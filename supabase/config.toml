@@ -1,0 +1,13 @@
+# Skip Supabase JWT verification for get-upload-url so the function receives
+# the Firebase ID token in Authorization and can verify it itself.
+[functions.get-upload-url]
+verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false
+
+[functions.notify-planner-event-published]
+verify_jwt = false
+
+[functions.sync-accepted-event-id]
+verify_jwt = false
