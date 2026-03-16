@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/services/fcm_service.dart';
-import '../../../domain/entities/user_entity.dart';
+import '../../../domain/entities/user_entity.dart'
     show ProfileVisibility, UserRole, WhoCanMessage;
 import '../../../domain/repositories/auth_repository.dart';
 import '../../../domain/repositories/planner_profile_repository.dart';
