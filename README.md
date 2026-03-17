@@ -72,7 +72,7 @@ flutter pub get
 
 The app uses Supabase for **storage** (portfolio images, profile photos) and **push notifications** (Edge Functions). Firebase remains the auth source.
 
-1. **Supabase project**: Default URL and anon key are in `lib/core/config/supabase_config.dart`. Override with `--dart-define` if needed:
+1. **Supabase project**: Default project URL is in `lib/core/config/supabase_config.dart`; the **anon key is not stored in the repo** (use `--dart-define` or CI secrets). Example:
    ```bash
    flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
    ```

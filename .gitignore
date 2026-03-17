@@ -27,11 +27,18 @@ build/
 # Firebase — Admin SDK & service account keys (never commit)
 **/firebase-adminsdk*.json
 **/*-firebase-adminsdk-*.json
+**/firebase-service-account*.json
+firebase-service-account*.json
 **/serviceAccount*.json
 **/service-account*.json
 firebase-credentials.json
 credentials.json
 *-credentials.json
+
+# Firebase client config (API keys; GitHub secret scanning flags these if committed)
+**/google-services.json
+**/GoogleService-Info.plist
+lib/firebase_options.dart
 
 # Firebase Functions — env and runtime config (often contain secrets)
 functions/.env
@@ -48,9 +55,5 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 
-# Optional: uncomment if you do not want client config files in the repo
-# (Flutter apps often commit these; Firebase treats them as public client config.)
-# android/app/google-services.json
-# ios/Runner/GoogleService-Info.plist
+# macOS client plist if re-added
 # macos/Runner/GoogleService-Info.plist
-# lib/firebase_options.dart
