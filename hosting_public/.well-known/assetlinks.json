@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.linkstage.app",
+      "sha256_cert_fingerprints": [
+        "D2:29:F3:69:66:7F:33:E1:41:C2:3C:D5:78:A4:32:F9:A4:FE:5F:E4:BA:CC:E7:B2:47:30:3B:D4:E3:50:AB:7D"
+      ]
+    }
+  }
+]

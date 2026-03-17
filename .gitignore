@@ -1,0 +1,59 @@
+# Miscellaneous
+*.log
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Dart / Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+**/doc/api/
+
+# Android (local signing; never commit secrets)
+**/local.properties
+**/key.properties
+**/*.keystore
+**/*.jks
+
+# Firebase — Admin SDK & service account keys (never commit)
+**/firebase-adminsdk*.json
+**/*-firebase-adminsdk-*.json
+**/firebase-service-account*.json
+firebase-service-account*.json
+**/serviceAccount*.json
+**/service-account*.json
+firebase-credentials.json
+credentials.json
+*-credentials.json
+
+# Firebase client config (API keys; GitHub secret scanning flags these if committed)
+**/google-services.json
+**/GoogleService-Info.plist
+lib/firebase_options.dart
+
+# Firebase Functions — env and runtime config (often contain secrets)
+functions/.env
+functions/.env.*
+functions/.runtimeconfig.json
+
+# Local env files (API keys, secrets)
+.env
+.env.*
+!.env.example
+
+# Firebase debug / emulator logs
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# macOS client plist if re-added
+# macos/Runner/GoogleService-Info.plist
