@@ -45,7 +45,7 @@
       p.innerHTML = '<a href="#" id="openAppBtn" style="font-weight:600">Open in LinkStage app</a> — use this if the app did not open automatically.';
       p.querySelector('#openAppBtn').onclick = function (e) {
         e.preventDefault();
-        var intent = 'intent://linkstage-rw.firebaseapp.com' + location.pathname + (location.search || '') + (location.hash || '') + '#Intent;scheme=https;package=com.example.flutter_application_1;S.browser_fallback_url=' + encodeURIComponent(location.href) + ';end';
+        var intent = 'intent://linkstage-rw.firebaseapp.com' + location.pathname + (location.search || '') + (location.hash || '') + '#Intent;scheme=https;package=com.linkstage.app;S.browser_fallback_url=' + encodeURIComponent(location.href) + ';end';
         window.location.href = intent;
       };
       document.querySelector('main').appendChild(p);

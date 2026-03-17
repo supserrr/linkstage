@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "F3DA2ZQKS6.com.example.flutterApplication1",
+        "paths": [
+          "/__/auth/*",
+          "/__/auth/links/*",
+          "/finishSignIn",
+          "/finishSignIn/*"
+        ]
+      }
+    ]
+  }
+}
