@@ -37,8 +37,10 @@ class NotificationEntity extends Equatable {
   final String title;
   final String? subtitle;
   final DateTime createdAt;
+
   /// Route to navigate to when tapped (e.g. AppRoutes.eventApplicants(eventId)).
   final String route;
+
   /// Extra data for routes that need it (e.g. collaboration detail).
   final Object? routeExtra;
   final String? eventId;
@@ -49,17 +51,17 @@ class NotificationEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        type,
-        title,
-        subtitle,
-        createdAt,
-        route,
-        routeExtra,
-        eventId,
-        bookingId,
-        collaborationId,
-        conversationId,
-        otherUserId,
-      ];
+    id,
+    type,
+    title,
+    subtitle,
+    createdAt,
+    route,
+    routeExtra,
+    eventId,
+    bookingId,
+    collaborationId,
+    conversationId,
+    otherUserId,
+  ];
 }

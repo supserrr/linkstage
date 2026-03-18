@@ -6,11 +6,7 @@ class ImageUrlUtils {
 
   /// Returns the URL for display. For Supabase/other storage, returns [url] as-is.
   /// [width] and [height] are ignored (transforms require Supabase Pro).
-  static String thumbnailUrl(
-    String url, {
-    int width = 96,
-    int height = 96,
-  }) {
+  static String thumbnailUrl(String url, {int width = 96, int height = 96}) {
     if (url.isEmpty) return url;
     return url;
   }

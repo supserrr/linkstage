@@ -8,10 +8,43 @@ const int _weightCategoryMatch = 2;
 
 /// Keywords associated with each creative category for matching event text.
 final Map<ProfileCategory, List<String>> _categoryKeywords = {
-  ProfileCategory.dj: ['dj', 'music', 'party', 'wedding', 'corporate', 'concert', 'club', 'entertainment'],
-  ProfileCategory.photographer: ['photo', 'photography', 'wedding', 'portrait', 'event', 'corporate', 'film'],
-  ProfileCategory.decorator: ['decor', 'decoration', 'wedding', 'corporate', 'venue', 'floral', 'design'],
-  ProfileCategory.contentCreator: ['content', 'social', 'video', 'media', 'influencer', 'brand', 'marketing'],
+  ProfileCategory.dj: [
+    'dj',
+    'music',
+    'party',
+    'wedding',
+    'corporate',
+    'concert',
+    'club',
+    'entertainment',
+  ],
+  ProfileCategory.photographer: [
+    'photo',
+    'photography',
+    'wedding',
+    'portrait',
+    'event',
+    'corporate',
+    'film',
+  ],
+  ProfileCategory.decorator: [
+    'decor',
+    'decoration',
+    'wedding',
+    'corporate',
+    'venue',
+    'floral',
+    'design',
+  ],
+  ProfileCategory.contentCreator: [
+    'content',
+    'social',
+    'video',
+    'media',
+    'influencer',
+    'brand',
+    'marketing',
+  ],
 };
 
 /// Normalizes a string into a set of lowercase tokens (letters and digits).
@@ -24,7 +57,9 @@ Set<String> _normalizeWords(String? s) {
 
 /// Returns true if location strings match (normalized contains or equality).
 bool _locationMatches(String? a, String? b) {
-  if (a == null || b == null || a.trim().isEmpty || b.trim().isEmpty) return false;
+  if (a == null || b == null || a.trim().isEmpty || b.trim().isEmpty) {
+    return false;
+  }
   final na = a.trim().toLowerCase();
   final nb = b.trim().toLowerCase();
   return na == nb || na.contains(nb) || nb.contains(na);
@@ -38,8 +73,8 @@ int scoreEventForCreative(EventEntity event, ProfileEntity? profile) {
   int score = 0;
 
   final eventWords = _normalizeWords(event.eventType)
-      ..addAll(_normalizeWords(event.title))
-      ..addAll(_normalizeWords(event.description));
+    ..addAll(_normalizeWords(event.title))
+    ..addAll(_normalizeWords(event.description));
 
   final profileWords = <String>{}
     ..addAll(profile.professions.expand((p) => _normalizeWords(p)))
@@ -53,9 +88,12 @@ int scoreEventForCreative(EventEntity event, ProfileEntity? profile) {
   if (profile.category != null) {
     final keywords = _categoryKeywords[profile.category!] ?? [];
     final categoryWordSet = keywords.toSet();
-    final categoryMatches = eventWords.where((w) => categoryWordSet.contains(w)).length;
+    final categoryMatches = eventWords
+        .where((w) => categoryWordSet.contains(w))
+        .length;
     if (categoryMatches > 0) {
-      score += _weightCategoryMatch * (categoryMatches > 2 ? 2 : categoryMatches);
+      score +=
+          _weightCategoryMatch * (categoryMatches > 2 ? 2 : categoryMatches);
     }
   }
 

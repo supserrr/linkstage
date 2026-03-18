@@ -48,12 +48,17 @@ class ProfileEntity extends Equatable {
   final double rating;
   final int reviewCount;
   final String? displayName;
+
   /// Profile picture URL (from user document); used for avatar display.
   final String? photoUrl;
+
   /// Denormalized from user; for query filtering (everyone | connections_only | only_me).
   final ProfileVisibility? profileVisibility;
 
-  ProfileEntity copyWith({String? photoUrl, ProfileVisibility? profileVisibility}) {
+  ProfileEntity copyWith({
+    String? photoUrl,
+    ProfileVisibility? profileVisibility,
+  }) {
     return ProfileEntity(
       id: id,
       userId: userId,
@@ -130,20 +135,20 @@ class ProfileEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        username,
-        bio,
-        category,
-        priceRange,
-        location,
-        portfolioUrls,
-        portfolioVideoUrls,
-        availability,
-        services,
-        languages,
-        professions,
-        photoUrl,
-        profileVisibility,
-      ];
+    id,
+    userId,
+    username,
+    bio,
+    category,
+    priceRange,
+    location,
+    portfolioUrls,
+    portfolioVideoUrls,
+    availability,
+    services,
+    languages,
+    professions,
+    photoUrl,
+    profileVisibility,
+  ];
 }

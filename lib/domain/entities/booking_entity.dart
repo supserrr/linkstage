@@ -27,6 +27,7 @@ class BookingEntity extends Equatable {
   final DateTime? createdAt;
   final DateTime? plannerConfirmedAt;
   final DateTime? creativeConfirmedAt;
+
   /// True when this booking was created as an invitation (planner invited creative).
   final bool? wasInvitation;
 
@@ -49,13 +50,13 @@ class BookingEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        eventId,
-        creativeId,
-        plannerId,
-        status,
-        plannerConfirmedAt,
-        creativeConfirmedAt,
-        wasInvitation,
-      ];
+    id,
+    eventId,
+    creativeId,
+    plannerId,
+    status,
+    plannerConfirmedAt,
+    creativeConfirmedAt,
+    wasInvitation,
+  ];
 }

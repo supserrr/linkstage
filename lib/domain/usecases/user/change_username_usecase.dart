@@ -63,7 +63,8 @@ class ChangeUsernameUseCase {
     }
     final normalized = newUsername.toLowerCase();
     final currentUsername = user.username;
-    if (currentUsername != null && currentUsername.toLowerCase() == normalized) {
+    if (currentUsername != null &&
+        currentUsername.toLowerCase() == normalized) {
       return ChangeUsernameInvalid('This is already your username.');
     }
 

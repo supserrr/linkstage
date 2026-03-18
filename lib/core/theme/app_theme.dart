@@ -58,9 +58,7 @@ class AppTheme {
         isDense: true,
       ),
       chipTheme: ChipThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: AppBorders.borderRadius,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadius),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -79,9 +77,7 @@ class AppTheme {
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
           shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-            RoundedRectangleBorder(
-              borderRadius: AppBorders.borderRadius,
-            ),
+            RoundedRectangleBorder(borderRadius: AppBorders.borderRadius),
           ),
         ),
       ),
@@ -148,9 +144,7 @@ class AppTheme {
         isDense: true,
       ),
       chipTheme: ChipThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: AppBorders.borderRadius,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadius),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -169,9 +163,7 @@ class AppTheme {
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
           shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-            RoundedRectangleBorder(
-              borderRadius: AppBorders.borderRadius,
-            ),
+            RoundedRectangleBorder(borderRadius: AppBorders.borderRadius),
           ),
         ),
       ),

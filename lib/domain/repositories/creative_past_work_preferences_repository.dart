@@ -9,5 +9,8 @@ abstract class CreativePastWorkPreferencesRepository {
 
   /// Toggle visibility: add to hidden if [show] is false, remove if true.
   Future<void> setItemVisibility(
-      String creativeUserId, String itemId, bool show);
+    String creativeUserId,
+    String itemId,
+    bool show,
+  );
 }

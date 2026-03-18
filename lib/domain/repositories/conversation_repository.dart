@@ -7,7 +7,10 @@ abstract class ConversationRepository {
   Stream<List<ConversationEntity>> watchConversations(String userId);
 
   /// Gets existing 1:1 chat id or creates a new chat; returns chatId.
-  Future<String> getOrCreateOneToOneChat(String currentUserId, String otherUserId);
+  Future<String> getOrCreateOneToOneChat(
+    String currentUserId,
+    String otherUserId,
+  );
 
   /// Stream of messages for a chat, ordered by createdAt.
   Stream<List<MessageEntity>> watchMessages(String chatId);
