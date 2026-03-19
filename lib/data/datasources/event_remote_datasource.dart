@@ -166,7 +166,10 @@ class EventRemoteDataSource {
 
   /// Fetch a single event by ID.
   Future<EventEntity?> getEventById(String eventId) async {
-    final doc = await _firestore.collection(_eventsCollection).doc(eventId).get();
+    final doc = await _firestore
+        .collection(_eventsCollection)
+        .doc(eventId)
+        .get();
     if (doc.exists && doc.data() != null) {
       return EventModel.fromFirestore(doc).toEntity();
     }
@@ -183,8 +186,9 @@ class EventRemoteDataSource {
     final results = <EventEntity>[];
     for (var i = 0; i < uniqueIds.length; i += chunkSize) {
       final chunk = uniqueIds.skip(i).take(chunkSize).toList();
-      final refs =
-          chunk.map((id) => _firestore.collection(_eventsCollection).doc(id));
+      final refs = chunk.map(
+        (id) => _firestore.collection(_eventsCollection).doc(id),
+      );
       final docs = await Future.wait(refs.map((ref) => ref.get()));
       for (final doc in docs) {
         if (doc.exists && doc.data() != null) {

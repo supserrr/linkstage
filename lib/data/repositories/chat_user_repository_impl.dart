@@ -9,8 +9,7 @@ class ChatUserRepositoryImpl implements ChatUserRepository {
 
   @override
   Future<void> ensureChatUser(UserEntity user) async {
-    final displayName =
-        user.displayName ?? user.username ?? user.email;
+    final displayName = user.displayName ?? user.username ?? user.email;
     await _dataSource.ensureChatUser(
       id: user.id,
       displayName: displayName,

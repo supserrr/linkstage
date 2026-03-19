@@ -29,7 +29,8 @@ class BookingModel {
       eventId: data['eventId'] as String? ?? '',
       creativeId: data['creativeId'] as String? ?? '',
       plannerId: data['plannerId'] as String? ?? '',
-      status: BookingEntity.statusFromKey(data['status'] as String?) ??
+      status:
+          BookingEntity.statusFromKey(data['status'] as String?) ??
           BookingStatus.pending,
       agreedPrice: (data['agreedPrice'] as num?)?.toDouble(),
       createdAt: ts?.toDate(),
@@ -57,7 +58,9 @@ class BookingModel {
       'plannerId': plannerId,
       'status': _statusKey,
       if (agreedPrice != null) 'agreedPrice': agreedPrice,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'createdAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
       if (wasInvitation != null) 'wasInvitation': wasInvitation,
     };
   }

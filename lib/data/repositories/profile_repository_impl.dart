@@ -39,8 +39,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
       if (onlyCreativeAccounts) {
         list = list
-            .where((p) =>
-                users[p.userId]?.role == UserRole.creativeProfessional)
+            .where(
+              (p) => users[p.userId]?.role == UserRole.creativeProfessional,
+            )
             .toList();
       }
 
@@ -52,7 +53,10 @@ class ProfileRepositoryImpl implements ProfileRepository {
         final visibility = p.profileVisibility ?? ProfileVisibility.everyone;
         if (visibility == ProfileVisibility.onlyMe) continue;
         if (visibility == ProfileVisibility.connectionsOnly) {
-          final worked = await _userRepository.hasWorkedWith(viewerId, p.userId);
+          final worked = await _userRepository.hasWorkedWith(
+            viewerId,
+            p.userId,
+          );
           if (!worked) continue;
         }
         filtered.add(p);
@@ -78,17 +82,13 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<List<ProfileEntity>> getProfilesByUserIds(
-    List<String> userIds,
-  ) async {
+  Future<List<ProfileEntity>> getProfilesByUserIds(List<String> userIds) async {
     if (userIds.isEmpty) return [];
     final profiles = await _remote.getProfilesByUserIds(userIds);
     if (profiles.isEmpty) return [];
     final users = await _userRepository.getUsersByIds(userIds);
     return profiles
-        .map(
-          (p) => p.copyWith(photoUrl: users[p.userId]?.photoUrl),
-        )
+        .map((p) => p.copyWith(photoUrl: users[p.userId]?.photoUrl))
         .toList();
   }
 
@@ -110,9 +110,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
     String profileDocId,
     double rating,
     int reviewCount,
-  ) =>
-      _remote.updateProfileRatingStats(profileDocId, rating, reviewCount);
+  ) => _remote.updateProfileRatingStats(profileDocId, rating, reviewCount);
 
   @override
-  Future<void> deleteProfile(String username) => _remote.deleteProfile(username);
+  Future<void> deleteProfile(String username) =>
+      _remote.deleteProfile(username);
 }

@@ -16,11 +16,12 @@ class PortfolioStorageDataSource {
   PortfolioStorageDataSource({
     String? getUploadUrlUrl,
     SupabaseClient? supabaseClient,
-  })  : _getUploadUrlUrl =
-            getUploadUrlUrl ??
-            '${SupabaseConfig.url}/functions/v1/get-upload-url',
-        _supabase = supabaseClient ??
-            SupabaseClient(SupabaseConfig.url, SupabaseConfig.anonKey);
+  }) : _getUploadUrlUrl =
+           getUploadUrlUrl ??
+           '${SupabaseConfig.url}/functions/v1/get-upload-url',
+       _supabase =
+           supabaseClient ??
+           SupabaseClient(SupabaseConfig.url, SupabaseConfig.anonKey);
 
   static const Duration _uploadTimeout = Duration(seconds: 90);
 
@@ -135,16 +136,12 @@ class PortfolioStorageDataSource {
         imageQuality: imageQuality,
       );
       if (result == null || result.isEmpty) {
-        throw Exception(
-          'Image compression failed. Please try another photo.',
-        );
+        throw Exception('Image compression failed. Please try another photo.');
       }
       return result;
     } catch (e) {
       if (e is Exception) rethrow;
-      throw Exception(
-        'Image compression failed. Please try another photo.',
-      );
+      throw Exception('Image compression failed. Please try another photo.');
     }
   }
 
@@ -158,7 +155,9 @@ class PortfolioStorageDataSource {
 
     final bytes = await file.readAsBytes();
     if (bytes.isEmpty) {
-      throw Exception('Could not read image file. Please try a different photo.');
+      throw Exception(
+        'Could not read image file. Please try a different photo.',
+      );
     }
     final fileName = file.name.isNotEmpty ? file.name : 'avatar.jpg';
 

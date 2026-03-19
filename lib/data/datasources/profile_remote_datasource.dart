@@ -31,17 +31,15 @@ class ProfileRemoteDataSource {
     }
     query = query.limit(limit);
 
-    return query.snapshots().map(
-      (snapshot) {
-        var list = snapshot.docs
-            .map((d) => ProfileModel.fromFirestore(d).toEntity())
-            .toList();
-        if (excludeUserId != null) {
-          list = list.where((p) => p.userId != excludeUserId).toList();
-        }
-        return list;
-      },
-    );
+    return query.snapshots().map((snapshot) {
+      var list = snapshot.docs
+          .map((d) => ProfileModel.fromFirestore(d).toEntity())
+          .toList();
+      if (excludeUserId != null) {
+        list = list.where((p) => p.userId != excludeUserId).toList();
+      }
+      return list;
+    });
   }
 
   Future<ProfileEntity?> getProfile(String username) async {
@@ -68,9 +66,7 @@ class ProfileRemoteDataSource {
   }
 
   /// Batch fetch profiles by user IDs. Firestore whereIn limited to 30 per query.
-  Future<List<ProfileEntity>> getProfilesByUserIds(
-    List<String> userIds,
-  ) async {
+  Future<List<ProfileEntity>> getProfilesByUserIds(List<String> userIds) async {
     if (userIds.isEmpty) return [];
     final uniqueIds = userIds.toSet().where((id) => id.isNotEmpty).toList();
     if (uniqueIds.isEmpty) return [];
@@ -92,7 +88,9 @@ class ProfileRemoteDataSource {
   static String _normalizeUsername(String s) => s.toLowerCase();
 
   Future<void> upsertProfile(ProfileEntity profile) async {
-    final username = profile.id.isNotEmpty ? profile.id : profile.username ?? '';
+    final username = profile.id.isNotEmpty
+        ? profile.id
+        : profile.username ?? '';
     if (username.isEmpty) {
       throw ArgumentError('Profile must have username as id');
     }
@@ -147,10 +145,10 @@ class ProfileRemoteDataSource {
         .doc(_normalizeUsername(username))
         .snapshots()
         .map((doc) {
-      if (doc.exists && doc.data() != null) {
-        return ProfileModel.fromFirestore(doc).toEntity();
-      }
-      return null;
-    });
+          if (doc.exists && doc.data() != null) {
+            return ProfileModel.fromFirestore(doc).toEntity();
+          }
+          return null;
+        });
   }
 }

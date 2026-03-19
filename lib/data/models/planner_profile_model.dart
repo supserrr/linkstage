@@ -33,8 +33,9 @@ class PlannerProfileModel {
       portfolioUrls: portfolio?.map((e) => e.toString()).toList() ?? const [],
       displayName: data['displayName'] as String?,
       role: data['role'] as String?,
-      profileVisibility:
-          UserEntity.profileVisibilityFromKey(data['profileVisibility'] as String?),
+      profileVisibility: UserEntity.profileVisibilityFromKey(
+        data['profileVisibility'] as String?,
+      ),
     );
   }
 
@@ -58,10 +59,9 @@ class PlannerProfileModel {
       'portfolioUrls': portfolioUrls,
       'displayName': displayName,
       'role': role,
-      'profileVisibility':
-          profileVisibility != null
-              ? UserEntity.profileVisibilityToKey(profileVisibility!)
-              : null,
+      'profileVisibility': profileVisibility != null
+          ? UserEntity.profileVisibilityToKey(profileVisibility!)
+          : null,
     };
   }
 

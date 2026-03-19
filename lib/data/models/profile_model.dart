@@ -38,7 +38,9 @@ class ProfileModel {
     final profs = data['professions'] as List<dynamic>?;
     final svcList = svcs?.map((e) => e.toString()).toList() ?? [];
     final specList = specs?.map((e) => e.toString()).toList() ?? [];
-    final mergedServices = [...{...svcList, ...specList}];
+    final mergedServices = [
+      ...{...svcList, ...specList},
+    ];
     return ProfileModel(
       id: doc.id,
       userId: data['userId'] as String? ?? '',
@@ -50,16 +52,18 @@ class ProfileModel {
       portfolioUrls: portfolio?.map((e) => e.toString()).toList() ?? [],
       portfolioVideoUrls:
           portfolioVideos?.map((e) => e.toString()).toList() ?? const [],
-      availability:
-          ProfileEntity.availabilityFromKey(data['availability'] as String?),
+      availability: ProfileEntity.availabilityFromKey(
+        data['availability'] as String?,
+      ),
       services: mergedServices,
       languages: langs?.map((e) => e.toString()).toList() ?? const [],
       professions: profs?.map((e) => e.toString()).toList() ?? const [],
       rating: (data['rating'] as num?)?.toDouble() ?? 0,
       reviewCount: data['reviewCount'] as int? ?? 0,
       displayName: data['displayName'] as String?,
-      profileVisibility:
-          UserEntity.profileVisibilityFromKey(data['profileVisibility'] as String?),
+      profileVisibility: UserEntity.profileVisibilityFromKey(
+        data['profileVisibility'] as String?,
+      ),
     );
   }
 
@@ -98,10 +102,9 @@ class ProfileModel {
       'rating': rating,
       'reviewCount': reviewCount,
       'displayName': displayName,
-      'profileVisibility':
-          profileVisibility != null
-              ? UserEntity.profileVisibilityToKey(profileVisibility!)
-              : null,
+      'profileVisibility': profileVisibility != null
+          ? UserEntity.profileVisibilityToKey(profileVisibility!)
+          : null,
     };
   }
 

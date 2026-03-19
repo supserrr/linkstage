@@ -67,63 +67,69 @@ class NotificationRepositoryImpl implements NotificationRepository {
           final eventTitle = event?.title ?? 'Event';
           final creativeName = _displayName(creative, b.creativeId);
           final createdAt = b.createdAt ?? DateTime.now();
-          notifications.add(NotificationEntity(
-            id: 'booking-p-${b.id}',
-            type: NotificationType.bookingNewApplication,
-            title: 'New application for $eventTitle',
-            subtitle: '$creativeName applied',
-            createdAt: createdAt,
-            route: '/event/${b.eventId}/applicants',
-            eventId: b.eventId,
-            bookingId: b.id,
-            otherUserId: b.creativeId,
-          ));
+          notifications.add(
+            NotificationEntity(
+              id: 'booking-p-${b.id}',
+              type: NotificationType.bookingNewApplication,
+              title: 'New application for $eventTitle',
+              subtitle: '$creativeName applied',
+              createdAt: createdAt,
+              route: '/event/${b.eventId}/applicants',
+              eventId: b.eventId,
+              bookingId: b.id,
+              otherUserId: b.creativeId,
+            ),
+          );
         }
         for (final c in collabsByRequesterAccepted) {
           final other = await _userRepository.getUser(c.targetUserId);
           final otherName = _displayName(other, c.targetUserId);
           final createdAt = c.createdAt ?? DateTime.now();
-          notifications.add(NotificationEntity(
-            id: 'collab-acc-${c.id}',
-            type: NotificationType.collaborationAccepted,
-            title: 'Proposal accepted',
-            subtitle: '$otherName accepted your collaboration',
-            createdAt: createdAt,
-            route: '/collaboration/detail',
-            routeExtra: {
-              'collaboration': c,
-              'otherPersonName': otherName,
-              'otherPersonId': c.targetUserId,
-              'otherPersonPhotoUrl': other?.photoUrl,
-              'otherPersonRole': UserRole.creativeProfessional,
-              'viewerIsCreative': false,
-            },
-            collaborationId: c.id,
-            otherUserId: c.targetUserId,
-          ));
+          notifications.add(
+            NotificationEntity(
+              id: 'collab-acc-${c.id}',
+              type: NotificationType.collaborationAccepted,
+              title: 'Proposal accepted',
+              subtitle: '$otherName accepted your collaboration',
+              createdAt: createdAt,
+              route: '/collaboration/detail',
+              routeExtra: {
+                'collaboration': c,
+                'otherPersonName': otherName,
+                'otherPersonId': c.targetUserId,
+                'otherPersonPhotoUrl': other?.photoUrl,
+                'otherPersonRole': UserRole.creativeProfessional,
+                'viewerIsCreative': false,
+              },
+              collaborationId: c.id,
+              otherUserId: c.targetUserId,
+            ),
+          );
         }
         for (final c in collabsByRequesterDeclined) {
           final other = await _userRepository.getUser(c.targetUserId);
           final otherName = _displayName(other, c.targetUserId);
           final createdAt = c.createdAt ?? DateTime.now();
-          notifications.add(NotificationEntity(
-            id: 'collab-dec-${c.id}',
-            type: NotificationType.collaborationDeclined,
-            title: 'Proposal declined',
-            subtitle: '$otherName declined your collaboration',
-            createdAt: createdAt,
-            route: '/collaboration/detail',
-            routeExtra: {
-              'collaboration': c,
-              'otherPersonName': otherName,
-              'otherPersonId': c.targetUserId,
-              'otherPersonPhotoUrl': other?.photoUrl,
-              'otherPersonRole': UserRole.creativeProfessional,
-              'viewerIsCreative': false,
-            },
-            collaborationId: c.id,
-            otherUserId: c.targetUserId,
-          ));
+          notifications.add(
+            NotificationEntity(
+              id: 'collab-dec-${c.id}',
+              type: NotificationType.collaborationDeclined,
+              title: 'Proposal declined',
+              subtitle: '$otherName declined your collaboration',
+              createdAt: createdAt,
+              route: '/collaboration/detail',
+              routeExtra: {
+                'collaboration': c,
+                'otherPersonName': otherName,
+                'otherPersonId': c.targetUserId,
+                'otherPersonPhotoUrl': other?.photoUrl,
+                'otherPersonRole': UserRole.creativeProfessional,
+                'viewerIsCreative': false,
+              },
+              collaborationId: c.id,
+              otherUserId: c.targetUserId,
+            ),
+          );
         }
         for (final b in invitationAcceptedBookings) {
           final event = await _eventRepository.getEventById(b.eventId);
@@ -131,17 +137,19 @@ class NotificationRepositoryImpl implements NotificationRepository {
           final eventTitle = event?.title ?? 'Event';
           final creativeName = _displayName(creative, b.creativeId);
           final createdAt = b.createdAt ?? DateTime.now();
-          notifications.add(NotificationEntity(
-            id: 'booking-ia-${b.id}',
-            type: NotificationType.bookingInvitationAccepted,
-            title: 'Invitation accepted',
-            subtitle: '$creativeName accepted your invitation to $eventTitle',
-            createdAt: createdAt,
-            route: '/event/${b.eventId}/applicants',
-            eventId: b.eventId,
-            bookingId: b.id,
-            otherUserId: b.creativeId,
-          ));
+          notifications.add(
+            NotificationEntity(
+              id: 'booking-ia-${b.id}',
+              type: NotificationType.bookingInvitationAccepted,
+              title: 'Invitation accepted',
+              subtitle: '$creativeName accepted your invitation to $eventTitle',
+              createdAt: createdAt,
+              route: '/event/${b.eventId}/applicants',
+              eventId: b.eventId,
+              bookingId: b.id,
+              otherUserId: b.creativeId,
+            ),
+          );
         }
         for (final b in invitationDeclinedBookings) {
           final event = await _eventRepository.getEventById(b.eventId);
@@ -149,17 +157,19 @@ class NotificationRepositoryImpl implements NotificationRepository {
           final eventTitle = event?.title ?? 'Event';
           final creativeName = _displayName(creative, b.creativeId);
           final createdAt = b.createdAt ?? DateTime.now();
-          notifications.add(NotificationEntity(
-            id: 'booking-id-${b.id}',
-            type: NotificationType.bookingInvitationDeclined,
-            title: 'Invitation declined',
-            subtitle: '$creativeName declined your invitation to $eventTitle',
-            createdAt: createdAt,
-            route: '/event/${b.eventId}/applicants',
-            eventId: b.eventId,
-            bookingId: b.id,
-            otherUserId: b.creativeId,
-          ));
+          notifications.add(
+            NotificationEntity(
+              id: 'booking-id-${b.id}',
+              type: NotificationType.bookingInvitationDeclined,
+              title: 'Invitation declined',
+              subtitle: '$creativeName declined your invitation to $eventTitle',
+              createdAt: createdAt,
+              route: '/event/${b.eventId}/applicants',
+              eventId: b.eventId,
+              bookingId: b.id,
+              otherUserId: b.creativeId,
+            ),
+          );
         }
       } else {
         for (final b in invitedBookings) {
@@ -168,116 +178,128 @@ class NotificationRepositoryImpl implements NotificationRepository {
           final eventTitle = event?.title ?? 'Event';
           final plannerName = _displayName(planner, b.plannerId);
           final createdAt = b.createdAt ?? DateTime.now();
-          notifications.add(NotificationEntity(
-            id: 'booking-i-${b.id}',
-            type: NotificationType.bookingInvited,
-            title: 'Invitation to $eventTitle',
-            subtitle: '$plannerName invited you',
-            createdAt: createdAt,
-            route: '/bookings',
-            eventId: b.eventId,
-            bookingId: b.id,
-            otherUserId: b.plannerId,
-          ));
+          notifications.add(
+            NotificationEntity(
+              id: 'booking-i-${b.id}',
+              type: NotificationType.bookingInvited,
+              title: 'Invitation to $eventTitle',
+              subtitle: '$plannerName invited you',
+              createdAt: createdAt,
+              route: '/bookings',
+              eventId: b.eventId,
+              bookingId: b.id,
+              otherUserId: b.plannerId,
+            ),
+          );
         }
         for (final b in acceptedBookings) {
           final event = await _eventRepository.getEventById(b.eventId);
           final eventTitle = event?.title ?? 'Event';
           final createdAt = b.createdAt ?? DateTime.now();
-          notifications.add(NotificationEntity(
-            id: 'booking-a-${b.id}',
-            type: NotificationType.bookingAccepted,
-            title: 'Application accepted',
-            subtitle: 'Your application for $eventTitle was accepted',
-            createdAt: createdAt,
-            route: '/event/${b.eventId}',
-            eventId: b.eventId,
-            bookingId: b.id,
-          ));
+          notifications.add(
+            NotificationEntity(
+              id: 'booking-a-${b.id}',
+              type: NotificationType.bookingAccepted,
+              title: 'Application accepted',
+              subtitle: 'Your application for $eventTitle was accepted',
+              createdAt: createdAt,
+              route: '/event/${b.eventId}',
+              eventId: b.eventId,
+              bookingId: b.id,
+            ),
+          );
         }
         for (final b in declinedBookings) {
           final event = await _eventRepository.getEventById(b.eventId);
           final eventTitle = event?.title ?? 'Event';
           final createdAt = b.createdAt ?? DateTime.now();
-          notifications.add(NotificationEntity(
-            id: 'booking-d-${b.id}',
-            type: NotificationType.bookingDeclined,
-            title: 'Application declined',
-            subtitle: 'Your application for $eventTitle was declined',
-            createdAt: createdAt,
-            route: '/bookings',
-            eventId: b.eventId,
-            bookingId: b.id,
-          ));
+          notifications.add(
+            NotificationEntity(
+              id: 'booking-d-${b.id}',
+              type: NotificationType.bookingDeclined,
+              title: 'Application declined',
+              subtitle: 'Your application for $eventTitle was declined',
+              createdAt: createdAt,
+              route: '/bookings',
+              eventId: b.eventId,
+              bookingId: b.id,
+            ),
+          );
         }
         for (final c in collabsByTarget) {
           final other = await _userRepository.getUser(c.requesterId);
           final otherName = _displayName(other, c.requesterId);
           final createdAt = c.createdAt ?? DateTime.now();
-          notifications.add(NotificationEntity(
-            id: 'collab-p-${c.id}',
-            type: NotificationType.collaborationNewProposal,
-            title: 'New collaboration proposal',
-            subtitle: '$otherName sent you a proposal',
-            createdAt: createdAt,
-            route: '/collaboration/detail',
-            routeExtra: {
-              'collaboration': c,
-              'otherPersonName': otherName,
-              'otherPersonId': c.requesterId,
-              'otherPersonPhotoUrl': other?.photoUrl,
-              'otherPersonRole': null,
-              'viewerIsCreative': true,
-            },
-            collaborationId: c.id,
-            otherUserId: c.requesterId,
-          ));
+          notifications.add(
+            NotificationEntity(
+              id: 'collab-p-${c.id}',
+              type: NotificationType.collaborationNewProposal,
+              title: 'New collaboration proposal',
+              subtitle: '$otherName sent you a proposal',
+              createdAt: createdAt,
+              route: '/collaboration/detail',
+              routeExtra: {
+                'collaboration': c,
+                'otherPersonName': otherName,
+                'otherPersonId': c.requesterId,
+                'otherPersonPhotoUrl': other?.photoUrl,
+                'otherPersonRole': null,
+                'viewerIsCreative': true,
+              },
+              collaborationId: c.id,
+              otherUserId: c.requesterId,
+            ),
+          );
         }
         for (final c in collabsByRequesterAccepted) {
           final other = await _userRepository.getUser(c.targetUserId);
           final otherName = _displayName(other, c.targetUserId);
           final createdAt = c.createdAt ?? DateTime.now();
-          notifications.add(NotificationEntity(
-            id: 'collab-acc-${c.id}',
-            type: NotificationType.collaborationAccepted,
-            title: 'Proposal accepted',
-            subtitle: '$otherName accepted your collaboration',
-            createdAt: createdAt,
-            route: '/collaboration/detail',
-            routeExtra: {
-              'collaboration': c,
-              'otherPersonName': otherName,
-              'otherPersonId': c.targetUserId,
-              'otherPersonPhotoUrl': other?.photoUrl,
-              'otherPersonRole': UserRole.creativeProfessional,
-              'viewerIsCreative': true,
-            },
-            collaborationId: c.id,
-            otherUserId: c.targetUserId,
-          ));
+          notifications.add(
+            NotificationEntity(
+              id: 'collab-acc-${c.id}',
+              type: NotificationType.collaborationAccepted,
+              title: 'Proposal accepted',
+              subtitle: '$otherName accepted your collaboration',
+              createdAt: createdAt,
+              route: '/collaboration/detail',
+              routeExtra: {
+                'collaboration': c,
+                'otherPersonName': otherName,
+                'otherPersonId': c.targetUserId,
+                'otherPersonPhotoUrl': other?.photoUrl,
+                'otherPersonRole': UserRole.creativeProfessional,
+                'viewerIsCreative': true,
+              },
+              collaborationId: c.id,
+              otherUserId: c.targetUserId,
+            ),
+          );
         }
         for (final c in collabsByRequesterDeclined) {
           final other = await _userRepository.getUser(c.targetUserId);
           final otherName = _displayName(other, c.targetUserId);
           final createdAt = c.createdAt ?? DateTime.now();
-          notifications.add(NotificationEntity(
-            id: 'collab-dec-${c.id}',
-            type: NotificationType.collaborationDeclined,
-            title: 'Proposal declined',
-            subtitle: '$otherName declined your collaboration',
-            createdAt: createdAt,
-            route: '/collaboration/detail',
-            routeExtra: {
-              'collaboration': c,
-              'otherPersonName': otherName,
-              'otherPersonId': c.targetUserId,
-              'otherPersonPhotoUrl': other?.photoUrl,
-              'otherPersonRole': UserRole.creativeProfessional,
-              'viewerIsCreative': true,
-            },
-            collaborationId: c.id,
-            otherUserId: c.targetUserId,
-          ));
+          notifications.add(
+            NotificationEntity(
+              id: 'collab-dec-${c.id}',
+              type: NotificationType.collaborationDeclined,
+              title: 'Proposal declined',
+              subtitle: '$otherName declined your collaboration',
+              createdAt: createdAt,
+              route: '/collaboration/detail',
+              routeExtra: {
+                'collaboration': c,
+                'otherPersonName': otherName,
+                'otherPersonId': c.targetUserId,
+                'otherPersonPhotoUrl': other?.photoUrl,
+                'otherPersonRole': UserRole.creativeProfessional,
+                'viewerIsCreative': true,
+              },
+              collaborationId: c.id,
+              otherUserId: c.targetUserId,
+            ),
+          );
         }
         for (final doc in plannerNewEventDocs) {
           final eventId = doc['eventId'] as String?;
@@ -294,36 +316,38 @@ class NotificationRepositoryImpl implements NotificationRepository {
           }
           if (eventId == null || eventId.isEmpty) continue;
           final docId = doc['id'] as String? ?? eventId;
-          notifications.add(NotificationEntity(
-            id: 'planner-new-event-$docId',
-            type: NotificationType.plannerNewEvent,
-            title: '$plannerName posted a new event',
-            subtitle: eventTitle,
-            createdAt: createdAt,
-            route: '/event/$eventId',
-            eventId: eventId,
-            otherUserId: doc['plannerId'] as String?,
-          ));
+          notifications.add(
+            NotificationEntity(
+              id: 'planner-new-event-$docId',
+              type: NotificationType.plannerNewEvent,
+              title: '$plannerName posted a new event',
+              subtitle: eventTitle,
+              createdAt: createdAt,
+              route: '/event/$eventId',
+              eventId: eventId,
+              otherUserId: doc['plannerId'] as String?,
+            ),
+          );
         }
       }
 
       for (final c in unreadConversations) {
-        final otherName =
-            c.otherUserDisplayName?.trim().isNotEmpty == true
-                ? c.otherUserDisplayName!
-                : 'Someone';
-        final createdAt =
-            c.lastMessageAt ?? c.createdAt ?? DateTime.now();
-        notifications.add(NotificationEntity(
-          id: 'chat-${c.id}',
-          type: NotificationType.chatNewMessage,
-          title: '$otherName sent a message',
-          subtitle: c.lastMessageText,
-          createdAt: createdAt,
-          route: '/messages/chat/${c.id}',
-          conversationId: c.id,
-          otherUserId: c.otherUserId,
-        ));
+        final otherName = c.otherUserDisplayName?.trim().isNotEmpty == true
+            ? c.otherUserDisplayName!
+            : 'Someone';
+        final createdAt = c.lastMessageAt ?? c.createdAt ?? DateTime.now();
+        notifications.add(
+          NotificationEntity(
+            id: 'chat-${c.id}',
+            type: NotificationType.chatNewMessage,
+            title: '$otherName sent a message',
+            subtitle: c.lastMessageText,
+            createdAt: createdAt,
+            route: '/messages/chat/${c.id}',
+            conversationId: c.id,
+            otherUserId: c.otherUserId,
+          ),
+        );
       }
 
       notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -473,7 +497,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
     return user.displayName?.trim().isNotEmpty == true
         ? user.displayName!
         : (user.username?.trim().isNotEmpty == true
-            ? '@${user.username}'
-            : user.email.split('@').firstOrNull ?? 'Someone');
+              ? '@${user.username}'
+              : user.email.split('@').firstOrNull ?? 'Someone');
   }
 }

@@ -34,12 +34,12 @@ class MessageModel {
   final DateTime createdAt;
 
   MessageEntity toEntity() => MessageEntity(
-        id: id,
-        chatId: chatId,
-        senderId: senderId,
-        text: text,
-        createdAt: createdAt,
-      );
+    id: id,
+    chatId: chatId,
+    senderId: senderId,
+    text: text,
+    createdAt: createdAt,
+  );
 
   static Map<String, dynamic> toFirestore(String senderId, String text) {
     return {

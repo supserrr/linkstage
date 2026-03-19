@@ -17,7 +17,10 @@ class CreativePastWorkPreferencesRepositoryImpl
 
   @override
   Future<void> setItemVisibility(
-      String creativeUserId, String itemId, bool show) async {
+    String creativeUserId,
+    String itemId,
+    bool show,
+  ) async {
     if (show) {
       await _remote.removeHiddenId(creativeUserId, itemId);
     } else {

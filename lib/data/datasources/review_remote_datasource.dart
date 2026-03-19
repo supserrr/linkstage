@@ -132,15 +132,19 @@ class ReviewRemoteDataSource {
     await _firestore.runTransaction((transaction) async {
       final doc = await transaction.get(ref);
       if (doc.data() == null) return;
-      final likedBy =
-          List<String>.from((doc.data()!['likedBy'] as List<dynamic>?) ?? []);
+      final likedBy = List<String>.from(
+        (doc.data()!['likedBy'] as List<dynamic>?) ?? [],
+      );
       final hasLiked = likedBy.contains(userId);
       if (hasLiked) {
         likedBy.remove(userId);
       } else {
         likedBy.add(userId);
       }
-      transaction.update(ref, {'likedBy': likedBy, 'likeCount': likedBy.length});
+      transaction.update(ref, {
+        'likedBy': likedBy,
+        'likeCount': likedBy.length,
+      });
     });
   }
 
@@ -150,18 +154,19 @@ class ReviewRemoteDataSource {
     await _firestore.runTransaction((transaction) async {
       final doc = await transaction.get(ref);
       if (doc.data() == null) return;
-      final flaggedBy =
-          List<String>.from((doc.data()!['flaggedBy'] as List<dynamic>?) ?? []);
+      final flaggedBy = List<String>.from(
+        (doc.data()!['flaggedBy'] as List<dynamic>?) ?? [],
+      );
       final hasFlagged = flaggedBy.contains(userId);
       if (hasFlagged) {
         flaggedBy.remove(userId);
       } else {
         flaggedBy.add(userId);
       }
-      transaction.update(
-        ref,
-        {'flaggedBy': flaggedBy, 'flagCount': flaggedBy.length},
-      );
+      transaction.update(ref, {
+        'flaggedBy': flaggedBy,
+        'flagCount': flaggedBy.length,
+      });
     });
   }
 }

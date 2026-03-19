@@ -37,12 +37,15 @@ class CollaborationModel {
       requesterId: data['requesterId'] as String? ?? '',
       targetUserId: data['targetUserId'] as String? ?? '',
       description: data['description'] as String? ?? '',
-      status: CollaborationEntity.statusFromKey(data['status'] as String?) ??
+      status:
+          CollaborationEntity.statusFromKey(data['status'] as String?) ??
           CollaborationStatus.pending,
       title: data['title'] as String?,
       eventId: data['eventId'] as String?,
       createdAt: ts?.toDate(),
-      budget: budgetVal != null ? (budgetVal is num ? budgetVal.toDouble() : null) : null,
+      budget: budgetVal != null
+          ? (budgetVal is num ? budgetVal.toDouble() : null)
+          : null,
       date: dateTs?.toDate(),
       startTime: data['startTime'] as String?,
       endTime: data['endTime'] as String?,

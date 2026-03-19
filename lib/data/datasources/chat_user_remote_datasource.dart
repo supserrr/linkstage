@@ -9,8 +9,14 @@ abstract class ChatUserFirestoreWriter {
 /// Remote data source for chat user documents in Firestore.
 /// Used so the conversation list can resolve other user display name and photo.
 class ChatUserRemoteDataSource {
-  ChatUserRemoteDataSource({ChatUserFirestoreWriter? writer, FirebaseFirestore? firestore})
-      : _writer = writer ?? FirestoreChatUserFirestoreWriter(firestore ?? FirebaseFirestore.instance);
+  ChatUserRemoteDataSource({
+    ChatUserFirestoreWriter? writer,
+    FirebaseFirestore? firestore,
+  }) : _writer =
+           writer ??
+           FirestoreChatUserFirestoreWriter(
+             firestore ?? FirebaseFirestore.instance,
+           );
 
   final ChatUserFirestoreWriter _writer;
 
@@ -22,8 +28,8 @@ class ChatUserRemoteDataSource {
   }) async {
     final data = <String, dynamic>{
       'id': id,
-      ...? (displayName != null ? {'displayName': displayName} : null),
-      ...? (photoUrl != null ? {'photoUrl': photoUrl} : null),
+      ...?(displayName != null ? {'displayName': displayName} : null),
+      ...?(photoUrl != null ? {'photoUrl': photoUrl} : null),
     };
     await _writer.setChatUser(id, data);
   }
