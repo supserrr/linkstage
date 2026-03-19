@@ -1,6 +1,7 @@
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:animated_bubble_navigation_bar/animated_bubble_navigation_bar.dart';
@@ -31,8 +32,9 @@ class BottomNavShell extends StatelessWidget {
       builder: (context, _) {
         final role = sl<AuthRedirectNotifier>().user?.role;
         final l10n = AppLocalizations.of(context)!;
-        final activityLabel =
-            role == UserRole.eventPlanner ? l10n.events : l10n.gigs;
+        final activityLabel = role == UserRole.eventPlanner
+            ? l10n.events
+            : l10n.gigs;
 
         // Match package design: distinct bar background, blue highlight for selected tab.
         // Blue-tinted glass for floating pill look.
@@ -40,8 +42,7 @@ class BottomNavShell extends StatelessWidget {
           backgroundColor: isDark
               ? colorScheme.primary.withValues(alpha: 0.15)
               : colorScheme.primary.withValues(alpha: 0.12),
-          selectedBubbleBackgroundColor:
-              colorScheme.primaryContainer,
+          selectedBubbleBackgroundColor: colorScheme.primaryContainer,
           unSelectedBubbleBackgroundColor: Colors.transparent,
           selectedBubbleLabelColor: colorScheme.onPrimaryContainer,
           unSelectedBubbleLabelColor: colorScheme.onSurfaceVariant,
@@ -103,7 +104,8 @@ class BottomNavShell extends StatelessWidget {
                       if (index >= 0 && index < 5) {
                         navigationShell.goBranch(
                           index,
-                          initialLocation: index == navigationShell.currentIndex,
+                          initialLocation:
+                              index == navigationShell.currentIndex,
                         );
                       }
                     },
@@ -187,15 +189,10 @@ class _BubbleNavBar extends StatelessWidget {
                 ),
                 Positioned.fill(
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: frostOverlay,
-                    ),
+                    decoration: BoxDecoration(color: frostOverlay),
                   ),
                 ),
-                Padding(
-                  padding: bubble.padding,
-                  child: barContent,
-                ),
+                Padding(padding: bubble.padding, child: barContent),
               ],
             ),
           )
@@ -240,26 +237,26 @@ class _BubbleNavBar extends StatelessWidget {
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
           child: AnimatedContainer(
-          duration: bubble.bubbleDuration,
-          curve: bubble.curveIn,
-          padding: EdgeInsets.all(bubble.bubbleItemSize),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? bubble.selectedBubbleBackgroundColor
-                : bubble.unSelectedBubbleBackgroundColor,
-            borderRadius: BorderRadius.circular(radius),
-          ),
-          child: isHorizontal
-              ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: _buildLabelIcons(index, isSelected, isHorizontal),
-                )
+            duration: bubble.bubbleDuration,
+            curve: bubble.curveIn,
+            padding: EdgeInsets.all(bubble.bubbleItemSize),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? bubble.selectedBubbleBackgroundColor
+                  : bubble.unSelectedBubbleBackgroundColor,
+              borderRadius: BorderRadius.circular(radius),
+            ),
+            child: isHorizontal
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: _buildLabelIcons(index, isSelected, isHorizontal),
+                  )
                 : Column(
                     mainAxisSize: MainAxisSize.min,
                     children: _buildLabelIcons(index, isSelected, isHorizontal),
-                ),
+                  ),
+          ),
         ),
-      ),
       );
     });
   }
@@ -299,8 +296,7 @@ class _BubbleNavBar extends StatelessWidget {
   }
 
   Widget _buildLabel(BubbleDecoration bubble, String label, bool isHorizontal) {
-    final displayLabel =
-        isHorizontal ? label : label.split('').join('\n');
+    final displayLabel = isHorizontal ? label : label.split('').join('\n');
     return Text(
       displayLabel,
       textAlign: TextAlign.center,

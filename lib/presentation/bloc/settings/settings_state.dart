@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../domain/entities/user_entity.dart' show ProfileVisibility, WhoCanMessage;
+import '../../../domain/entities/user_entity.dart'
+    show ProfileVisibility, WhoCanMessage;
 
 class SettingsState {
   const SettingsState({

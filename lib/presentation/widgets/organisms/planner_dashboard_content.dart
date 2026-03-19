@@ -22,10 +22,7 @@ import '../../bloc/unread_notifications/unread_notifications_state.dart';
 /// Dashboard content for event planner home: header, Post a Gig CTA,
 /// summary cards, Your Events, Recent Activity.
 class PlannerDashboardContent extends StatelessWidget {
-  const PlannerDashboardContent({
-    super.key,
-    required this.displayName,
-  });
+  const PlannerDashboardContent({super.key, required this.displayName});
 
   final String displayName;
 
@@ -33,7 +30,10 @@ class PlannerDashboardContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<PlannerDashboardCubit, PlannerDashboardState>(
       builder: (context, state) {
-        if (state.isLoading && state.events.isEmpty && state.recentActivities.isEmpty && state.error == null) {
+        if (state.isLoading &&
+            state.events.isEmpty &&
+            state.recentActivities.isEmpty &&
+            state.error == null) {
           return const PlannerDashboardSkeleton();
         }
         final cubit = context.read<PlannerDashboardCubit>();
@@ -55,40 +55,44 @@ class PlannerDashboardContent extends StatelessWidget {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 60),
                   child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                BlocBuilder<UnreadNotificationsCubit, UnreadNotificationsState>(
-                  builder: (context, unreadState) => _DashboardHeader(
-                    displayName: displayName,
-                    notificationCount: unreadState.unreadCount,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      BlocBuilder<
+                        UnreadNotificationsCubit,
+                        UnreadNotificationsState
+                      >(
+                        builder: (context, unreadState) => _DashboardHeader(
+                          displayName: displayName,
+                          notificationCount: unreadState.unreadCount,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _PostAGigCard(
+                        onTap: () => context.push<bool?>(AppRoutes.createEvent),
+                      ),
+                      const SizedBox(height: 20),
+                      _UnifiedSummaryCard(
+                        applicantsCount: state.applicantsCount,
+                        eventsCount: state.eventsCount,
+                        unreadCount: state.unreadCount,
+                      ),
+                      const SizedBox(height: 24),
+                      _YourEventsSection(
+                        events: state.events
+                            .where((e) => e.status == EventStatus.open)
+                            .toList(),
+                        pendingCountByEventId: state.pendingCountByEventId,
+                        onViewAll: () => context.go(AppRoutes.bookings),
+                      ),
+                      const SizedBox(height: 24),
+                      _RecentActivitySection(
+                        activities: state.recentActivities,
+                      ),
+                      const SizedBox(height: 36),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                _PostAGigCard(
-                  onTap: () =>
-                      context.push<bool?>(AppRoutes.createEvent),
-                ),
-                const SizedBox(height: 20),
-                _UnifiedSummaryCard(
-                  applicantsCount: state.applicantsCount,
-                  eventsCount: state.eventsCount,
-                  unreadCount: state.unreadCount,
-                ),
-                const SizedBox(height: 24),
-                _YourEventsSection(
-                  events: state.events
-                      .where((e) => e.status == EventStatus.open)
-                      .toList(),
-                  pendingCountByEventId: state.pendingCountByEventId,
-                  onViewAll: () => context.go(AppRoutes.bookings),
-                ),
-                const SizedBox(height: 24),
-                _RecentActivitySection(activities: state.recentActivities),
-                const SizedBox(height: 36),
-              ],
-            ),
-          ),
-        );
+              );
         return ConnectionErrorOverlay(
           hasError: state.error != null,
           error: state.error,
@@ -111,12 +115,27 @@ class _DashboardHeader extends StatelessWidget {
   final int notificationCount;
 
   static const List<String> _weekdays = [
-    'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY',
-    'SATURDAY', 'SUNDAY',
+    'MONDAY',
+    'TUESDAY',
+    'WEDNESDAY',
+    'THURSDAY',
+    'FRIDAY',
+    'SATURDAY',
+    'SUNDAY',
   ];
   static const List<String> _months = [
-    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-    'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+    'JAN',
+    'FEB',
+    'MAR',
+    'APR',
+    'MAY',
+    'JUN',
+    'JUL',
+    'AUG',
+    'SEP',
+    'OCT',
+    'NOV',
+    'DEC',
   ];
 
   @override
@@ -159,53 +178,52 @@ class _DashboardHeader extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                    Icon(
-                      AppIcons.notifications,
-                      size: 24,
-                      color: theme.colorScheme.onPrimaryContainer,
-                    ),
-                    if (notificationCount > 0)
-                      Positioned(
-                        right: -1,
-                        top: -1,
-                        child: Container(
-                          padding: notificationCount == 1
-                              ? EdgeInsets.zero
-                              : const EdgeInsets.symmetric(
-                                  horizontal: 5,
-                                  vertical: 2,
-                                ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.error,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: theme.colorScheme.surface,
-                              width: 1.5,
-                            ),
+                  Icon(
+                    AppIcons.notifications,
+                    size: 24,
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
+                  if (notificationCount > 0)
+                    Positioned(
+                      right: -1,
+                      top: -1,
+                      child: Container(
+                        padding: notificationCount == 1
+                            ? EdgeInsets.zero
+                            : const EdgeInsets.symmetric(
+                                horizontal: 5,
+                                vertical: 2,
+                              ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.error,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: theme.colorScheme.surface,
+                            width: 1.5,
                           ),
-                          constraints: BoxConstraints(
-                            minWidth: notificationCount == 1 ? 8 : 18,
-                            minHeight: notificationCount == 1 ? 8 : 18,
-                          ),
-                          child: notificationCount == 1
-                              ? null
-                              : Center(
-                                  child: Text(
-                                    notificationCount > 99
-                                        ? '99+'
-                                        : '$notificationCount',
-                                    style:
-                                        theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.onError,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                        ),
+                        constraints: BoxConstraints(
+                          minWidth: notificationCount == 1 ? 8 : 18,
+                          minHeight: notificationCount == 1 ? 8 : 18,
+                        ),
+                        child: notificationCount == 1
+                            ? null
+                            : Center(
+                                child: Text(
+                                  notificationCount > 99
+                                      ? '99+'
+                                      : '$notificationCount',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onError,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                        ),
+                              ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
+              ),
             ),
           ),
         ],
@@ -230,36 +248,36 @@ class _PostAGigCard extends StatelessWidget {
         borderRadius: AppBorders.borderRadius,
         child: Row(
           children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Post a Gig',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Post a Gig',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Find talent for your event.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Find talent for your event.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              FilledButton(
-                onPressed: onTap,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.all(12),
-                  minimumSize: const Size(48, 48),
-                  shape: const CircleBorder(),
-                ),
-                child: const Icon(AppIcons.add, size: 26),
+            ),
+            FilledButton(
+              onPressed: onTap,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.all(12),
+                minimumSize: const Size(48, 48),
+                shape: const CircleBorder(),
               ),
+              child: const Icon(AppIcons.add, size: 26),
+            ),
           ],
         ),
       ),
@@ -287,39 +305,39 @@ class _UnifiedSummaryCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
         children: [
-              Expanded(
-                child: _PlannerStatTile(
-                  icon: AppIcons.applicants,
-                  value: applicantsCount,
-                  label: 'Applicants',
-                ),
-              ),
-              Container(
-                width: 1,
-                height: 36,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-              ),
-              Expanded(
-                child: _PlannerStatTile(
-                  icon: AppIcons.event,
-                  value: eventsCount,
-                  label: 'Events',
-                ),
-              ),
-              Container(
-                width: 1,
-                height: 36,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-              ),
-              Expanded(
-                child: _PlannerStatTile(
-                  icon: AppIcons.unread,
-                  value: unreadCount,
-                  label: 'Unread',
-                ),
-              ),
+          Expanded(
+            child: _PlannerStatTile(
+              icon: AppIcons.applicants,
+              value: applicantsCount,
+              label: 'Applicants',
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 36,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+          Expanded(
+            child: _PlannerStatTile(
+              icon: AppIcons.event,
+              value: eventsCount,
+              label: 'Events',
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 36,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+          Expanded(
+            child: _PlannerStatTile(
+              icon: AppIcons.unread,
+              value: unreadCount,
+              label: 'Unread',
+            ),
+          ),
         ],
       ),
     );
@@ -353,11 +371,7 @@ class _PlannerStatTile extends StatelessWidget {
               color: colorScheme.secondary.withValues(alpha: 0.35),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              size: 18,
-              color: colorScheme.primary,
-            ),
+            child: Icon(icon, size: 18, color: colorScheme.primary),
           ),
           const SizedBox(height: 8),
           Text(
@@ -410,10 +424,7 @@ class _YourEventsSection extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            TextButton(
-              onPressed: onViewAll,
-              child: const Text('View All'),
-            ),
+            TextButton(onPressed: onViewAll, child: const Text('View All')),
           ],
         ),
         const SizedBox(height: 12),
@@ -426,7 +437,8 @@ class _YourEventsSection extends StatelessWidget {
                     child: EmptyStateDotted(
                       icon: AppIcons.event,
                       headline: 'No active events',
-                      description: 'Post a gig to get proposals from creatives.',
+                      description:
+                          'Post a gig to get proposals from creatives.',
                       compact: true,
                     ),
                   ),
@@ -437,12 +449,12 @@ class _YourEventsSection extends StatelessWidget {
                   separatorBuilder: (_, _) => const SizedBox(width: 12),
                   itemBuilder: (context, index) {
                     final event = events[index];
-                    final newCount =
-                        pendingCountByEventId[event.id] ?? 0;
+                    final newCount = pendingCountByEventId[event.id] ?? 0;
                     return _StageCard(
                       event: event,
                       newCount: newCount,
-                      onTap: () => context.push(AppRoutes.eventDetail(event.id)),
+                      onTap: () =>
+                          context.push(AppRoutes.eventDetail(event.id)),
                     );
                   },
                 ),
@@ -506,166 +518,176 @@ class _StageCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              clipBehavior: Clip.antiAlias,
-              children: [
-                Container(
-                  height: 110,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(AppBorders.radius),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                clipBehavior: Clip.antiAlias,
+                children: [
+                  Container(
+                    height: 110,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(AppBorders.radius),
+                      ),
+                    ),
+                    child: event.imageUrls.isNotEmpty
+                        ? ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(AppBorders.radius),
+                            ),
+                            child: CachedNetworkImage(
+                              imageUrl: event.imageUrls.first,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                            ),
+                          )
+                        : Icon(
+                            AppIcons.event,
+                            size: 40,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                  ),
+                  Positioned(
+                    top: 14,
+                    left: 6,
+                    right: 6,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surface.withValues(
+                                alpha: 0.95,
+                              ),
+                              borderRadius: BorderRadius.circular(
+                                AppBorders.radius,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  margin: const EdgeInsets.only(right: 6),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: _isPublished(event.status)
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                Text(
+                                  _statusLabel(event.status),
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  child: event.imageUrls.isNotEmpty
-                      ? ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(AppBorders.radius),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      event.title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Icon(
+                          AppIcons.date,
+                          size: 12,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(
+                            daysLeft,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          child: CachedNetworkImage(
-                            imageUrl: event.imageUrls.first,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
-                          ),
-                        )
-                      : Icon(
-                          AppIcons.event,
-                          size: 40,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(
+                          AppIcons.location,
+                          size: 12,
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
-                ),
-                Positioned(
-                  top: 14,
-                  left: 6,
-                  right: 6,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface.withValues(alpha: 0.95),
-                            borderRadius: BorderRadius.circular(AppBorders.radius),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                margin: const EdgeInsets.only(right: 6),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: _isPublished(event.status)
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              Text(
-                                _statusLabel(event.status),
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                        const SizedBox(width: 3),
+                        Expanded(
+                          child: Text(
+                            '$dateStr \u2022 $location',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontSize: 11,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    event.title,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      ],
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      Icon(
-                        AppIcons.date,
-                        size: 12,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 3),
-                      Expanded(
-                        child: Text(
-                          daysLeft,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(
+                          AppIcons.applicants,
+                          size: 12,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Icon(
-                        AppIcons.location,
-                        size: 12,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 3),
-                      Expanded(
-                        child: Text(
-                          '$dateStr \u2022 $location',
+                        const SizedBox(width: 3),
+                        Text(
+                          newCount == 1
+                              ? '1 applicant'
+                              : '$newCount applicants',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontSize: 11,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Icon(
-                        AppIcons.applicants,
-                        size: 12,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        newCount == 1
-                            ? '1 applicant'
-                            : '$newCount applicants',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
           ),
         ),
       ),
@@ -674,9 +696,7 @@ class _StageCard extends StatelessWidget {
 }
 
 class _RecentActivitySection extends StatelessWidget {
-  const _RecentActivitySection({
-    required this.activities,
-  });
+  const _RecentActivitySection({required this.activities});
 
   final List<PlannerDashboardActivityItem> activities;
 
@@ -754,11 +774,7 @@ class _ActivityTile extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          AppIcons.proposal,
-          size: 24,
-          color: theme.colorScheme.primary,
-        ),
+        Icon(AppIcons.proposal, size: 24, color: theme.colorScheme.primary),
         const SizedBox(width: 12),
         Expanded(
           child: Column(

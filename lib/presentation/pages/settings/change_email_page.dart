@@ -101,8 +101,8 @@ class _ChangeEmailViewState extends State<_ChangeEmailView> {
                     'We will send a verification link to your new email. '
                     'You may need to sign in with Google again to confirm.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   FilledButton(
@@ -111,8 +111,8 @@ class _ChangeEmailViewState extends State<_ChangeEmailView> {
                         : () {
                             if (_formKey.currentState?.validate() == true) {
                               context.read<ChangeEmailCubit>().submit(
-                                    _newEmailController.text.trim(),
-                                  );
+                                _newEmailController.text.trim(),
+                              );
                             }
                           },
                     child: state.isSubmitting

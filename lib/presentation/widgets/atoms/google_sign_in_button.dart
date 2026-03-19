@@ -34,9 +34,7 @@ class GoogleSignInButton extends StatelessWidget {
           minimumSize: Size(double.infinity, AppBorders.inputButtonHeight),
           padding: const EdgeInsets.symmetric(horizontal: 16),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppBorders.borderRadius,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: AppBorders.borderRadius),
           side: BorderSide(
             color: isDark
                 ? Colors.white24

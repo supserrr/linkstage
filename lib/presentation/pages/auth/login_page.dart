@@ -45,8 +45,8 @@ class _LoginViewState extends State<_LoginView> {
   void _sendEmailLink() {
     if (!_formKey.currentState!.validate()) return;
     context.read<AuthBloc>().add(
-          AuthSendSignInLinkRequested(email: _emailController.text.trim()),
-        );
+      AuthSendSignInLinkRequested(email: _emailController.text.trim()),
+    );
   }
 
   void _signInWithGoogle() {
@@ -81,9 +81,7 @@ class _LoginViewState extends State<_LoginView> {
               Expanded(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxHeight: illustrationHeight),
-                  child: const Center(
-                    child: AuthSignIllustration(),
-                  ),
+                  child: const Center(child: AuthSignIllustration()),
                 ),
               ),
               Padding(
@@ -98,10 +96,8 @@ class _LoginViewState extends State<_LoginView> {
                       children: [
                         Text(
                           'Sign In or Create Account',
-                          style:
-                              Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.headlineLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
                         ),
                         SizedBox(height: beforeInputs),
@@ -154,7 +150,9 @@ class _LoginViewState extends State<_LoginView> {
                                   TextButton(
                                     onPressed: loading
                                         ? null
-                                        : () => setState(() => _showEmailForm = false),
+                                        : () => setState(
+                                            () => _showEmailForm = false,
+                                          ),
                                     child: const Text('Back'),
                                   ),
                                 ] else
@@ -162,7 +160,9 @@ class _LoginViewState extends State<_LoginView> {
                                     label: 'Continue with Email',
                                     onPressed: loading
                                         ? null
-                                        : () => setState(() => _showEmailForm = true),
+                                        : () => setState(
+                                            () => _showEmailForm = true,
+                                          ),
                                     isLoading: false,
                                   ),
                               ],

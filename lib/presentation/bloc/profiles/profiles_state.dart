@@ -9,23 +9,24 @@ class ProfilesState {
   });
 
   const ProfilesState.initial()
-      : status = ProfilesStatus.initial,
-        profiles = const [],
-        searchQuery = '',
-        error = null;
+    : status = ProfilesStatus.initial,
+      profiles = const [],
+      searchQuery = '',
+      error = null;
 
   const ProfilesState.loading({this.profiles = const [], this.searchQuery = ''})
-      : status = ProfilesStatus.loading,
-        error = null;
+    : status = ProfilesStatus.loading,
+      error = null;
 
-  ProfilesState.loaded(
-    this.profiles, {
+  ProfilesState.loaded(this.profiles, {this.searchQuery = ''})
+    : status = ProfilesStatus.loaded,
+      error = null;
+
+  ProfilesState.error(
+    this.error, {
+    this.profiles = const [],
     this.searchQuery = '',
-  })  : status = ProfilesStatus.loaded,
-        error = null;
-
-  ProfilesState.error(this.error, {this.profiles = const [], this.searchQuery = ''})
-      : status = ProfilesStatus.error;
+  }) : status = ProfilesStatus.error;
 
   final ProfilesStatus status;
   final List<ProfileEntity> profiles;
@@ -41,7 +42,6 @@ class ProfilesState {
       return un.contains(q) || dn.contains(q);
     }).toList();
   }
-
 }
 
 enum ProfilesStatus { initial, loading, loaded, error }

@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../domain/entities/user_entity.dart' show ProfileVisibility, WhoCanMessage;
+import '../../../domain/entities/user_entity.dart'
+    show ProfileVisibility, WhoCanMessage;
 import '../../bloc/settings/settings_cubit.dart';
 import '../../bloc/settings/settings_state.dart';
 
 /// Shared form for privacy settings: profile visibility, who can message, and
 /// show online status. Used by both the privacy settings page and settings sheet.
 class PrivacySettingsForm extends StatelessWidget {
-  const PrivacySettingsForm({
-    super.key,
-    this.sectionHeaderStyle,
-  });
+  const PrivacySettingsForm({super.key, this.sectionHeaderStyle});
 
   /// Optional custom style for section headers. If null, uses theme defaults.
   final TextStyle? sectionHeaderStyle;
@@ -20,7 +18,8 @@ class PrivacySettingsForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final headerStyle = sectionHeaderStyle ??
+    final headerStyle =
+        sectionHeaderStyle ??
         theme.textTheme.labelSmall?.copyWith(
           fontWeight: FontWeight.w600,
           color: colorScheme.onSurfaceVariant,
@@ -34,10 +33,7 @@ class PrivacySettingsForm extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Text(
-                'Profile visibility',
-                style: headerStyle,
-              ),
+              child: Text('Profile visibility', style: headerStyle),
             ),
             RadioGroup<ProfileVisibility>(
               groupValue: state.profileVisibility,
@@ -59,9 +55,7 @@ class PrivacySettingsForm extends StatelessWidget {
                   ),
                   RadioListTile<ProfileVisibility>(
                     title: const Text('Connections only'),
-                    subtitle: const Text(
-                      'Only people you\'ve connected with',
-                    ),
+                    subtitle: const Text('Only people you\'ve connected with'),
                     value: ProfileVisibility.connectionsOnly,
                   ),
                   RadioListTile<ProfileVisibility>(
@@ -75,10 +69,7 @@ class PrivacySettingsForm extends StatelessWidget {
             const Divider(),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(
-                'Who can message you',
-                style: headerStyle,
-              ),
+              child: Text('Who can message you', style: headerStyle),
             ),
             RadioGroup<WhoCanMessage>(
               groupValue: state.whoCanMessage,
@@ -93,16 +84,12 @@ class PrivacySettingsForm extends StatelessWidget {
                 children: [
                   RadioListTile<WhoCanMessage>(
                     title: const Text('Everyone'),
-                    subtitle: const Text(
-                      'Any user can send you messages',
-                    ),
+                    subtitle: const Text('Any user can send you messages'),
                     value: WhoCanMessage.everyone,
                   ),
                   RadioListTile<WhoCanMessage>(
                     title: const Text('People you\'ve worked with'),
-                    subtitle: const Text(
-                      'Only after a completed booking',
-                    ),
+                    subtitle: const Text('Only after a completed booking'),
                     value: WhoCanMessage.workedWith,
                   ),
                   RadioListTile<WhoCanMessage>(
@@ -116,9 +103,7 @@ class PrivacySettingsForm extends StatelessWidget {
             const Divider(),
             SwitchListTile(
               title: const Text('Show when you\'re active'),
-              subtitle: const Text(
-                'Let others see when you were last active',
-              ),
+              subtitle: const Text('Let others see when you were last active'),
               value: state.showOnlineStatus,
               onChanged: (v) =>
                   context.read<SettingsCubit>().setShowOnlineStatus(v),

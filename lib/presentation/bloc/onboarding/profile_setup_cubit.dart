@@ -37,20 +37,21 @@ class ProfileSetupCubit extends Cubit<ProfileSetupState> {
       emit(draft);
       return;
     }
-    emit(state.copyWith(
-      displayName: _user.displayName ?? '',
-      isLoading: false,
-    ));
+    emit(
+      state.copyWith(displayName: _user.displayName ?? '', isLoading: false),
+    );
   }
 
   void setUsername(String value) => emit(state.copyWith(username: value));
 
-  void setPhoto(XFile? file) => emit(state.copyWith(
-        photoFile: file,
-        clearPhotoFile: file == null,
-        clearPhotoUrl: file == null,
-        clearPhotoUploadError: file == null,
-      ));
+  void setPhoto(XFile? file) => emit(
+    state.copyWith(
+      photoFile: file,
+      clearPhotoFile: file == null,
+      clearPhotoUrl: file == null,
+      clearPhotoUploadError: file == null,
+    ),
+  );
 
   /// Uploads the selected photo. Returns true on success. Caller should navigate
   /// to next step on success.
@@ -60,26 +61,24 @@ class ProfileSetupCubit extends Cubit<ProfileSetupState> {
     }
     final userId = _authRepository.currentUser?.id ?? _user.id;
     if (userId.isEmpty) {
-      emit(state.copyWith(
-        photoUploadError: 'Please sign in again to upload a photo.',
-        isUploadingPhoto: false,
-      ));
+      emit(
+        state.copyWith(
+          photoUploadError: 'Please sign in again to upload a photo.',
+          isUploadingPhoto: false,
+        ),
+      );
       return false;
     }
-    emit(state.copyWith(
-      isUploadingPhoto: true,
-      clearPhotoUploadError: true,
-    ));
+    emit(state.copyWith(isUploadingPhoto: true, clearPhotoUploadError: true));
     try {
-      final url = await _storage.uploadProfilePhoto(
-        state.photoFile!,
-        userId,
+      final url = await _storage.uploadProfilePhoto(state.photoFile!, userId);
+      emit(
+        state.copyWith(
+          photoUrl: url,
+          isUploadingPhoto: false,
+          clearPhotoUploadError: true,
+        ),
       );
-      emit(state.copyWith(
-        photoUrl: url,
-        isUploadingPhoto: false,
-        clearPhotoUploadError: true,
-      ));
       return true;
     } catch (e, stackTrace) {
       if (kDebugMode) {
@@ -87,19 +86,25 @@ class ProfileSetupCubit extends Cubit<ProfileSetupState> {
         debugPrint(stackTrace.toString());
       }
       final message = e.toString().replaceAll('Exception:', '').trim();
-      emit(state.copyWith(
-        photoUploadError: message.isNotEmpty ? message : 'Upload failed. Please try again.',
-        isUploadingPhoto: false,
-      ));
+      emit(
+        state.copyWith(
+          photoUploadError: message.isNotEmpty
+              ? message
+              : 'Upload failed. Please try again.',
+          isUploadingPhoto: false,
+        ),
+      );
       return false;
     }
   }
 
-  void clearPhotoAndError() => emit(state.copyWith(
-        clearPhotoFile: true,
-        clearPhotoUrl: true,
-        clearPhotoUploadError: true,
-      ));
+  void clearPhotoAndError() => emit(
+    state.copyWith(
+      clearPhotoFile: true,
+      clearPhotoUrl: true,
+      clearPhotoUploadError: true,
+    ),
+  );
 
   void setDisplayName(String value) => emit(state.copyWith(displayName: value));
 
@@ -131,7 +136,9 @@ class ProfileSetupCubit extends Cubit<ProfileSetupState> {
         email: _user.email,
         emailVerified: _user.emailVerified,
         username: username,
-        displayName: state.displayName.isNotEmpty ? state.displayName : username,
+        displayName: state.displayName.isNotEmpty
+            ? state.displayName
+            : username,
         photoUrl: photoUrl,
         role: _user.role,
       );
@@ -145,18 +152,23 @@ class ProfileSetupCubit extends Cubit<ProfileSetupState> {
         category: state.category,
         priceRange: state.priceRange,
         location: state.location,
-        displayName:
-            state.displayName.isNotEmpty ? state.displayName : username,
+        displayName: state.displayName.isNotEmpty
+            ? state.displayName
+            : username,
       );
       await _profileRepository.upsertProfile(profile);
 
       emit(state.copyWith(isLoading: false, success: true));
     } catch (e) {
       final message = e.toString().replaceAll('Exception:', '').trim();
-      emit(state.copyWith(
-        isLoading: false,
-        error: message.isNotEmpty ? message : 'Something went wrong. Please try again.',
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: message.isNotEmpty
+              ? message
+              : 'Something went wrong. Please try again.',
+        ),
+      );
     }
   }
 }

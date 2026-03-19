@@ -94,9 +94,9 @@ class _SettingsViewState extends State<_SettingsView> {
                         const SizedBox(height: 20),
                         _SignOutTile(
                           onTap: () {
-                            context
-                                .read<AuthBloc>()
-                                .add(AuthSignOutRequested());
+                            context.read<AuthBloc>().add(
+                              AuthSignOutRequested(),
+                            );
                           },
                         ),
                       ]),
@@ -120,7 +120,8 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final photoUrl = (user?.photoUrl as String?) ??
+    final photoUrl =
+        (user?.photoUrl as String?) ??
         sl<AuthRepository>().currentUser?.photoUrl;
     final displayName = user?.displayName ?? user?.email ?? 'User';
     final email = user?.email ?? '—';
@@ -165,17 +166,18 @@ class _ProfileHeader extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           displayName.isNotEmpty ? displayName : 'User',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ) ??
+          style:
+              Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold) ??
               const TextStyle(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
           email,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -218,8 +220,8 @@ class _AccountSettingsCard extends StatelessWidget {
               value: state.themeMode == ThemeMode.dark,
               onChanged: (v) {
                 context.read<SettingsCubit>().setThemeMode(
-                      v ? ThemeMode.dark : ThemeMode.light,
-                    );
+                  v ? ThemeMode.dark : ThemeMode.light,
+                );
               },
             ),
           ),
@@ -260,7 +262,6 @@ class _AccountSettingsCard extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class _SettingsRow extends StatelessWidget {
@@ -300,31 +301,31 @@ class _SettingsRow extends StatelessWidget {
                 child: Text(
                   label,
                   style: theme.textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSurface,
-                      ),
+                    color: colorScheme.onSurface,
+                  ),
                 ),
               ),
               if (trailing != null)
                 trailing!
               else ...[
-              if (value != null) ...[
-                Text(
-                  value!,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                ),
-                if (onTap != null) const SizedBox(width: 8),
+                if (value != null) ...[
+                  Text(
+                    value!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  if (onTap != null) const SizedBox(width: 8),
+                ],
+                if (onTap != null)
+                  Icon(
+                    Icons.chevron_right,
+                    color: colorScheme.onSurfaceVariant,
+                    size: 22,
+                  ),
               ],
-              if (onTap != null)
-                Icon(
-                  Icons.chevron_right,
-                  color: colorScheme.onSurfaceVariant,
-                  size: 22,
-                ),
             ],
-          ],
-        ),
+          ),
         ),
       ),
     );
@@ -354,10 +355,7 @@ class _SignOutTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FilledButton(
-      onPressed: onTap,
-      child: const Text('Sign out'),
-    );
+    return FilledButton(onPressed: onTap, child: const Text('Sign out'));
   }
 }
 
@@ -390,30 +388,35 @@ void _showLanguagePicker(BuildContext context, SettingsState state) {
     builder: (ctx) => GlassBottomSheet(
       child: SafeArea(
         child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              'Language',
-              style: Theme.of(ctx).textTheme.titleMedium,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Language',
+                style: Theme.of(ctx).textTheme.titleMedium,
+              ),
             ),
-          ),
-          ...languages.map((l) => ListTile(
+            ...languages.map(
+              (l) => ListTile(
                 title: Text(l.$2),
                 trailing: state.language == l.$1
-                    ? Icon(Icons.check, color: Theme.of(ctx).colorScheme.primary)
+                    ? Icon(
+                        Icons.check,
+                        color: Theme.of(ctx).colorScheme.primary,
+                      )
                     : null,
                 onTap: () {
                   cubit.setLanguage(l.$1);
                   Navigator.pop(ctx);
                 },
-              )),
-        ],
+              ),
+            ),
+          ],
+        ),
       ),
     ),
-  ),
-);
+  );
 }
 
 void _showChangeEmailSheet(BuildContext context, String? currentEmail) {
@@ -449,13 +452,9 @@ void _showChangeUsernameSheet(BuildContext context, dynamic user) {
     isScrollControlled: true,
     builder: (ctx) => GlassBottomSheet(
       child: BlocProvider(
-        create: (_) => ChangeUsernameCubit(
-          sl<ChangeUsernameUseCase>(),
-          userEntity,
-        ),
-        child: _ChangeUsernameSheetContent(
-          onClose: () => Navigator.pop(ctx),
-        ),
+        create: (_) =>
+            ChangeUsernameCubit(sl<ChangeUsernameUseCase>(), userEntity),
+        child: _ChangeUsernameSheetContent(onClose: () => Navigator.pop(ctx)),
       ),
     ),
   );
@@ -561,8 +560,8 @@ class _ChangeEmailSheetContentState extends State<_ChangeEmailSheetContent> {
                     Text(
                       'We will send a verification link to your new email.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     FilledButton(
@@ -571,8 +570,8 @@ class _ChangeEmailSheetContentState extends State<_ChangeEmailSheetContent> {
                           : () {
                               if (_formKey.currentState?.validate() == true) {
                                 context.read<ChangeEmailCubit>().submit(
-                                      _newEmailController.text.trim(),
-                                    );
+                                  _newEmailController.text.trim(),
+                                );
                               }
                             },
                       child: state.isSubmitting
@@ -607,7 +606,8 @@ class _ChangeUsernameSheetContent extends StatefulWidget {
       _ChangeUsernameSheetContentState();
 }
 
-class _ChangeUsernameSheetContentState extends State<_ChangeUsernameSheetContent> {
+class _ChangeUsernameSheetContentState
+    extends State<_ChangeUsernameSheetContent> {
   final _controller = TextEditingController();
   Timer? _debounce;
 
@@ -694,8 +694,8 @@ class _ChangeUsernameSheetContentState extends State<_ChangeUsernameSheetContent
                     Text(
                       cooldownMessage,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ),
                   ],
                   const SizedBox(height: 16),
@@ -726,7 +726,8 @@ class _ChangeUsernameSheetContentState extends State<_ChangeUsernameSheetContent
                   ),
                   const SizedBox(height: 24),
                   FilledButton(
-                    onPressed: canChange &&
+                    onPressed:
+                        canChange &&
                             !state.isSubmitting &&
                             state.isAvailable == true &&
                             _controller.text.trim().length >= 3
@@ -774,10 +775,7 @@ class _PrivacySheetContent extends StatelessWidget {
           children: [
             Padding(
               padding: const EdgeInsets.all(24),
-              child: Text(
-                'Privacy',
-                style: theme.textTheme.titleMedium,
-              ),
+              child: Text('Privacy', style: theme.textTheme.titleMedium),
             ),
             const PrivacySettingsForm(),
           ],
@@ -799,34 +797,33 @@ void _showContactSupportSheet(BuildContext context) {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            Text(
-              'Contact Support',
-              style: Theme.of(ctx).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Get help from our support team.',
-              style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(ctx).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: () async {
-                final uri = Uri.parse('mailto:support@linkstage.app');
-                if (await canLaunchUrl(uri)) {
-                  await launchUrl(uri);
-                }
-                if (ctx.mounted) Navigator.pop(ctx);
-              },
-              icon: const Icon(Icons.email_outlined),
-              label: const Text('Email support'),
-            ),
-          ],
+              Text(
+                'Contact Support',
+                style: Theme.of(ctx).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Get help from our support team.',
+                style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: () async {
+                  final uri = Uri.parse('mailto:support@linkstage.app');
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri);
+                  }
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+                icon: const Icon(Icons.email_outlined),
+                label: const Text('Email support'),
+              ),
+            ],
           ),
         ),
       ),
     ),
   );
 }
-

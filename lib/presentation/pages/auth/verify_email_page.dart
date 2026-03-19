@@ -34,9 +34,7 @@ class VerifyEmailPage extends StatelessWidget {
               Expanded(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxHeight: 200),
-                  child: const Center(
-                    child: AuthSignIllustration(),
-                  ),
+                  child: const Center(child: AuthSignIllustration()),
                 ),
               ),
               Padding(
@@ -45,12 +43,14 @@ class VerifyEmailPage extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   child: isLinkSentFlow
                       ? _LinkSentView(email: email)
-                      : _UnverifiedView(onSignOut: () async {
-                          await auth.signOut();
-                          if (context.mounted) {
-                            context.go(AppRoutes.login);
-                          }
-                        }),
+                      : _UnverifiedView(
+                          onSignOut: () async {
+                            await auth.signOut();
+                            if (context.mounted) {
+                              context.go(AppRoutes.login);
+                            }
+                          },
+                        ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -89,10 +89,9 @@ class _LinkSentView extends StatelessWidget {
           children: [
             Text(
               'Check your email',
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -108,8 +107,8 @@ class _LinkSentView extends StatelessWidget {
                   ? null
                   : () {
                       context.read<AuthBloc>().add(
-                            AuthSendSignInLinkRequested(email: email),
-                          );
+                        AuthSendSignInLinkRequested(email: email),
+                      );
                     },
               isLoading: loading,
             ),
@@ -138,10 +137,9 @@ class _UnverifiedView extends StatelessWidget {
       children: [
         Text(
           'Verify your email',
-          style: Theme.of(context)
-              .textTheme
-              .headlineLarge
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
@@ -151,10 +149,7 @@ class _UnverifiedView extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
-        AppButton(
-          label: 'Sign out',
-          onPressed: onSignOut,
-        ),
+        AppButton(label: 'Sign out', onPressed: onSignOut),
       ],
     );
   }

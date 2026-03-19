@@ -114,68 +114,66 @@ class _FollowingPageState extends State<FollowingPage> {
           ? ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: 5,
-              itemBuilder: (context, index) => const FollowingPlannerCardSkeleton(),
+              itemBuilder: (context, index) =>
+                  const FollowingPlannerCardSkeleton(),
             )
           : _error != null && _planners.isEmpty
-              ? ConnectionErrorOverlay(
-                  hasError: true,
-                  error: _error,
-                  onRefresh: _load,
-                  onBack: () => context.pop(),
-                  child: const SizedBox.shrink(),
-                )
-              : _planners.isEmpty
-                  ? SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight:
-                              MediaQuery.sizeOf(context).height - 200,
-                        ),
-                        child: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24),
-                            child: EmptyStateDotted(
-                              icon: Icons.person_add_outlined,
-                              headline: 'No planners followed yet',
-                              description:
-                                  'Follow event planners from their events or profiles to see them here',
-                              primaryLabel: 'Browse events',
-                              onPrimaryPressed: () =>
-                                  context.go(AppRoutes.explore),
-                            ),
-                          ),
-                        ),
-                      ),
-                    )
-                  : CustomMaterialIndicator(
-                      onRefresh: _load,
-                      backgroundColor: Colors.transparent,
-                      elevation: 0,
-                      useMaterialContainer: false,
-                      indicatorBuilder: (context, controller) => Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: LoadingAnimationWidget.threeRotatingDots(
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 40,
-                        ),
-                      ),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _planners.length,
-                        itemBuilder: (context, index) {
-                          final planner = _planners[index];
-                          return _FollowingPlannerCard(
-                            planner: planner,
-                            onTap: () => context.push(
-                              AppRoutes.plannerProfileView(planner.userId),
-                            ),
-                            onUnfollow: () => _unfollow(planner.userId),
-                          );
-                        },
-                      ),
+          ? ConnectionErrorOverlay(
+              hasError: true,
+              error: _error,
+              onRefresh: _load,
+              onBack: () => context.pop(),
+              child: const SizedBox.shrink(),
+            )
+          : _planners.isEmpty
+          ? SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.sizeOf(context).height - 200,
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: EmptyStateDotted(
+                      icon: Icons.person_add_outlined,
+                      headline: 'No planners followed yet',
+                      description:
+                          'Follow event planners from their events or profiles to see them here',
+                      primaryLabel: 'Browse events',
+                      onPrimaryPressed: () => context.go(AppRoutes.explore),
                     ),
+                  ),
+                ),
+              ),
+            )
+          : CustomMaterialIndicator(
+              onRefresh: _load,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              useMaterialContainer: false,
+              indicatorBuilder: (context, controller) => Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: LoadingAnimationWidget.threeRotatingDots(
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 40,
+                ),
+              ),
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _planners.length,
+                itemBuilder: (context, index) {
+                  final planner = _planners[index];
+                  return _FollowingPlannerCard(
+                    planner: planner,
+                    onTap: () => context.push(
+                      AppRoutes.plannerProfileView(planner.userId),
+                    ),
+                    onUnfollow: () => _unfollow(planner.userId),
+                  );
+                },
+              ),
+            ),
     );
   }
 }
@@ -197,8 +195,7 @@ class _FollowingPlannerCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final name = planner.displayName ?? 'Event Planner';
     final role = planner.role ?? 'Event Planner';
-    final location =
-        planner.location.isNotEmpty ? planner.location : '—';
+    final location = planner.location.isNotEmpty ? planner.location : '—';
     final eventTypesStr = planner.eventTypes.isNotEmpty
         ? planner.eventTypes.take(3).join(', ')
         : null;
@@ -213,93 +210,93 @@ class _FollowingPlannerCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: AppBorders.borderRadius,
         child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(imageRadius),
-                child: SizedBox(
-                  width: imageSize,
-                  height: imageSize,
-                  child: planner.photoUrl != null && planner.photoUrl!.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: planner.photoUrl!,
-                          fit: BoxFit.cover,
-                        )
-                      : ColoredBox(
-                          color: colorScheme.surfaceContainerHighest,
-                          child: Icon(
-                            AppIcons.person,
-                            size: 36,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      role,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (eventTypesStr != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        eventTypesStr,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          AppIcons.location,
-                          size: 14,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(imageRadius),
+              child: SizedBox(
+                width: imageSize,
+                height: imageSize,
+                child: planner.photoUrl != null && planner.photoUrl!.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: planner.photoUrl!,
+                        fit: BoxFit.cover,
+                      )
+                    : ColoredBox(
+                        color: colorScheme.surfaceContainerHighest,
+                        child: Icon(
+                          AppIcons.person,
+                          size: 36,
                           color: colorScheme.onSurfaceVariant,
                         ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            location,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                      ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    name,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    role,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (eventTypesStr != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      eventTypesStr,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        AppIcons.location,
+                        size: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          location,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              OutlinedButton(
-                onPressed: onUnfollow,
-                child: const Text('Unfollow'),
-              ),
-            ],
+            ),
+            const SizedBox(width: 12),
+            OutlinedButton(
+              onPressed: onUnfollow,
+              child: const Text('Unfollow'),
+            ),
+          ],
         ),
       ),
     );

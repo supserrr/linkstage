@@ -33,23 +33,26 @@ class CreativeDashboardState {
   final List<ProfileEntity> fellowCreatives;
   final Map<String, int> pendingCountByEventId;
   final Set<String> savedEventIds;
+
   /// Resolved list of saved events (for display in Saved section).
   final List<EventEntity> savedEvents;
   final Set<String> savedCreativeIds;
+
   /// Resolved list of saved creative profiles.
   final List<ProfileEntity> savedCreatives;
+
   /// Top open events recommended for this creative (skills/location match).
   final List<EventEntity> recommendedForYouEvents;
   final int applicationsCount;
   final int gigsCount;
   final int followedPlannersCount;
+
   /// Event IDs where this creative has an accepted booking (for location visibility).
   final Set<String> acceptedEventIds;
   final bool isLoading;
   final String? error;
 
-  String get displayName =>
-      profile?.displayName ?? '';
+  String get displayName => profile?.displayName ?? '';
 
   /// Role label for "For: [Role]" (e.g. "Jazz Vocalist", "DJ").
   String? get roleLabel {

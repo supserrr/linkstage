@@ -68,9 +68,7 @@ class _MessagesPageState extends State<MessagesPage> {
     if (currentUser == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Chat')),
-        body: const Center(
-          child: Text('Sign in to view conversations'),
-        ),
+        body: const Center(child: Text('Sign in to view conversations')),
       );
     }
 
@@ -81,7 +79,9 @@ class _MessagesPageState extends State<MessagesPage> {
       );
     }
 
-    final stream = sl<ConversationRepository>().watchConversations(currentUser.id);
+    final stream = sl<ConversationRepository>().watchConversations(
+      currentUser.id,
+    );
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -106,7 +106,11 @@ class _MessagesPageState extends State<MessagesPage> {
               focusNode: _searchFocusNode,
               decoration: InputDecoration(
                 hintText: 'Search conversations',
-                prefixIcon: Icon(AppIcons.search, size: 22, color: colorScheme.onSurfaceVariant),
+                prefixIcon: Icon(
+                  AppIcons.search,
+                  size: 22,
+                  color: colorScheme.onSurfaceVariant,
+                ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
@@ -116,7 +120,9 @@ class _MessagesPageState extends State<MessagesPage> {
                       )
                     : null,
                 filled: true,
-                fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                fillColor: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.6,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: AppBorders.borderRadius,
                   borderSide: BorderSide(
@@ -138,7 +144,10 @@ class _MessagesPageState extends State<MessagesPage> {
                     width: 1.5,
                   ),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 isDense: true,
               ),
               textInputAction: TextInputAction.search,
@@ -198,14 +207,16 @@ class _MessagesPageState extends State<MessagesPage> {
                       child: ListView.builder(
                         physics: const AlwaysScrollableScrollPhysics(),
                         itemCount: 8,
-                        itemBuilder: (context, index) => const ConversationItemSkeleton(),
+                        itemBuilder: (context, index) =>
+                            const ConversationItemSkeleton(),
                       ),
                     );
                   }
                   if (!snapshot.hasData) {
                     return ListView.builder(
                       itemCount: 8,
-                      itemBuilder: (context, index) => const ConversationItemSkeleton(),
+                      itemBuilder: (context, index) =>
+                          const ConversationItemSkeleton(),
                     );
                   }
                   var list = snapshot.data!
@@ -226,19 +237,25 @@ class _MessagesPageState extends State<MessagesPage> {
                             physics: const AlwaysScrollableScrollPhysics(),
                             child: ConstrainedBox(
                               constraints: BoxConstraints(
-                                minHeight: MediaQuery.sizeOf(context).height - 220,
+                                minHeight:
+                                    MediaQuery.sizeOf(context).height - 220,
                               ),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 24),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                ),
                                 child: EmptyStateIllustrated(
-                                  assetPathDark: 'assets/images/no_chats_empty_dark.svg',
-                                  assetPathLight: 'assets/images/no_chats_empty_light.svg',
+                                  assetPathDark:
+                                      'assets/images/no_chats_empty_dark.svg',
+                                  assetPathLight:
+                                      'assets/images/no_chats_empty_light.svg',
                                   headline:
                                       "No conversations yet — let's find someone to connect with!",
                                   description:
                                       'Search for creatives or planners and start a conversation.',
                                   primaryLabel: 'Search',
-                                  onPrimaryPressed: () => context.go(AppRoutes.explore),
+                                  onPrimaryPressed: () =>
+                                      context.go(AppRoutes.explore),
                                   illustrationHeight: 200,
                                 ),
                               ),
@@ -254,7 +271,8 @@ class _MessagesPageState extends State<MessagesPage> {
                       return ConversationListItem(
                         conversation: conversation,
                         showDivider: true,
-                        onTap: () => context.push(AppRoutes.chat(conversation.id)),
+                        onTap: () =>
+                            context.push(AppRoutes.chat(conversation.id)),
                       );
                     },
                   );
@@ -275,7 +293,9 @@ class _MessagesPageState extends State<MessagesPage> {
           Icon(
             AppIcons.search,
             size: 48,
-            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
           ),
           const SizedBox(height: 16),
           Text(
@@ -290,5 +310,3 @@ class _MessagesPageState extends State<MessagesPage> {
     );
   }
 }
-
-

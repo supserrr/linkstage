@@ -164,8 +164,9 @@ class _ProfilePhotoSectionState extends State<_ProfilePhotoSection> {
           children: [
             CircleAvatar(
               radius: radius,
-              backgroundColor:
-                  Theme.of(context).colorScheme.surfaceContainerHighest,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
               backgroundImage: photoUrl != null && photoUrl.isNotEmpty
                   ? CachedNetworkImageProvider(photoUrl)
                   : null,
@@ -186,9 +187,9 @@ class _ProfilePhotoSectionState extends State<_ProfilePhotoSection> {
                         width: widget.compact ? 16 : 24,
                         height: widget.compact ? 16 : 24,
                         child: LoadingAnimationWidget.stretchedDots(
-                        color: Theme.of(context).colorScheme.primary,
-                        size: widget.compact ? 16 : 24,
-                      ),
+                          color: Theme.of(context).colorScheme.primary,
+                          size: widget.compact ? 16 : 24,
+                        ),
                       )
                     : Icon(Icons.camera_alt, size: widget.compact ? 18 : 24),
                 onPressed: _isUploading ? null : _changePhoto,

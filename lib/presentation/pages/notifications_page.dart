@@ -116,11 +116,7 @@ class NotificationsPage extends StatelessWidget {
     final role = user.role ?? UserRole.creativeProfessional;
 
     return BlocProvider(
-      create: (_) => NotificationsCubit(
-        sl(),
-        user.id,
-        role,
-      ),
+      create: (_) => NotificationsCubit(sl(), user.id, role),
       child: const _NotificationsView(),
     );
   }
@@ -145,101 +141,102 @@ class _NotificationsView extends StatelessWidget {
       child: Scaffold(
         backgroundColor: colorScheme.surface,
         appBar: AppBar(
-        leading: BackButton(
-          onPressed: () => context.go(AppRoutes.home),
-        ),
-        title: Text(
-          l10n.notifications,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.3,
+          leading: BackButton(onPressed: () => context.go(AppRoutes.home)),
+          title: Text(
+            l10n.notifications,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.3,
+            ),
           ),
+          centerTitle: true,
+          scrolledUnderElevation: 1,
+          actions: [
+            BlocBuilder<NotificationsCubit, NotificationsState>(
+              buildWhen: (a, b) =>
+                  a.notifications != b.notifications || a.readIds != b.readIds,
+              builder: (context, state) {
+                final hasUnread = state.notifications.any(
+                  (n) => !state.readIds.contains(n.id),
+                );
+                if (!hasUnread) return const SizedBox.shrink();
+                return TextButton(
+                  onPressed: () =>
+                      context.read<NotificationsCubit>().markAllAsRead(),
+                  child: Text(l10n.markAllRead),
+                );
+              },
+            ),
+          ],
         ),
-        centerTitle: true,
-        scrolledUnderElevation: 1,
-        actions: [
-          BlocBuilder<NotificationsCubit, NotificationsState>(
-            buildWhen: (a, b) =>
-                a.notifications != b.notifications ||
-                a.readIds != b.readIds,
-            builder: (context, state) {
-              final hasUnread = state.notifications.any(
-                (n) => !state.readIds.contains(n.id),
-              );
-              if (!hasUnread) return const SizedBox.shrink();
-              return TextButton(
-                onPressed: () =>
-                    context.read<NotificationsCubit>().markAllAsRead(),
-                child: Text(l10n.markAllRead),
-              );
-            },
-          ),
-        ],
-      ),
-      body: BlocBuilder<NotificationsCubit, NotificationsState>(
-        builder: (context, state) {
-          if (!state.hasLoaded && state.error == null) {
-            return const NotificationListSkeleton();
-          }
+        body: BlocBuilder<NotificationsCubit, NotificationsState>(
+          builder: (context, state) {
+            if (!state.hasLoaded && state.error == null) {
+              return const NotificationListSkeleton();
+            }
 
-          final body = state.error != null
-              ? const SizedBox.shrink()
-              : CustomMaterialIndicator(
-                  onRefresh: () async =>
-                      context.read<NotificationsCubit>().load(),
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  useMaterialContainer: false,
-                  indicatorBuilder: (context, controller) => Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: LoadingAnimationWidget.threeRotatingDots(
-                      color: colorScheme.primary,
-                      size: 40,
+            final body = state.error != null
+                ? const SizedBox.shrink()
+                : CustomMaterialIndicator(
+                    onRefresh: () async =>
+                        context.read<NotificationsCubit>().load(),
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    useMaterialContainer: false,
+                    indicatorBuilder: (context, controller) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: LoadingAnimationWidget.threeRotatingDots(
+                        color: colorScheme.primary,
+                        size: 40,
+                      ),
                     ),
-                  ),
-                  child: state.notifications.isEmpty
-                      ? SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight:
-                                  MediaQuery.sizeOf(context).height - 200,
-                            ),
-                            child: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24),
-                                child: EmptyStateIllustrated(
-                                  assetPathDark: 'assets/images/notification_page_illustration_dark.svg',
-                                  assetPathLight: 'assets/images/notification_page_illustration_light.svg',
-                                  headline: l10n.noNotificationsYet,
-                                  description: l10n.noNotificationsHint,
-                                  primaryLabel: l10n.explore,
-                                  onPrimaryPressed: () => context.go(AppRoutes.explore),
-                                  illustrationHeight: 200,
+                    child: state.notifications.isEmpty
+                        ? SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minHeight:
+                                    MediaQuery.sizeOf(context).height - 200,
+                              ),
+                              child: Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                  ),
+                                  child: EmptyStateIllustrated(
+                                    assetPathDark:
+                                        'assets/images/notification_page_illustration_dark.svg',
+                                    assetPathLight:
+                                        'assets/images/notification_page_illustration_light.svg',
+                                    headline: l10n.noNotificationsYet,
+                                    description: l10n.noNotificationsHint,
+                                    primaryLabel: l10n.explore,
+                                    onPrimaryPressed: () =>
+                                        context.go(AppRoutes.explore),
+                                    illustrationHeight: 200,
+                                  ),
                                 ),
                               ),
                             ),
+                          )
+                        : _NotificationList(
+                            notifications: state.notifications,
+                            readIds: state.readIds,
+                            onTap: (n) => _onNotificationTap(context, n),
                           ),
-                        )
-                      : _NotificationList(
-                          notifications: state.notifications,
-                          readIds: state.readIds,
-                          onTap: (n) => _onNotificationTap(context, n),
-                        ),
-                );
+                  );
 
-          return ConnectionErrorOverlay(
-            hasError: state.error != null,
-            error: state.error,
-            onRefresh: () async {
-              context.read<NotificationsCubit>().load();
-            },
-            onBack: () => context.go(AppRoutes.home),
-            child: body,
-          );
-        },
-      ),
+            return ConnectionErrorOverlay(
+              hasError: state.error != null,
+              error: state.error,
+              onRefresh: () async {
+                context.read<NotificationsCubit>().load();
+              },
+              onBack: () => context.go(AppRoutes.home),
+              child: body,
+            );
+          },
+        ),
       ),
     );
   }
@@ -269,10 +266,12 @@ class _NotificationList extends StatelessWidget {
   Widget build(BuildContext context) {
     final sections = <String, List<NotificationEntity>>{};
     for (final n in notifications) {
-      sections.putIfAbsent(
-        NotificationsPage._sectionFor(context, n.createdAt),
-        () => [],
-      ).add(n);
+      sections
+          .putIfAbsent(
+            NotificationsPage._sectionFor(context, n.createdAt),
+            () => [],
+          )
+          .add(n);
     }
     final l10n = AppLocalizations.of(context)!;
     final order = [l10n.today, l10n.yesterday, l10n.thisWeek, l10n.older];
@@ -340,10 +339,18 @@ class _NotificationCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final icon = NotificationsPage._iconForType(notification.type);
-    final timeStr = NotificationsPage._formatTime(context, notification.createdAt);
-    final iconBg = NotificationsPage._tintForType(notification.type, colorScheme)!;
-    final iconColor =
-        NotificationsPage._iconColorForType(notification.type, colorScheme);
+    final timeStr = NotificationsPage._formatTime(
+      context,
+      notification.createdAt,
+    );
+    final iconBg = NotificationsPage._tintForType(
+      notification.type,
+      colorScheme,
+    )!;
+    final iconColor = NotificationsPage._iconColorForType(
+      notification.type,
+      colorScheme,
+    );
 
     return GlassCard(
       margin: EdgeInsets.zero,
@@ -351,86 +358,86 @@ class _NotificationCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Row(
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: iconBg,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(icon, color: iconColor, size: 24),
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    shape: BoxShape.circle,
                   ),
-                  if (!isRead)
-                    Positioned(
-                      top: -2,
-                      right: -2,
-                      child: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: colorScheme.surface,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      notification.title,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: isRead ? FontWeight.w600 : FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (notification.subtitle != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        notification.subtitle!,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
+                  child: Icon(icon, color: iconColor, size: 24),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                if (!isRead)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: colorScheme.surface,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    timeStr,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                    notification.title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: isRead ? FontWeight.w600 : FontWeight.bold,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Icon(
-                    AppIcons.chevronRight,
-                    size: 20,
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                  ),
+                  if (notification.subtitle != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      notification.subtitle!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ],
               ),
-            ],
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  timeStr,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Icon(
+                  AppIcons.chevronRight,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

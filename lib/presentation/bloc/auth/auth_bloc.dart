@@ -17,11 +17,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required SignInWithEmailLinkUseCase signInWithEmailLink,
     required SignInWithGoogleUseCase signInWithGoogle,
     required SignOutUseCase signOut,
-  })  : _sendSignInLink = sendSignInLink,
-        _signInWithEmailLink = signInWithEmailLink,
-        _signInWithGoogle = signInWithGoogle,
-        _signOut = signOut,
-        super(const AuthInitial()) {
+  }) : _sendSignInLink = sendSignInLink,
+       _signInWithEmailLink = signInWithEmailLink,
+       _signInWithGoogle = signInWithGoogle,
+       _signOut = signOut,
+       super(const AuthInitial()) {
     on<AuthSendSignInLinkRequested>(_onSendSignInLink);
     on<AuthSignInWithEmailLinkRequested>(_onSignInWithEmailLink);
     on<AuthSignInWithGoogleRequested>(_onSignInWithGoogle);
@@ -114,7 +114,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       return 'Too many requests. Please try again later.';
     }
     // Surface FirebaseAuthException message (e.g. config errors from Google Sign-In).
-    if (e is FirebaseAuthException && e.message != null && e.message!.isNotEmpty) {
+    if (e is FirebaseAuthException &&
+        e.message != null &&
+        e.message!.isNotEmpty) {
       return e.message!;
     }
     return 'An error occurred. Please try again.';

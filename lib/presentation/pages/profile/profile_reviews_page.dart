@@ -33,15 +33,14 @@ class ProfileReviewsPage extends StatelessWidget {
     if (user == null) {
       return Scaffold(
         body: Center(
-        child: LoadingAnimationWidget.stretchedDots(
-          color: Theme.of(context).colorScheme.primary,
-          size: 48,
+          child: LoadingAnimationWidget.stretchedDots(
+            color: Theme.of(context).colorScheme.primary,
+            size: 48,
+          ),
         ),
-      ),
       );
     }
-    final revieweeId =
-        revieweeUserId.isNotEmpty ? revieweeUserId : user.id;
+    final revieweeId = revieweeUserId.isNotEmpty ? revieweeUserId : user.id;
     return BlocProvider(
       create: (_) => ProfileReviewsCubit(
         sl<ReviewRepository>(),
@@ -62,9 +61,7 @@ class _ProfileReviewsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reviews'),
-      ),
+      appBar: AppBar(title: const Text('Reviews')),
       body: BlocConsumer<ProfileReviewsCubit, ProfileReviewsState>(
         listenWhen: (a, b) => a.error != b.error,
         listener: (context, state) {
@@ -75,11 +72,11 @@ class _ProfileReviewsView extends StatelessWidget {
         builder: (context, state) {
           if (state.isLoading && state.reviews.isEmpty) {
             return Center(
-            child: LoadingAnimationWidget.stretchedDots(
-              color: Theme.of(context).colorScheme.primary,
-              size: 48,
-            ),
-          );
+              child: LoadingAnimationWidget.stretchedDots(
+                color: Theme.of(context).colorScheme.primary,
+                size: 48,
+              ),
+            );
           }
           if (state.reviews.isEmpty) {
             return Center(
@@ -136,57 +133,58 @@ class _ProfileReviewsView extends StatelessWidget {
       isScrollControlled: true,
       builder: (ctx) => GlassBottomSheet(
         child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Reply to review',
-                  style: Theme.of(ctx).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controller,
-                  maxLines: 3,
-                  maxLength: 1000,
-                  decoration: const InputDecoration(
-                    hintText: 'Write your reply...',
-                    border: OutlineInputBorder(),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Reply to review',
+                    style: Theme.of(ctx).textTheme.titleMedium,
                   ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text('Cancel'),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller,
+                    maxLines: 3,
+                    maxLength: 1000,
+                    decoration: const InputDecoration(
+                      hintText: 'Write your reply...',
+                      border: OutlineInputBorder(),
                     ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                      onPressed: () {
-                        final text = controller.text.trim();
-                        Navigator.pop(ctx);
-                        context
-                            .read<ProfileReviewsCubit>()
-                            .addReply(review.id, text);
-                      },
-                      child: const Text('Save'),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton(
+                        onPressed: () {
+                          final text = controller.text.trim();
+                          Navigator.pop(ctx);
+                          context.read<ProfileReviewsCubit>().addReply(
+                            review.id,
+                            text,
+                          );
+                        },
+                        child: const Text('Save'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
-        ),
     );
   }
 }
@@ -221,139 +219,138 @@ class _ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasLiked = review.likedBy.contains(sl<AuthRedirectNotifier>().user?.id);
-    final hasFlagged =
-        review.flaggedBy.contains(sl<AuthRedirectNotifier>().user?.id);
+    final hasLiked = review.likedBy.contains(
+      sl<AuthRedirectNotifier>().user?.id,
+    );
+    final hasFlagged = review.flaggedBy.contains(
+      sl<AuthRedirectNotifier>().user?.id,
+    );
     final name = _reviewerName(reviewer);
     return GlassCard(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                ProfileAvatar(
-                  photoUrl: reviewer?.photoUrl,
-                  displayName: name,
-                  radius: 28,
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primaryContainer,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            size: 18,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${review.rating}',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const Spacer(),
-                          if (review.createdAt != null)
-                            Text(
-                              _formatDate(review.createdAt!),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (review.comment.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(review.comment),
-            ],
-            if (review.reply.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceContainerHighest
-                      .withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(AppBorders.chipRadius),
-                ),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ProfileAvatar(
+                photoUrl: reviewer?.photoUrl,
+                displayName: name,
+                radius: 28,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      showReplyActions ? 'Your reply' : 'Reply from creative',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                      name,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Text(review.reply),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.star,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${review.rating}',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const Spacer(),
+                        if (review.createdAt != null)
+                          Text(
+                            _formatDate(review.createdAt!),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),
             ],
+          ),
+          if (review.comment.isNotEmpty) ...[
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 4,
-              runSpacing: 4,
-              children: [
-                if (showReplyActions)
-                  TextButton.icon(
-                    onPressed: onReply,
-                    icon: const Icon(Icons.reply, size: 18),
-                    label: const Text('Reply'),
+            Text(review.comment),
+          ],
+          if (review.reply.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(AppBorders.chipRadius),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    showReplyActions ? 'Your reply' : 'Reply from creative',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                TextButton.icon(
-                  onPressed: onLike,
-                  icon: Icon(
-                    hasLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
-                    size: 18,
-                    color: hasLiked
-                        ? Theme.of(context).colorScheme.primary
-                        : null,
-                  ),
-                  label: Text(NumberFormatter.formatInteger(review.likeCount)),
-                ),
-                TextButton.icon(
-                  onPressed: onFlag,
-                  icon: Icon(
-                    hasFlagged ? Icons.flag : Icons.outlined_flag,
-                    size: 18,
-                    color: hasFlagged
-                        ? Theme.of(context).colorScheme.error
-                        : null,
-                  ),
-                  label: const Text('Flag'),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(review.reply),
+                ],
+              ),
             ),
           ],
-        ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              if (showReplyActions)
+                TextButton.icon(
+                  onPressed: onReply,
+                  icon: const Icon(Icons.reply, size: 18),
+                  label: const Text('Reply'),
+                ),
+              TextButton.icon(
+                onPressed: onLike,
+                icon: Icon(
+                  hasLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                  size: 18,
+                  color: hasLiked
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
+                ),
+                label: Text(NumberFormatter.formatInteger(review.likeCount)),
+              ),
+              TextButton.icon(
+                onPressed: onFlag,
+                icon: Icon(
+                  hasFlagged ? Icons.flag : Icons.outlined_flag,
+                  size: 18,
+                  color: hasFlagged
+                      ? Theme.of(context).colorScheme.error
+                      : null,
+                ),
+                label: const Text('Flag'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

@@ -20,11 +20,7 @@ class LocationPickerResult {
 /// Full-screen OSM map picker. Tap to select location; uses device geocoding
 /// (free) to get address from coordinates.
 class LocationPickerPage extends StatefulWidget {
-  const LocationPickerPage({
-    super.key,
-    this.initialLat,
-    this.initialLng,
-  });
+  const LocationPickerPage({super.key, this.initialLat, this.initialLng});
 
   final double? initialLat;
   final double? initialLng;
@@ -73,7 +69,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _address = '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}';
+          _address =
+              '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}';
           _isLoading = false;
         });
       }
@@ -83,28 +80,38 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
   String _formatAddress(geocoding.Placemark p) {
     final parts = <String>[];
     if (p.street != null && p.street!.isNotEmpty) parts.add(p.street!);
-    if (p.subLocality != null && p.subLocality!.isNotEmpty) parts.add(p.subLocality!);
+    if (p.subLocality != null && p.subLocality!.isNotEmpty) {
+      parts.add(p.subLocality!);
+    }
     if (p.locality != null && p.locality!.isNotEmpty) parts.add(p.locality!);
-    if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty) parts.add(p.administrativeArea!);
+    if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty) {
+      parts.add(p.administrativeArea!);
+    }
     if (p.country != null && p.country!.isNotEmpty) parts.add(p.country!);
     return parts.join(', ');
   }
 
   void _confirm() {
     if (_selectedPoint == null) return;
-    final addr = _address ?? '${_selectedPoint!.latitude.toStringAsFixed(5)}, ${_selectedPoint!.longitude.toStringAsFixed(5)}';
-    Navigator.of(context).pop(LocationPickerResult(
-      address: addr,
-      lat: _selectedPoint!.latitude,
-      lng: _selectedPoint!.longitude,
-    ));
+    final addr =
+        _address ??
+        '${_selectedPoint!.latitude.toStringAsFixed(5)}, ${_selectedPoint!.longitude.toStringAsFixed(5)}';
+    Navigator.of(context).pop(
+      LocationPickerResult(
+        address: addr,
+        lat: _selectedPoint!.latitude,
+        lng: _selectedPoint!.longitude,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final initial = _selectedPoint ?? (widget.initialLat != null && widget.initialLng != null
-        ? LatLng(widget.initialLat!, widget.initialLng!)
-        : LocationPickerPage._kigali);
+    final initial =
+        _selectedPoint ??
+        (widget.initialLat != null && widget.initialLng != null
+            ? LatLng(widget.initialLat!, widget.initialLng!)
+            : LocationPickerPage._kigali);
 
     return Scaffold(
       appBar: AppBar(

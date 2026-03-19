@@ -20,6 +20,7 @@ class EmptyStateDotted extends StatelessWidget {
   final IconData icon;
   final String headline;
   final String? description;
+
   /// When true, reduces padding for use in constrained spaces (e.g. inside cards).
   final bool compact;
   final String? primaryLabel;
@@ -57,11 +58,7 @@ class EmptyStateDotted extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  icon,
-                  size: iconSize,
-                  color: colorScheme.primary,
-                ),
+                Icon(icon, size: iconSize, color: colorScheme.primary),
                 SizedBox(height: compact ? 8 : 12),
                 Text(
                   headline,
@@ -76,7 +73,9 @@ class EmptyStateDotted extends StatelessWidget {
                   Text(
                     description!,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.8,
+                      ),
                     ),
                     textAlign: TextAlign.center,
                   ),

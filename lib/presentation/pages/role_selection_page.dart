@@ -27,7 +27,8 @@ class RoleSelectionPage extends StatelessWidget {
       create: (_) => RoleSelectionCubit(sl<UpsertUserUseCase>()),
       child: BlocConsumer<RoleSelectionCubit, RoleSelectionState>(
         listener: (context, state) {
-          if (state.status == RoleSelectionStatus.success && state.user != null) {
+          if (state.status == RoleSelectionStatus.success &&
+              state.user != null) {
             context.go(AppRoutes.profileSetup, extra: state.user);
           }
           if (state.status == RoleSelectionStatus.error &&
@@ -79,10 +80,7 @@ class _RoleSelectionViewState extends State<_RoleSelectionView> {
                   children: [
                     Expanded(
                       child: Center(
-                        child: SvgPicture.asset(
-                          asset,
-                          fit: BoxFit.contain,
-                        ),
+                        child: SvgPicture.asset(asset, fit: BoxFit.contain),
                       ),
                     ),
                     Padding(
@@ -95,9 +93,7 @@ class _RoleSelectionViewState extends State<_RoleSelectionView> {
                           children: [
                             Text(
                               'Choose your role below',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineMedium,
+                              style: Theme.of(context).textTheme.headlineMedium,
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 32),
@@ -106,7 +102,8 @@ class _RoleSelectionViewState extends State<_RoleSelectionView> {
                               isSelected:
                                   _selectedRole == UserRole.eventPlanner,
                               onTap: () => setState(
-                                  () => _selectedRole = UserRole.eventPlanner),
+                                () => _selectedRole = UserRole.eventPlanner,
+                              ),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -117,7 +114,8 @@ class _RoleSelectionViewState extends State<_RoleSelectionView> {
                             const SizedBox(height: 16),
                             _RoleCard(
                               title: 'Creative Professional',
-                              isSelected: _selectedRole ==
+                              isSelected:
+                                  _selectedRole ==
                                   UserRole.creativeProfessional,
                               onTap: () => setState(
                                 () => _selectedRole =
@@ -137,19 +135,21 @@ class _RoleSelectionViewState extends State<_RoleSelectionView> {
               child: Theme(
                 data: Theme.of(context).copyWith(
                   textTheme: Theme.of(context).textTheme.copyWith(
-                    labelLarge: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontSize: 16,
-                        ),
+                    labelLarge: Theme.of(
+                      context,
+                    ).textTheme.labelLarge?.copyWith(fontSize: 16),
                   ),
                 ),
                 child: AppButton(
                   label: 'Get started',
-                  onPressed: _selectedRole == null ||
+                  onPressed:
+                      _selectedRole == null ||
                           state.status == RoleSelectionStatus.loading
                       ? null
-                      : () => context
-                          .read<RoleSelectionCubit>()
-                          .selectRole(user, _selectedRole!),
+                      : () => context.read<RoleSelectionCubit>().selectRole(
+                          user,
+                          _selectedRole!,
+                        ),
                   isLoading: state.status == RoleSelectionStatus.loading,
                 ),
               ),
@@ -177,10 +177,10 @@ class _RoleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final backgroundColor =
-        isSelected ? _selectedColor : colorScheme.surfaceContainerHighest;
-    final foregroundColor =
-        isSelected ? Colors.white : colorScheme.onSurface;
+    final backgroundColor = isSelected
+        ? _selectedColor
+        : colorScheme.surfaceContainerHighest;
+    final foregroundColor = isSelected ? Colors.white : colorScheme.onSurface;
 
     return Material(
       color: Colors.transparent,
@@ -198,10 +198,10 @@ class _RoleCard extends StatelessWidget {
             child: Text(
               title,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: foregroundColor,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16,
-                  ),
+                color: foregroundColor,
+                fontWeight: FontWeight.w500,
+                fontSize: 16,
+              ),
             ),
           ),
         ),

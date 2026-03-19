@@ -31,7 +31,8 @@ class SkeletonBox extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: skeletonColor,
-        borderRadius: borderRadius ?? BorderRadius.circular(AppBorders.chipRadius),
+        borderRadius:
+            borderRadius ?? BorderRadius.circular(AppBorders.chipRadius),
       ),
     );
     if (shimmer) {

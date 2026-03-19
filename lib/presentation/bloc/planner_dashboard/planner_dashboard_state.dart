@@ -31,6 +31,7 @@ class PlannerDashboardState {
   final int eventsCount;
   final int unreadCount;
   final List<PlannerDashboardActivityItem> recentActivities;
+
   /// Pending bookings count per event ID (for "+N New" on stage cards).
   final Map<String, int> pendingCountByEventId;
   final bool isLoading;

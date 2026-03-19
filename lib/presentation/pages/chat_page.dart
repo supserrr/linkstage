@@ -78,11 +78,16 @@ class _ChatPageState extends State<ChatPage> {
             child: CircleAvatar(
               radius: 28,
               backgroundColor: colorScheme.surfaceContainerHighest,
-              backgroundImage: _otherUserPhotoUrl != null && _otherUserPhotoUrl!.isNotEmpty
+              backgroundImage:
+                  _otherUserPhotoUrl != null && _otherUserPhotoUrl!.isNotEmpty
                   ? CachedNetworkImageProvider(_otherUserPhotoUrl!)
                   : null,
               child: _otherUserPhotoUrl == null || _otherUserPhotoUrl!.isEmpty
-                  ? Icon(AppIcons.person, size: 32, color: colorScheme.onSurfaceVariant)
+                  ? Icon(
+                      AppIcons.person,
+                      size: 32,
+                      color: colorScheme.onSurfaceVariant,
+                    )
                   : null,
             ),
           ),
@@ -128,7 +133,8 @@ class _ChatPageState extends State<ChatPage> {
     if (!_scrollController.hasClients) return;
     final atBottom = _scrollController.position.pixels <= _atBottomThreshold;
     if (atBottom) {
-      if (_showNewMessagesBanner || _lastSeenMessageCount != _currentMessageCount) {
+      if (_showNewMessagesBanner ||
+          _lastSeenMessageCount != _currentMessageCount) {
         setState(() {
           _showNewMessagesBanner = false;
           _lastSeenMessageCount = _currentMessageCount;
@@ -164,14 +170,19 @@ class _ChatPageState extends State<ChatPage> {
       if (widget.chatId != null && widget.chatId!.isNotEmpty) {
         _resolvedChatId = widget.chatId;
         unawaited(
-          sl<ConversationRepository>().markChatAsRead(widget.chatId!, currentUser.id),
+          sl<ConversationRepository>().markChatAsRead(
+            widget.chatId!,
+            currentUser.id,
+          ),
         );
         final other = await sl<ConversationRepository>().getOtherParticipant(
           widget.chatId!,
           currentUser.id,
         );
         if (mounted && other != null) {
-          final otherUser = await sl<UserRepository>().getUser(other.otherUserId);
+          final otherUser = await sl<UserRepository>().getUser(
+            other.otherUserId,
+          );
           setState(() {
             _otherUserId = other.otherUserId;
             _otherUserRole = otherUser?.role;
@@ -180,16 +191,18 @@ class _ChatPageState extends State<ChatPage> {
           });
         }
       } else if (widget.otherUserId != null && widget.otherUserId!.isNotEmpty) {
-        final otherUser = await sl<UserRepository>().getUser(widget.otherUserId!);
+        final otherUser = await sl<UserRepository>().getUser(
+          widget.otherUserId!,
+        );
         if (otherUser != null) {
           await sl<ChatUserRepository>().ensureChatUser(otherUser);
         } else {
-          await sl<ChatUserRepository>().ensureChatUserById(widget.otherUserId!);
+          await sl<ChatUserRepository>().ensureChatUserById(
+            widget.otherUserId!,
+          );
         }
-        _resolvedChatId = await sl<ConversationRepository>().getOrCreateOneToOneChat(
-          currentUser.id,
-          widget.otherUserId!,
-        );
+        _resolvedChatId = await sl<ConversationRepository>()
+            .getOrCreateOneToOneChat(currentUser.id, widget.otherUserId!);
         if (mounted) {
           setState(() {
             _otherUserId = widget.otherUserId;
@@ -199,7 +212,10 @@ class _ChatPageState extends State<ChatPage> {
           });
         }
         unawaited(
-          sl<ConversationRepository>().markChatAsRead(_resolvedChatId!, currentUser.id),
+          sl<ConversationRepository>().markChatAsRead(
+            _resolvedChatId!,
+            currentUser.id,
+          ),
         );
       } else {
         if (mounted) setState(() => _error = 'Missing chat or user');
@@ -210,7 +226,11 @@ class _ChatPageState extends State<ChatPage> {
       if (mounted) {
         final msg = e.toString().replaceFirst('Exception: ', '');
         if (msg.contains('restricted') || msg.contains('who can message')) {
-          showToast(context, 'This user has restricted who can message them', isError: true);
+          showToast(
+            context,
+            'This user has restricted who can message them',
+            isError: true,
+          );
           context.pop();
           return;
         }
@@ -240,15 +260,14 @@ class _ChatPageState extends State<ChatPage> {
     final chatId = _resolvedChatId;
     if (chatId == null || chatId.isEmpty) {
       return Scaffold(
-        appBar: AppBar(
-          toolbarHeight: 92,
-          title: const ChatAppBarSkeleton(),
-        ),
+        appBar: AppBar(toolbarHeight: 92, title: const ChatAppBarSkeleton()),
         body: Column(
           children: [
             Expanded(
               child: Container(
-                color: Theme.of(context).colorScheme.surfaceContainerLowest.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerLowest.withValues(alpha: 0.3),
                 child: const ChatMessagesSkeleton(),
               ),
             ),
@@ -267,8 +286,9 @@ class _ChatPageState extends State<ChatPage> {
       return Scaffold(
         appBar: AppBar(
           leading: BackButton(
-            onPressed: () =>
-                context.canPop() ? context.pop() : context.go(AppRoutes.messages),
+            onPressed: () => context.canPop()
+                ? context.pop()
+                : context.go(AppRoutes.messages),
           ),
           title: Text(_otherUserName),
         ),
@@ -287,8 +307,9 @@ class _ChatPageState extends State<ChatPage> {
         return Scaffold(
           appBar: AppBar(
             leading: BackButton(
-              onPressed: () =>
-                  context.canPop() ? context.pop() : context.go(AppRoutes.messages),
+              onPressed: () => context.canPop()
+                  ? context.pop()
+                  : context.go(AppRoutes.messages),
             ),
             toolbarHeight: 92,
             title: showAppBarSkeleton
@@ -299,7 +320,9 @@ class _ChatPageState extends State<ChatPage> {
             children: [
               Expanded(
                 child: Container(
-                  color: colorScheme.surfaceContainerLowest.withValues(alpha: 0.3),
+                  color: colorScheme.surfaceContainerLowest.withValues(
+                    alpha: 0.3,
+                  ),
                   child: _buildMessagesContent(
                     context,
                     snapshot,
@@ -358,11 +381,13 @@ class _ChatPageState extends State<ChatPage> {
     }
     final messages = snapshot.data!;
     _currentMessageCount = messages.length;
-    if (messages.length > _lastSeenMessageCount && _scrollController.hasClients) {
+    if (messages.length > _lastSeenMessageCount &&
+        _scrollController.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         if (!_scrollController.hasClients) return;
-        final atBottom = _scrollController.position.pixels <= _atBottomThreshold;
+        final atBottom =
+            _scrollController.position.pixels <= _atBottomThreshold;
         if (!atBottom && !_showNewMessagesBanner) {
           setState(() => _showNewMessagesBanner = true);
         } else if (atBottom) {
@@ -405,35 +430,41 @@ class _ChatPageState extends State<ChatPage> {
           reverse: true,
           padding: const EdgeInsets.only(top: 12, bottom: 12),
           itemCount: messages.length + 1,
-      itemBuilder: (context, index) {
-        if (index == messages.length) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
-                  borderRadius: AppBorders.borderRadius,
-                ),
-                child: Text(
-                  _formatDateHeader(messages.isNotEmpty ? messages.last.createdAt : DateTime.now()),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
+          itemBuilder: (context, index) {
+            if (index == messages.length) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.8,
+                      ),
+                      borderRadius: AppBorders.borderRadius,
+                    ),
+                    child: Text(
+                      _formatDateHeader(
+                        messages.isNotEmpty
+                            ? messages.last.createdAt
+                            : DateTime.now(),
+                      ),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          );
-        }
-        final message = messages[messages.length - 1 - index];
-        final isSentByMe = message.senderId == currentUser.id;
-        return MessageBubble(
-          message: message,
-          isSentByMe: isSentByMe,
-        );
-      },
+              );
+            }
+            final message = messages[messages.length - 1 - index];
+            final isSentByMe = message.senderId == currentUser.id;
+            return MessageBubble(message: message, isSentByMe: isSentByMe);
+          },
         ),
         if (_showNewMessagesBanner)
           Positioned(
@@ -447,7 +478,10 @@ class _ChatPageState extends State<ChatPage> {
                   onTap: _scrollToNewMessages,
                   borderRadius: AppBorders.borderRadius,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.primaryContainer,
                       borderRadius: AppBorders.borderRadius,
@@ -494,7 +528,15 @@ class _ChatPageState extends State<ChatPage> {
     final yesterday = today.subtract(const Duration(days: 1));
     if (msgDay == yesterday) return 'Yesterday';
     if (now.difference(msgDay).inDays < 7) {
-      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      const days = [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday',
+      ];
       return days[t.weekday - 1];
     }
     return '${t.day}/${t.month}/${t.year}';

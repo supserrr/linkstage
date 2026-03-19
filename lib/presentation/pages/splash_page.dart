@@ -25,8 +25,10 @@ class SplashPage extends StatelessWidget {
           lottieAsset,
           fit: BoxFit.contain,
           repeat: false,
-          errorBuilder: (context, error, stackTrace) =>
-            Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error),
+          errorBuilder: (context, error, stackTrace) => Icon(
+            Icons.error_outline,
+            color: Theme.of(context).colorScheme.error,
+          ),
         ),
       ),
     );

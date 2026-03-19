@@ -25,20 +25,32 @@ import '../molecules/vendor_card.dart';
 /// Home dashboard content for creatives: header (date, greeting, notifications),
 /// search, filters, Recent events, Saved, and For: [Role] with Update Profile.
 class CreativeDashboardContent extends StatelessWidget {
-  const CreativeDashboardContent({
-    super.key,
-    required this.displayName,
-  });
+  const CreativeDashboardContent({super.key, required this.displayName});
 
   final String displayName;
 
   static const List<String> _weekdays = [
-    'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY',
-    'SATURDAY', 'SUNDAY',
+    'MONDAY',
+    'TUESDAY',
+    'WEDNESDAY',
+    'THURSDAY',
+    'FRIDAY',
+    'SATURDAY',
+    'SUNDAY',
   ];
   static const List<String> _months = [
-    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-    'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+    'JAN',
+    'FEB',
+    'MAR',
+    'APR',
+    'MAY',
+    'JUN',
+    'JUL',
+    'AUG',
+    'SEP',
+    'OCT',
+    'NOV',
+    'DEC',
   ];
 
   @override
@@ -87,10 +99,7 @@ class CreativeDashboardContent extends StatelessWidget {
       useMaterialContainer: false,
       indicatorBuilder: (context, controller) => Padding(
         padding: const EdgeInsets.all(8.0),
-        child: LoadingAnimationWidget.threeRotatingDots(
-          color: color,
-          size: 40,
-        ),
+        child: LoadingAnimationWidget.threeRotatingDots(color: color, size: 40),
       ),
       child: child,
     );
@@ -101,9 +110,7 @@ class CreativeDashboardContent extends StatelessWidget {
     CreativeDashboardState state,
     String displayName,
   ) {
-    final name = state.displayName.isNotEmpty
-        ? state.displayName
-        : displayName;
+    final name = state.displayName.isNotEmpty ? state.displayName : displayName;
     final now = DateTime.now();
     final dateText =
         '${_weekdays[now.weekday - 1]}, ${_months[now.month - 1]} ${now.day}';
@@ -122,15 +129,15 @@ class CreativeDashboardContent extends StatelessWidget {
                   Text(
                     dateText,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Hello, $name',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -142,9 +149,7 @@ class CreativeDashboardContent extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        _FindGigsCard(
-          onTap: () => context.go(AppRoutes.explore),
-        ),
+        _FindGigsCard(onTap: () => context.go(AppRoutes.explore)),
         const SizedBox(height: 20),
         _UnifiedStatsCard(
           savedCount: state.savedEventIds.length,
@@ -270,53 +275,47 @@ class _NotificationIcon extends StatelessWidget {
         onTap: () => context.go(AppRoutes.notifications),
         borderRadius: AppBorders.borderRadius,
         child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Icon(
-                AppIcons.notifications,
-                size: 24,
-                color: colorScheme.onPrimaryContainer,
-              ),
-              if (count > 0)
-                Positioned(
-                  right: -1,
-                  top: -1,
-                  child: Container(
-                    padding: count == 1
-                        ? EdgeInsets.zero
-                        : const EdgeInsets.symmetric(
-                            horizontal: 5,
-                            vertical: 2,
-                          ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.error,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: colorScheme.surface,
-                        width: 1.5,
-                      ),
-                    ),
-                    constraints: BoxConstraints(
-                      minWidth: count == 1 ? 8 : 18,
-                      minHeight: count == 1 ? 8 : 18,
-                    ),
-                    child: count == 1
-                        ? null
-                        : Center(
-                            child: Text(
-                              count > 99 ? '99+' : '$count',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: colorScheme.onError,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
+          clipBehavior: Clip.none,
+          children: [
+            Icon(
+              AppIcons.notifications,
+              size: 24,
+              color: colorScheme.onPrimaryContainer,
+            ),
+            if (count > 0)
+              Positioned(
+                right: -1,
+                top: -1,
+                child: Container(
+                  padding: count == 1
+                      ? EdgeInsets.zero
+                      : const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: colorScheme.error,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: colorScheme.surface, width: 1.5),
+                  ),
+                  constraints: BoxConstraints(
+                    minWidth: count == 1 ? 8 : 18,
+                    minHeight: count == 1 ? 8 : 18,
+                  ),
+                  child: count == 1
+                      ? null
+                      : Center(
+                          child: Text(
+                            count > 99 ? '99+' : '$count',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onError,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                  ),
+                        ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
+      ),
     );
   }
 }
@@ -336,38 +335,38 @@ class _FindGigsCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: AppBorders.borderRadius,
         child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Find Gigs',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Find Gigs',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Browse events that need you.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Browse events that need you.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              FilledButton(
-                onPressed: onTap,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.all(12),
-                  minimumSize: const Size(48, 48),
-                  shape: const CircleBorder(),
-                ),
-                child: const Icon(AppIcons.search, size: 26),
+            ),
+            FilledButton(
+              onPressed: onTap,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.all(12),
+                minimumSize: const Size(48, 48),
+                shape: const CircleBorder(),
               ),
-            ],
+              child: const Icon(AppIcons.search, size: 26),
+            ),
+          ],
         ),
       ),
     );
@@ -398,9 +397,9 @@ class _UnifiedStatsCard extends StatelessWidget {
         children: [
           Expanded(
             child: _StatTile(
-                  icon: AppIcons.savedOutline,
-                  value: savedCount,
-                label: 'Saved',
+              icon: AppIcons.savedOutline,
+              value: savedCount,
+              label: 'Saved',
             ),
           ),
           Container(
@@ -412,7 +411,7 @@ class _UnifiedStatsCard extends StatelessWidget {
           Expanded(
             child: _StatTile(
               icon: AppIcons.gigs,
-                  value: gigsCount,
+              value: gigsCount,
               label: 'Gigs',
             ),
           ),
@@ -463,11 +462,7 @@ class _StatTile extends StatelessWidget {
             color: colorScheme.secondary.withValues(alpha: 0.35),
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: colorScheme.primary,
-          ),
+          child: Icon(icon, size: 18, color: colorScheme.primary),
         ),
         const SizedBox(height: 8),
         Text(
@@ -553,74 +548,75 @@ class _RecentSection extends StatelessWidget {
           height: 200,
           child: isEvents
               ? (openEvents.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: EmptyStateDotted(
-                          icon: AppIcons.event,
-                          headline: 'No open events right now',
-                          compact: true,
-                          primaryLabel: 'Explore',
-                          onPrimaryPressed: () =>
-                              context.go(AppRoutes.explore),
-                        ),
-                      ),
-                    )
-                  : ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: openEvents.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 12),
-                      itemBuilder: (context, index) {
-                        final event = openEvents[index];
-                        return _CreativeEventCard(
-                          event: event,
-                          applicantCount:
-                              pendingCountByEventId[event.id] ?? 0,
-                          isSaved: savedEventIds.contains(event.id),
-                          hasAcceptedBooking:
-                              acceptedEventIds.contains(event.id),
-                          onTap: () =>
-                              context.push(AppRoutes.eventDetail(event.id)),
-                          onSaveTap: () => onToggleSaved(event.id),
-                        );
-                      },
-                    ))
-              : (fellowCreatives.isEmpty
-                  ? ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        _RecommendedCard(
-                          title: 'Explore creatives',
-                          subtitle: 'Find talent for your next gig',
-                          tag: 'Discover',
-                          onTap: () => context.go(AppRoutes.explore),
-                        ),
-                        const SizedBox(width: 12),
-                        _RecommendedCard(
-                          title: 'Build your profile',
-                          subtitle: 'Stand out to planners',
-                          tag: 'Profile',
-                          onTap: () => context.push(AppRoutes.viewProfile),
-                        ),
-                      ],
-                    )
-                  : ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: fellowCreatives.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 12),
-                      itemBuilder: (context, index) {
-                        final profile = fellowCreatives[index];
-                        return SizedBox(
-                          width: 280,
-                          child: VendorCard(
-                            profile: profile,
-                            onTap: () => context.push(
-                              AppRoutes.creativeProfileView(profile.userId),
-                            ),
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: EmptyStateDotted(
+                            icon: AppIcons.event,
+                            headline: 'No open events right now',
+                            compact: true,
+                            primaryLabel: 'Explore',
+                            onPrimaryPressed: () =>
+                                context.go(AppRoutes.explore),
                           ),
-                        );
-                      },
-                    )),
+                        ),
+                      )
+                    : ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: openEvents.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 12),
+                        itemBuilder: (context, index) {
+                          final event = openEvents[index];
+                          return _CreativeEventCard(
+                            event: event,
+                            applicantCount:
+                                pendingCountByEventId[event.id] ?? 0,
+                            isSaved: savedEventIds.contains(event.id),
+                            hasAcceptedBooking: acceptedEventIds.contains(
+                              event.id,
+                            ),
+                            onTap: () =>
+                                context.push(AppRoutes.eventDetail(event.id)),
+                            onSaveTap: () => onToggleSaved(event.id),
+                          );
+                        },
+                      ))
+              : (fellowCreatives.isEmpty
+                    ? ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          _RecommendedCard(
+                            title: 'Explore creatives',
+                            subtitle: 'Find talent for your next gig',
+                            tag: 'Discover',
+                            onTap: () => context.go(AppRoutes.explore),
+                          ),
+                          const SizedBox(width: 12),
+                          _RecommendedCard(
+                            title: 'Build your profile',
+                            subtitle: 'Stand out to planners',
+                            tag: 'Profile',
+                            onTap: () => context.push(AppRoutes.viewProfile),
+                          ),
+                        ],
+                      )
+                    : ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: fellowCreatives.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 12),
+                        itemBuilder: (context, index) {
+                          final profile = fellowCreatives[index];
+                          return SizedBox(
+                            width: 280,
+                            child: VendorCard(
+                              profile: profile,
+                              onTap: () => context.push(
+                                AppRoutes.creativeProfileView(profile.userId),
+                              ),
+                            ),
+                          );
+                        },
+                      )),
         ),
       ],
     );
@@ -721,10 +717,17 @@ class _CreativeEventCard extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(left: 12),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surface.withValues(alpha: 0.95),
-                            borderRadius: BorderRadius.circular(AppBorders.radius),
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.95,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AppBorders.radius,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -741,7 +744,9 @@ class _CreativeEventCard extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                event.status == EventStatus.open ? 'Open' : 'Closed',
+                                event.status == EventStatus.open
+                                    ? 'Open'
+                                    : 'Closed',
                                 style: theme.textTheme.labelMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -760,22 +765,27 @@ class _CreativeEventCard extends StatelessWidget {
                           child: Padding(
                             padding: const EdgeInsets.all(6),
                             child: Icon(
-                              isSaved ? AppIcons.savedFilled : AppIcons.savedOutline,
+                              isSaved
+                                  ? AppIcons.savedFilled
+                                  : AppIcons.savedOutline,
                               size: 18,
                               color: theme.colorScheme.primary,
                             ),
                           ),
                         ),
                       ),
-                ],
-              ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
             InkWell(
               onTap: onTap,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -894,7 +904,10 @@ class _RecommendedCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.primaryContainer.withValues(alpha: 0.8),
                     borderRadius: AppBorders.borderRadius,
@@ -962,8 +975,9 @@ class _SavedSection extends StatelessWidget {
     final theme = Theme.of(context);
     final isEvents = filter == CreativeHomeFilter.events;
     if (isEvents) {
-      final openSaved =
-          openEvents.where((e) => savedEventIds.contains(e.id)).toList();
+      final openSaved = openEvents
+          .where((e) => savedEventIds.contains(e.id))
+          .toList();
       final combined = <EventEntity>[
         ...savedEvents,
         ...openSaved.where((e) => !savedEvents.any((s) => s.id == e.id)),
@@ -982,7 +996,8 @@ class _SavedSection extends StatelessWidget {
             EmptyStateDotted(
               icon: AppIcons.savedOutline,
               headline: 'No saved events yet',
-              description: 'Save events you\'re interested in to find them here.',
+              description:
+                  'Save events you\'re interested in to find them here.',
             )
           else
             Column(
@@ -1082,19 +1097,13 @@ class _SavedEventTile extends StatelessWidget {
                   ),
                 ),
               )
-            : Icon(
-                AppIcons.event,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+            : Icon(AppIcons.event, color: theme.colorScheme.onSurfaceVariant),
         title: Text(event.title),
         subtitle: Text(
           '${getEventLocationDisplayLine(event, isPlanner: false, hasAcceptedBooking: hasAcceptedBooking)} · $dateStr',
         ),
         trailing: IconButton(
-          icon: Icon(
-            AppIcons.savedFilled,
-            color: theme.colorScheme.primary,
-          ),
+          icon: Icon(AppIcons.savedFilled, color: theme.colorScheme.primary),
           onPressed: onUnsave,
           tooltip: 'Remove from saved',
         ),
@@ -1157,7 +1166,9 @@ class _ForRoleSection extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                      color: colorScheme.primaryContainer.withValues(
+                        alpha: 0.5,
+                      ),
                       borderRadius: AppBorders.borderRadius,
                     ),
                     child: Icon(
@@ -1209,12 +1220,10 @@ class _ForRoleSection extends StatelessWidget {
                       final e = recommendedForYouEvents[index];
                       return _CreativeEventCard(
                         event: e,
-                        applicantCount:
-                            pendingCountByEventId[e.id] ?? 0,
+                        applicantCount: pendingCountByEventId[e.id] ?? 0,
                         isSaved: savedEventIds.contains(e.id),
                         hasAcceptedBooking: acceptedEventIds.contains(e.id),
-                        onTap: () =>
-                            context.push(AppRoutes.eventDetail(e.id)),
+                        onTap: () => context.push(AppRoutes.eventDetail(e.id)),
                         onSaveTap: onToggleSaved != null
                             ? () => onToggleSaved!(e.id)
                             : () {},
@@ -1246,48 +1255,48 @@ class _ForRoleSection extends StatelessWidget {
         GlassCard(
           padding: const EdgeInsets.all(16),
           child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer.withValues(alpha: 0.5),
-                    borderRadius: AppBorders.borderRadius,
-                  ),
-                  child: Icon(
-                    AppIcons.gigs,
-                    size: 28,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                  borderRadius: AppBorders.borderRadius,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Keep your profile up to date',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                child: Icon(
+                  AppIcons.gigs,
+                  size: 28,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Keep your profile up to date',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Help planners find you for the right gigs.',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Help planners find you for the right gigs.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                FilledButton.icon(
-                  onPressed: () => context.push(AppRoutes.creativeProfile),
-                  icon: const Icon(Icons.auto_awesome, size: 18),
-                  label: const Text('Update Profile'),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              FilledButton.icon(
+                onPressed: () => context.push(AppRoutes.creativeProfile),
+                icon: const Icon(Icons.auto_awesome, size: 18),
+                label: const Text('Update Profile'),
+              ),
+            ],
+          ),
         ),
       ],
     );

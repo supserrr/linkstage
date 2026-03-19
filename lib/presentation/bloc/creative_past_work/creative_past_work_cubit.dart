@@ -43,7 +43,9 @@ class CreativePastWorkCubit extends Cubit<CreativePastWorkState> {
   Future<void> load() async {
     emit(state.copyWith(isLoading: true, error: null));
     try {
-      final profile = await _profileRepository.getProfileByUserId(_profileUserId);
+      final profile = await _profileRepository.getProfileByUserId(
+        _profileUserId,
+      );
       final creativeName = profile?.displayName;
       final creativePhotoUrl = profile?.photoUrl;
 
@@ -71,12 +73,19 @@ class CreativePastWorkCubit extends Cubit<CreativePastWorkState> {
       }
 
       final collaborationsAsTarget = await _collaborationRepository
-          .getCollaborationsByTargetUserId(_profileUserId, status: CollaborationStatus.completed);
+          .getCollaborationsByTargetUserId(
+            _profileUserId,
+            status: CollaborationStatus.completed,
+          );
       final collaborationsAsRequester = await _collaborationRepository
-          .getCollaborationsByRequesterId(_profileUserId, status: CollaborationStatus.completed);
+          .getCollaborationsByRequesterId(
+            _profileUserId,
+            status: CollaborationStatus.completed,
+          );
 
-      final hiddenIds =
-          (await _preferencesRepository.getHiddenIds(_profileUserId)).toSet();
+      final hiddenIds = (await _preferencesRepository.getHiddenIds(
+        _profileUserId,
+      )).toSet();
 
       final plannerIds = <String>{};
       for (final b in pastEventBookings) {
@@ -102,12 +111,14 @@ class CreativePastWorkCubit extends Cubit<CreativePastWorkState> {
         if (!_isViewingOwn && hiddenIds.contains(b.id)) continue;
         final event = await _eventRepository.getEventById(b.eventId);
         if (event != null) {
-          pastEvents.add(PastEventItem(
-            bookingId: b.id,
-            event: event,
-            plannerName: userMap[b.plannerId] ?? 'Unknown',
-            plannerPhotoUrl: photoMap[b.plannerId],
-          ));
+          pastEvents.add(
+            PastEventItem(
+              bookingId: b.id,
+              event: event,
+              plannerName: userMap[b.plannerId] ?? 'Unknown',
+              plannerPhotoUrl: photoMap[b.plannerId],
+            ),
+          );
         }
       }
       pastEvents.sort((a, b) {
@@ -125,13 +136,15 @@ class CreativePastWorkCubit extends Cubit<CreativePastWorkState> {
           if (c.eventId != null) {
             event = await _eventRepository.getEventById(c.eventId!);
           }
-          pastCollaborations.add(PastCollaborationItem(
-            collaboration: c,
-            event: event,
-            plannerId: c.requesterId,
-            plannerName: userMap[c.requesterId] ?? 'Unknown',
-            plannerPhotoUrl: photoMap[c.requesterId],
-          ));
+          pastCollaborations.add(
+            PastCollaborationItem(
+              collaboration: c,
+              event: event,
+              plannerId: c.requesterId,
+              plannerName: userMap[c.requesterId] ?? 'Unknown',
+              plannerPhotoUrl: photoMap[c.requesterId],
+            ),
+          );
         }
       }
       for (final c in collaborationsAsRequester) {
@@ -141,13 +154,15 @@ class CreativePastWorkCubit extends Cubit<CreativePastWorkState> {
           if (c.eventId != null) {
             event = await _eventRepository.getEventById(c.eventId!);
           }
-          pastCollaborations.add(PastCollaborationItem(
-            collaboration: c,
-            event: event,
-            plannerId: c.targetUserId,
-            plannerName: userMap[c.targetUserId] ?? 'Unknown',
-            plannerPhotoUrl: photoMap[c.targetUserId],
-          ));
+          pastCollaborations.add(
+            PastCollaborationItem(
+              collaboration: c,
+              event: event,
+              plannerId: c.targetUserId,
+              plannerName: userMap[c.targetUserId] ?? 'Unknown',
+              plannerPhotoUrl: photoMap[c.targetUserId],
+            ),
+          );
         }
       }
       pastCollaborations.sort((a, b) {
@@ -156,19 +171,23 @@ class CreativePastWorkCubit extends Cubit<CreativePastWorkState> {
         return db.compareTo(da);
       });
 
-      emit(state.copyWith(
-        creativeName: creativeName,
-        creativePhotoUrl: creativePhotoUrl,
-        pastEvents: pastEvents,
-        pastCollaborations: pastCollaborations,
-        hiddenIds: hiddenIds,
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          creativeName: creativeName,
+          creativePhotoUrl: creativePhotoUrl,
+          pastEvents: pastEvents,
+          pastCollaborations: pastCollaborations,
+          hiddenIds: hiddenIds,
+          isLoading: false,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceFirst('Exception: ', ''),
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: e.toString().replaceFirst('Exception: ', ''),
+        ),
+      );
     }
   }
 
@@ -176,7 +195,11 @@ class CreativePastWorkCubit extends Cubit<CreativePastWorkState> {
   Future<void> setItemVisibility(String itemId, bool show) async {
     if (!_isViewingOwn) return;
     try {
-      await _preferencesRepository.setItemVisibility(_profileUserId, itemId, show);
+      await _preferencesRepository.setItemVisibility(
+        _profileUserId,
+        itemId,
+        show,
+      );
       final updated = Set<String>.from(state.hiddenIds);
       if (show) {
         updated.remove(itemId);
@@ -185,9 +208,7 @@ class CreativePastWorkCubit extends Cubit<CreativePastWorkState> {
       }
       emit(state.copyWith(hiddenIds: updated));
     } catch (e) {
-      emit(state.copyWith(
-        error: e.toString().replaceFirst('Exception: ', ''),
-      ));
+      emit(state.copyWith(error: e.toString().replaceFirst('Exception: ', '')));
     }
   }
 }

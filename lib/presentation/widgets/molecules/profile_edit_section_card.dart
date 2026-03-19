@@ -36,7 +36,9 @@ class ProfileEditSectionCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                      color: colorScheme.primaryContainer.withValues(
+                        alpha: 0.5,
+                      ),
                       borderRadius: AppBorders.borderRadius,
                     ),
                     child: Icon(

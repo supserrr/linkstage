@@ -67,7 +67,11 @@ class _BookingsPageState extends State<BookingsPage>
   Future<void> _load() async {
     final user = sl<AuthRedirectNotifier>().user;
     if (user?.id == null || user?.role != UserRole.creativeProfessional) {
-      if (mounted) setState(() { _loading = false; });
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
       return;
     }
     setState(() {
@@ -75,18 +79,16 @@ class _BookingsPageState extends State<BookingsPage>
       _error = null;
     });
     try {
-      final collaborations =
-          await sl<CollaborationRepository>().getCollaborationsByTargetUserId(
-        user!.id,
-      );
-      final invited =
-          await sl<BookingRepository>().getInvitedBookingsByCreativeId(user.id);
-      final pending =
-          await sl<BookingRepository>().getPendingBookingsByCreativeId(user.id);
-      final accepted =
-          await sl<BookingRepository>().getAcceptedBookingsByCreativeId(user.id);
-      final completed =
-          await sl<BookingRepository>().getCompletedBookingsByCreativeId(user.id);
+      final collaborations = await sl<CollaborationRepository>()
+          .getCollaborationsByTargetUserId(user!.id);
+      final invited = await sl<BookingRepository>()
+          .getInvitedBookingsByCreativeId(user.id);
+      final pending = await sl<BookingRepository>()
+          .getPendingBookingsByCreativeId(user.id);
+      final accepted = await sl<BookingRepository>()
+          .getAcceptedBookingsByCreativeId(user.id);
+      final completed = await sl<BookingRepository>()
+          .getCompletedBookingsByCreativeId(user.id);
       final eventRepo = sl<EventRepository>();
       final eventIds = {
         ...invited.map((b) => b.eventId),
@@ -98,7 +100,10 @@ class _BookingsPageState extends State<BookingsPage>
       for (final id in eventIds) {
         events[id] = await eventRepo.getEventById(id);
       }
-      final requesterIds = collaborations.map((c) => c.requesterId).toSet().toList();
+      final requesterIds = collaborations
+          .map((c) => c.requesterId)
+          .toSet()
+          .toList();
       final requesterNames = <String, String>{};
       final requesterPhotoUrls = <String, String?>{};
       final requesterRoles = <String, UserRole?>{};
@@ -244,7 +249,10 @@ class _BookingsPageState extends State<BookingsPage>
 
   Future<void> _acceptCollaboration(CollaborationEntity c) async {
     try {
-      await sl<CollaborationRepository>().updateStatus(c.id, CollaborationStatus.accepted);
+      await sl<CollaborationRepository>().updateStatus(
+        c.id,
+        CollaborationStatus.accepted,
+      );
       final user = sl<AuthRedirectNotifier>().user;
       final accepterName =
           user?.displayName ?? user?.username ?? user?.email ?? 'Someone';
@@ -277,7 +285,10 @@ class _BookingsPageState extends State<BookingsPage>
 
   Future<void> _declineCollaboration(CollaborationEntity c) async {
     try {
-      await sl<CollaborationRepository>().updateStatus(c.id, CollaborationStatus.declined);
+      await sl<CollaborationRepository>().updateStatus(
+        c.id,
+        CollaborationStatus.declined,
+      );
       final user = sl<AuthRedirectNotifier>().user;
       final declinerName =
           user?.displayName ?? user?.username ?? user?.email ?? 'Someone';
@@ -388,7 +399,8 @@ class _BookingsPageState extends State<BookingsPage>
     final hasApplications = _applications.isNotEmpty;
     final hasAccepted = _accepted.isNotEmpty;
     final hasCompleted = _completed.isNotEmpty;
-    final hasAnyGigs = hasInvited || hasApplications || hasAccepted || hasCompleted;
+    final hasAnyGigs =
+        hasInvited || hasApplications || hasAccepted || hasCompleted;
 
     if (_loading && !hasAnyGigs && _error == null) {
       return ListView.builder(
@@ -431,7 +443,8 @@ class _BookingsPageState extends State<BookingsPage>
         padding: const EdgeInsets.only(top: 16, bottom: 96),
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: 5,
-        itemBuilder: (context, index) => const CollaborationProposalTileSkeleton(),
+        itemBuilder: (context, index) =>
+            const CollaborationProposalTileSkeleton(),
       );
     }
     if (_collaborations.isEmpty && _error == null) {
@@ -446,9 +459,11 @@ class _BookingsPageState extends State<BookingsPage>
       );
     }
     final activeCollabs = _collaborations
-        .where((c) =>
-            c.status == CollaborationStatus.pending ||
-            c.status == CollaborationStatus.accepted)
+        .where(
+          (c) =>
+              c.status == CollaborationStatus.pending ||
+              c.status == CollaborationStatus.accepted,
+        )
         .toList();
     final pastCollabs = _collaborations
         .where((c) => c.status == CollaborationStatus.completed)
@@ -458,7 +473,8 @@ class _BookingsPageState extends State<BookingsPage>
             padding: const EdgeInsets.only(top: 16, bottom: 96),
             physics: const AlwaysScrollableScrollPhysics(),
             itemCount: 5,
-            itemBuilder: (context, index) => const CollaborationProposalTileSkeleton(),
+            itemBuilder: (context, index) =>
+                const CollaborationProposalTileSkeleton(),
           )
         : _buildCollaborationsSliverList(
             active: activeCollabs,
@@ -490,42 +506,39 @@ class _BookingsPageState extends State<BookingsPage>
             child: Text(
               'Active',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
         ),
       );
       slivers.add(
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final c = active[index];
-              final requesterName = _requesterNames[c.requesterId] ?? 'Someone';
-              final requesterPhotoUrl = _requesterPhotoUrls[c.requesterId];
-              return _CollaborationProposalTile(
-                collaboration: c,
-                requesterName: requesterName,
-                requesterPhotoUrl: requesterPhotoUrl,
-                requesterRole: _requesterRoles[c.requesterId],
-                onAccept: () => _acceptCollaboration(c),
-                onDecline: () => _declineCollaboration(c),
-                onViewMore: () => context.push(
-                  AppRoutes.collaborationDetail,
-                  extra: {
-                    'collaboration': c,
-                    'otherPersonName': requesterName,
-                    'otherPersonId': c.requesterId,
-                    'otherPersonRole': _requesterRoles[c.requesterId],
-                    'viewerIsCreative': true,
-                    'otherPersonPhotoUrl': requesterPhotoUrl,
-                  },
-                ),
-              );
-            },
-            childCount: active.length,
-          ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final c = active[index];
+            final requesterName = _requesterNames[c.requesterId] ?? 'Someone';
+            final requesterPhotoUrl = _requesterPhotoUrls[c.requesterId];
+            return _CollaborationProposalTile(
+              collaboration: c,
+              requesterName: requesterName,
+              requesterPhotoUrl: requesterPhotoUrl,
+              requesterRole: _requesterRoles[c.requesterId],
+              onAccept: () => _acceptCollaboration(c),
+              onDecline: () => _declineCollaboration(c),
+              onViewMore: () => context.push(
+                AppRoutes.collaborationDetail,
+                extra: {
+                  'collaboration': c,
+                  'otherPersonName': requesterName,
+                  'otherPersonId': c.requesterId,
+                  'otherPersonRole': _requesterRoles[c.requesterId],
+                  'viewerIsCreative': true,
+                  'otherPersonPhotoUrl': requesterPhotoUrl,
+                },
+              ),
+            );
+          }, childCount: active.length),
         ),
       );
       slivers.add(const SliverToBoxAdapter(child: SizedBox(height: 24)));
@@ -535,54 +548,51 @@ class _BookingsPageState extends State<BookingsPage>
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Text(
+            child: Text(
               'Past',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
         ),
       );
       slivers.add(
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final c = past[index];
-              final requesterName = _requesterNames[c.requesterId] ?? 'Someone';
-              final requesterPhotoUrl = _requesterPhotoUrls[c.requesterId];
-              return _CollaborationProposalTile(
-                collaboration: c,
-                requesterName: requesterName,
-                requesterPhotoUrl: requesterPhotoUrl,
-                requesterRole: _requesterRoles[c.requesterId],
-                onAccept: () => _acceptCollaboration(c),
-                onDecline: () => _declineCollaboration(c),
-                onViewMore: () => context.push(
-                  AppRoutes.collaborationDetail,
-                  extra: {
-                    'collaboration': c,
-                    'otherPersonName': requesterName,
-                    'otherPersonId': c.requesterId,
-                    'otherPersonRole': _requesterRoles[c.requesterId],
-                    'viewerIsCreative': true,
-                    'otherPersonPhotoUrl': requesterPhotoUrl,
-                  },
-                ),
-              );
-            },
-            childCount: past.length,
-          ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final c = past[index];
+            final requesterName = _requesterNames[c.requesterId] ?? 'Someone';
+            final requesterPhotoUrl = _requesterPhotoUrls[c.requesterId];
+            return _CollaborationProposalTile(
+              collaboration: c,
+              requesterName: requesterName,
+              requesterPhotoUrl: requesterPhotoUrl,
+              requesterRole: _requesterRoles[c.requesterId],
+              onAccept: () => _acceptCollaboration(c),
+              onDecline: () => _declineCollaboration(c),
+              onViewMore: () => context.push(
+                AppRoutes.collaborationDetail,
+                extra: {
+                  'collaboration': c,
+                  'otherPersonName': requesterName,
+                  'otherPersonId': c.requesterId,
+                  'otherPersonRole': _requesterRoles[c.requesterId],
+                  'viewerIsCreative': true,
+                  'otherPersonPhotoUrl': requesterPhotoUrl,
+                },
+              ),
+            );
+          }, childCount: past.length),
         ),
       );
     }
-    slivers.add(const SliverPadding(
-      padding: EdgeInsets.only(top: 8, left: 0, right: 0, bottom: 96),
-    ));
-    return CustomScrollView(
-      slivers: slivers,
+    slivers.add(
+      const SliverPadding(
+        padding: EdgeInsets.only(top: 8, left: 0, right: 0, bottom: 96),
+      ),
     );
+    return CustomScrollView(slivers: slivers);
   }
 
   Widget _buildGigsSliverList() {
@@ -599,47 +609,38 @@ class _BookingsPageState extends State<BookingsPage>
               child: Text(
                 'Invitations',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
           ),
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final booking = _invited[index];
-                return _BookingEventTile(
-                  booking: booking,
-                  event: _events[booking.eventId],
-                  status: BookingStatus.invited,
-                  onTap: () => context.push(
-                    AppRoutes.eventDetail(booking.eventId),
-                  ),
-                  onAccept: () => _acceptInvitation(booking),
-                  onDecline: () => _declineInvitation(booking),
-                );
-              },
-              childCount: _invited.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final booking = _invited[index];
+              return _BookingEventTile(
+                booking: booking,
+                event: _events[booking.eventId],
+                status: BookingStatus.invited,
+                onTap: () =>
+                    context.push(AppRoutes.eventDetail(booking.eventId)),
+                onAccept: () => _acceptInvitation(booking),
+                onDecline: () => _declineInvitation(booking),
+              );
+            }, childCount: _invited.length),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ],
         if (hasAccepted) ...[
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                hasInvited ? 0 : 16,
-                16,
-                8,
-              ),
+              padding: EdgeInsets.fromLTRB(16, hasInvited ? 0 : 16, 16, 8),
               child: Text(
                 'Accepted',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
           ),
@@ -670,9 +671,9 @@ class _BookingsPageState extends State<BookingsPage>
               child: Text(
                 'Applications',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
           ),
@@ -696,35 +697,32 @@ class _BookingsPageState extends State<BookingsPage>
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
-              'Past',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-            ),
+                'Past',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
             ),
           ),
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final booking = _completed[index];
-                return _BookingEventTile(
-                  booking: booking,
-                  event: _events[booking.eventId],
-                  status: BookingStatus.completed,
-                  onTap: () => context.push(
-                    AppRoutes.eventDetail(booking.eventId),
-                  ),
-                  canLeaveReview: false,
-                  onLeaveReview: null,
-                  canConfirmCompletion: booking.creativeConfirmedAt == null,
-                  hasConfirmedCompletion: booking.creativeConfirmedAt != null,
-                  onConfirmCompletion: () => _confirmCompletionByCreative(booking),
-                  isConfirmingCompletion: _confirmingBookingId == booking.id,
-                );
-              },
-              childCount: _completed.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final booking = _completed[index];
+              return _BookingEventTile(
+                booking: booking,
+                event: _events[booking.eventId],
+                status: BookingStatus.completed,
+                onTap: () =>
+                    context.push(AppRoutes.eventDetail(booking.eventId)),
+                canLeaveReview: false,
+                onLeaveReview: null,
+                canConfirmCompletion: booking.creativeConfirmedAt == null,
+                hasConfirmedCompletion: booking.creativeConfirmedAt != null,
+                onConfirmCompletion: () =>
+                    _confirmCompletionByCreative(booking),
+                isConfirmingCompletion: _confirmingBookingId == booking.id,
+              );
+            }, childCount: _completed.length),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 96)),
         ],
@@ -808,8 +806,7 @@ class _CollaborationProposalTile extends StatelessWidget {
       chips.add(
         AppDetailChip(
           icon: Icons.attach_money_outlined,
-          label:
-              '${NumberFormatter.formatMoney(collaboration.budget!)} RWF',
+          label: '${NumberFormatter.formatMoney(collaboration.budget!)} RWF',
           colorScheme: colorScheme,
         ),
       );
@@ -830,13 +827,13 @@ class _CollaborationProposalTile extends StatelessWidget {
     final statusBg = status == CollaborationStatus.pending
         ? colorScheme.tertiaryContainer
         : status == CollaborationStatus.accepted
-            ? colorScheme.primaryContainer
-            : colorScheme.surfaceContainerHighest;
+        ? colorScheme.primaryContainer
+        : colorScheme.surfaceContainerHighest;
     final statusFg = status == CollaborationStatus.pending
         ? colorScheme.onTertiaryContainer
         : status == CollaborationStatus.accepted
-            ? colorScheme.onPrimaryContainer
-            : colorScheme.onSurfaceVariant;
+        ? colorScheme.onPrimaryContainer
+        : colorScheme.onSurfaceVariant;
 
     return GlassCard(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -880,7 +877,9 @@ class _CollaborationProposalTile extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: statusBg,
-                              borderRadius: BorderRadius.circular(AppBorders.chipRadius),
+                              borderRadius: BorderRadius.circular(
+                                AppBorders.chipRadius,
+                              ),
                             ),
                             child: Text(
                               _statusLabel(status),
@@ -915,11 +914,7 @@ class _CollaborationProposalTile extends StatelessWidget {
             ),
             if (topChips.isNotEmpty) ...[
               const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: topChips,
-              ),
+              Wrap(spacing: 8, runSpacing: 8, children: topChips),
             ],
             const SizedBox(height: 14),
             Divider(
@@ -1036,17 +1031,17 @@ class _BookingEventTile extends StatelessWidget {
     final statusLabel = isCompleted
         ? 'Completed'
         : isInvited
-            ? 'Invitation'
-            : isAccepted
-                ? 'Accepted'
-                : 'Applied';
+        ? 'Invitation'
+        : isAccepted
+        ? 'Accepted'
+        : 'Applied';
     final statusColor = isCompleted
         ? colorScheme.secondary
         : isInvited
-            ? colorScheme.tertiary
-            : isAccepted
-                ? colorScheme.primary
-                : colorScheme.onSurfaceVariant;
+        ? colorScheme.tertiary
+        : isAccepted
+        ? colorScheme.primary
+        : colorScheme.onSurfaceVariant;
 
     // Status as subtle text (information, not action)
     final statusText = Text(
@@ -1110,7 +1105,9 @@ class _BookingEventTile extends StatelessWidget {
               style: hasConfirmedCompletion
                   ? tonalStyle.copyWith(
                       backgroundColor: WidgetStateProperty.all(
-                        colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
+                        colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.8,
+                        ),
                       ),
                       foregroundColor: WidgetStateProperty.all(
                         colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
@@ -1127,15 +1124,15 @@ class _BookingEventTile extends StatelessWidget {
                       ],
                     )
                   : isConfirmingCompletion
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: LoadingAnimationWidget.stretchedDots(
-                            color: colorScheme.onPrimary,
-                            size: 20,
-                          ),
-                        )
-                      : const Text('Confirm'),
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: LoadingAnimationWidget.stretchedDots(
+                        color: colorScheme.onPrimary,
+                        size: 20,
+                      ),
+                    )
+                  : const Text('Confirm'),
             ),
             if (canLeaveReview && onLeaveReview != null) pillSpacing,
           ],
@@ -1156,11 +1153,7 @@ class _BookingEventTile extends StatelessWidget {
           children: [
             const Text('View details'),
             const SizedBox(width: 6),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 12,
-              color: colorScheme.primary,
-            ),
+            Icon(Icons.arrow_forward_ios, size: 12, color: colorScheme.primary),
           ],
         ),
       );
@@ -1173,91 +1166,94 @@ class _BookingEventTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: AppBorders.borderRadius,
         child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  width: _imageSize,
-                  height: _imageSize,
-                  child: imageUrl != null
-                      ? CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (_, _) => Container(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: const Icon(Icons.image_outlined, size: 32),
-                          ),
-                          errorWidget: (_, _, _) => Container(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: const Icon(Icons.broken_image_outlined, size: 32),
-                          ),
-                        )
-                      : Container(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: _imageSize,
+                height: _imageSize,
+                child: imageUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (_, _) => Container(
                           color: colorScheme.surfaceContainerHighest,
-                          child: const Icon(Icons.event_outlined, size: 32),
+                          child: const Icon(Icons.image_outlined, size: 32),
                         ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              height: 1.25,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                        errorWidget: (_, _, _) => Container(
+                          color: colorScheme.surfaceContainerHighest,
+                          child: const Icon(
+                            Icons.broken_image_outlined,
+                            size: 32,
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        statusText,
-                      ],
+                      )
+                    : Container(
+                        color: colorScheme.surfaceContainerHighest,
+                        child: const Icon(Icons.event_outlined, size: 32),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            height: 1.25,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      statusText,
+                    ],
+                  ),
+                  if (eventType.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      eventType,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    if (eventType.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                  ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
                       Text(
-                        eventType,
+                        dateStr,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
-                          size: 14,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          dateStr,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    actionWidget,
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 10),
+                  actionWidget,
+                ],
               ),
-            ],
+            ),
+          ],
         ),
       ),
     );

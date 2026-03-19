@@ -17,6 +17,7 @@ class CreativeProfileState {
 
   final ProfileEntity? profile;
   final List<ReviewEntity> reviews;
+
   /// Reviewer userId -> user (for review avatars and names).
   final Map<String, UserEntity> reviewAuthorsById;
   final int totalGigs;

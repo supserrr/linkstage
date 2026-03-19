@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:glass_kit/glass_kit.dart';
 
@@ -117,7 +118,12 @@ class GlassBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(_screenPadding, 0, _screenPadding, _screenPadding),
+      padding: const EdgeInsets.fromLTRB(
+        _screenPadding,
+        0,
+        _screenPadding,
+        _screenPadding,
+      ),
       child: GlassCard(
         margin: EdgeInsets.zero,
         padding: EdgeInsets.zero,
@@ -170,10 +176,7 @@ class _FallbackCard extends StatelessWidget {
           width: 1,
         ),
       ),
-      child: ClipRRect(
-        borderRadius: AppBorders.borderRadius,
-        child: content,
-      ),
+      child: ClipRRect(borderRadius: AppBorders.borderRadius, child: content),
     );
   }
 }

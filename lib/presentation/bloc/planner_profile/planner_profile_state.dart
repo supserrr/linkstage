@@ -24,6 +24,7 @@ class PlannerProfileState {
   final List<EventEntity> currentEvents;
   final List<EventEntity> pastEvents;
   final List<ProfileEntity> recentCreatives;
+
   /// When viewing another planner, event IDs where the signed-in user has an accepted booking.
   final Set<String> acceptedEventIdsForViewer;
   final bool isLoading;

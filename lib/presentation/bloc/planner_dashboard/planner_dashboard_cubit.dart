@@ -68,10 +68,12 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
           onError: (e) {
             _loadingDeferTimer?.cancel();
             _loadingDeferTimer = null;
-            emit(state.copyWith(
-              isLoading: false,
-              error: e.toString().replaceAll('Exception:', '').trim(),
-            ));
+            emit(
+              state.copyWith(
+                isLoading: false,
+                error: e.toString().replaceAll('Exception:', '').trim(),
+              ),
+            );
           },
         );
 
@@ -85,10 +87,12 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
           onError: (e) {
             _loadingDeferTimer?.cancel();
             _loadingDeferTimer = null;
-            emit(state.copyWith(
-              isLoading: false,
-              error: e.toString().replaceAll('Exception:', '').trim(),
-            ));
+            emit(
+              state.copyWith(
+                isLoading: false,
+                error: e.toString().replaceAll('Exception:', '').trim(),
+              ),
+            );
           },
         );
   }
@@ -105,8 +109,9 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
           (pendingCountByEventId[b.eventId] ?? 0) + 1;
     }
 
-    final upcomingEvents =
-        events.where(EventDateUtils.isUpcomingEvent).toList();
+    final upcomingEvents = events
+        .where(EventDateUtils.isUpcomingEvent)
+        .toList();
     final recentBookings = pendingBookings
         .where((b) {
           final event = eventById[b.eventId];
@@ -114,41 +119,48 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
         })
         .take(_recentActivityLimit)
         .toList();
-    final creativeIds =
-        recentBookings.map((b) => b.creativeId).toSet().toList();
+    final creativeIds = recentBookings
+        .map((b) => b.creativeId)
+        .toSet()
+        .toList();
     final usersMap = creativeIds.isEmpty
         ? <String, UserEntity>{}
         : await _userRepository.getUsersByIds(creativeIds);
     final recentActivities = <PlannerDashboardActivityItem>[];
     for (final b in recentBookings) {
       final user = usersMap[b.creativeId];
-      final creativeName = user?.displayName ??
+      final creativeName =
+          user?.displayName ??
           user?.username ??
           user?.email.split('@').firstOrNull ??
           'Someone';
       final event = eventById[b.eventId];
       final eventTitle = event?.title ?? 'Event';
       final createdAt = b.createdAt ?? DateTime.now();
-      recentActivities.add(PlannerDashboardActivityItem(
-        creativeName: creativeName,
-        eventTitle: eventTitle,
-        createdAt: createdAt,
-      ));
+      recentActivities.add(
+        PlannerDashboardActivityItem(
+          creativeName: creativeName,
+          eventTitle: eventTitle,
+          createdAt: createdAt,
+        ),
+      );
     }
 
     if (seq != _emitSequence) return;
     _loadingDeferTimer?.cancel();
     _loadingDeferTimer = null;
     _hasEmittedData = true;
-    emit(state.copyWith(
-      events: upcomingEvents,
-      applicantsCount: pendingBookings.length,
-      eventsCount: upcomingEvents.length,
-      unreadCount: 0,
-      recentActivities: recentActivities,
-      pendingCountByEventId: pendingCountByEventId,
-      isLoading: false,
-    ));
+    emit(
+      state.copyWith(
+        events: upcomingEvents,
+        applicantsCount: pendingBookings.length,
+        eventsCount: upcomingEvents.length,
+        unreadCount: 0,
+        recentActivities: recentActivities,
+        pendingCountByEventId: pendingCountByEventId,
+        isLoading: false,
+      ),
+    );
   }
 
   /// Retry stream subscriptions on error.

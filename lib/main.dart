@@ -16,9 +16,7 @@ import 'presentation/bloc/settings/settings_cubit.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // Background message received - system handles notification display
 }
 
@@ -49,7 +47,10 @@ void main() async {
     FirebaseFirestore.instance.settings = const Settings(
       persistenceEnabled: true,
     );
-    if (const bool.fromEnvironment('USE_FIRESTORE_EMULATOR', defaultValue: false)) {
+    if (const bool.fromEnvironment(
+      'USE_FIRESTORE_EMULATOR',
+      defaultValue: false,
+    )) {
       FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
     }
   } on UnimplementedError catch (_) {
@@ -104,15 +105,17 @@ Future<void> _handleInitialAuthLink() async {
 
 void _listenForAuthLinks() {
   final appLinks = AppLinks();
-  appLinks.uriLinkStream.listen((Uri? uri) async {
-    if (uri != null) {
-      await _completeSignInWithEmailLink(uri.toString());
-    }
-  }).onError((Object e) {
-    if (kDebugMode) {
-      debugPrint('[AuthLink] Stream error: $e');
-    }
-  });
+  appLinks.uriLinkStream
+      .listen((Uri? uri) async {
+        if (uri != null) {
+          await _completeSignInWithEmailLink(uri.toString());
+        }
+      })
+      .onError((Object e) {
+        if (kDebugMode) {
+          debugPrint('[AuthLink] Stream error: $e');
+        }
+      });
 }
 
 Future<void> _completeSignInWithEmailLink(String link) async {

@@ -39,7 +39,11 @@ class _ConnectionErrorOverlayState extends State<ConnectionErrorOverlay> {
       _lastToastError = widget.error;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          showToast(context, firestoreErrorMessage(widget.error), isError: true);
+          showToast(
+            context,
+            firestoreErrorMessage(widget.error),
+            isError: true,
+          );
         }
       });
     }
@@ -55,10 +59,7 @@ class _ConnectionErrorOverlayState extends State<ConnectionErrorOverlay> {
       useMaterialContainer: false,
       indicatorBuilder: (context, controller) => Padding(
         padding: const EdgeInsets.all(8.0),
-        child: LoadingAnimationWidget.threeRotatingDots(
-          color: color,
-          size: 40,
-        ),
+        child: LoadingAnimationWidget.threeRotatingDots(color: color, size: 40),
       ),
       child: Stack(
         children: [
