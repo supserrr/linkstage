@@ -1,17 +1,45 @@
-# flutter_application_1
+# LinkStage
 
-A new Flutter project.
+LinkStage is a mobile marketplace connecting event planners with creative professionals (DJs, photographers, decorators, content creators) in Rwanda.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+Please refer to our detailed [Setup Guide](docs/setup.md) to get the application running locally and configure dependencies like Firebase and Supabase.
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+git clone <repository-url>
+cd linkstage
+flutter pub get
+flutter run
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Documentation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Full documentation is available in the [`docs/`](docs/) directory:
+
+- **Guides & Setup**
+  - [System Setup](docs/setup.md)
+  - [App Icons Setup](docs/app_icons_setup.md)
+  - [Splash Screen Setup](docs/splash_screen_setup.md)
+  - [Firebase MCP Setup](docs/firebase-mcp-setup.md)
+- **Architecture & Data**
+  - [State Management](docs/state_management.md)
+  - [Entity Relationship Diagram (ERD)](docs/erd.md)
+  - [Firestore Troubleshooting](docs/troubleshooting_firestore.md)
+- **Features**
+  - [Event Creation Flow](docs/create_event_flow.md)
+  - [Chat System](docs/chat.md)
+  - [Push Notifications](docs/push_notifications.md)
+  - [Supabase Storage Setup](docs/supabase_storage_setup.md)
+  - [Localization](docs/localization.md)
+- **Privacy & Security**
+  - [Privacy Settings](docs/privacy.md)
+  - [Wipe User Data](docs/wipe_user_data.md)
+
+## Support
+
+If you need help or want to report an issue, please check the documentation or open an issue in the repository.
+
+## License
+
+Private - LinkStage Project
