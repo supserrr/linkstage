@@ -9,7 +9,9 @@ import '../../../data/datasources/portfolio_storage_datasource.dart';
 import '../../bloc/onboarding/onboarding_cubit.dart';
 import '../../bloc/onboarding/profile_setup_cubit.dart';
 import '../../bloc/onboarding/profile_setup_draft_storage.dart';
+import '../../bloc/onboarding/profile_setup_flow_cubit.dart';
 import '../../bloc/onboarding/profile_setup_state.dart';
+import '../../bloc/onboarding/username_step_cubit.dart';
 import '../../../core/router/app_router.dart';
 import '../../../domain/entities/user_entity.dart';
 import '../../../domain/repositories/auth_repository.dart';
@@ -33,7 +35,7 @@ class ProfileSetupFlowPage extends StatefulWidget {
 class _ProfileSetupFlowPageState extends State<ProfileSetupFlowPage> {
   late final PageController _pageController;
   late final List<_StepConfig> _steps;
-  int _currentStep = 0;
+  late final int _initialStep;
   ProfileSetupState? _initialDraft;
 
   @override
@@ -46,10 +48,12 @@ class _ProfileSetupFlowPageState extends State<ProfileSetupFlowPage> {
     ];
     final draft = sl<ProfileSetupDraftStorage>().loadDraft(widget.user.id);
     if (draft != null) {
-      _currentStep = draft.step.clamp(0, _steps.length - 1);
+      _initialStep = draft.step.clamp(0, _steps.length - 1);
       _initialDraft = draft.state;
+    } else {
+      _initialStep = 0;
     }
-    _pageController = PageController(initialPage: _currentStep);
+    _pageController = PageController(initialPage: _initialStep);
   }
 
   @override
@@ -59,15 +63,17 @@ class _ProfileSetupFlowPageState extends State<ProfileSetupFlowPage> {
   }
 
   void _next(BuildContext blocContext) {
-    if (_currentStep < _steps.length - 1) {
-      final newStep = _currentStep + 1;
+    final flow = blocContext.read<ProfileSetupFlowCubit>();
+    final step = flow.state;
+    if (step < _steps.length - 1) {
+      final newStep = step + 1;
       final cubitState = blocContext.read<ProfileSetupCubit>().state;
       sl<ProfileSetupDraftStorage>().saveDraft(
         widget.user.id,
         newStep,
         cubitState,
       );
-      setState(() => _currentStep = newStep);
+      flow.setStep(newStep);
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -83,16 +89,21 @@ class _ProfileSetupFlowPageState extends State<ProfileSetupFlowPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ProfileSetupCubit(
-        widget.user,
-        sl<UpsertUserUseCase>(),
-        sl<ProfileRepository>(),
-        sl<UserRepository>(),
-        sl<PortfolioStorageDataSource>(),
-        sl<AuthRepository>(),
-        initialDraft: _initialDraft,
-      ),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => ProfileSetupFlowCubit(_initialStep)),
+        BlocProvider(
+          create: (_) => ProfileSetupCubit(
+            widget.user,
+            sl<UpsertUserUseCase>(),
+            sl<ProfileRepository>(),
+            sl<UserRepository>(),
+            sl<PortfolioStorageDataSource>(),
+            sl<AuthRepository>(),
+            initialDraft: _initialDraft,
+          ),
+        ),
+      ],
       child: BlocConsumer<ProfileSetupCubit, ProfileSetupState>(
         listenWhen: (a, b) => b.success || b.error != null,
         listener: (context, state) async {
@@ -109,21 +120,25 @@ class _ProfileSetupFlowPageState extends State<ProfileSetupFlowPage> {
         },
         builder: (context, state) {
           final colorScheme = Theme.of(context).colorScheme;
+          final currentStep = context.watch<ProfileSetupFlowCubit>().state;
           return Scaffold(
             backgroundColor: colorScheme.surface,
             appBar: AppBar(
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () async {
-                  if (_currentStep > 0) {
-                    final newStep = _currentStep - 1;
-                    final cubitState = context.read<ProfileSetupCubit>().state;
+                  if (currentStep > 0) {
+                    final newStep = currentStep - 1;
+                    final profileCubit = context.read<ProfileSetupCubit>();
+                    final flowCubit = context.read<ProfileSetupFlowCubit>();
+                    final cubitState = profileCubit.state;
                     await sl<ProfileSetupDraftStorage>().saveDraft(
                       widget.user.id,
                       newStep,
                       cubitState,
                     );
-                    setState(() => _currentStep = newStep);
+                    if (!context.mounted) return;
+                    flowCubit.setStep(newStep);
                     _pageController.previousPage(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOut,
@@ -132,14 +147,14 @@ class _ProfileSetupFlowPageState extends State<ProfileSetupFlowPage> {
                     final router = GoRouter.of(context);
                     final user = widget.user;
                     await sl<ProfileSetupDraftStorage>().clearDraft(user.id);
-                    if (mounted) {
+                    if (context.mounted) {
                       router.go(AppRoutes.roleSelection, extra: user);
                     }
                   }
                 },
               ),
               title: Text(
-                '${_currentStep + 1} of ${_steps.length}',
+                '${currentStep + 1} of ${_steps.length}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
@@ -167,7 +182,10 @@ class _ProfileSetupFlowPageState extends State<ProfileSetupFlowPage> {
     void onNext() => _next(blocContext);
 
     return [
-      UsernameStep(onNext: onNext),
+      BlocProvider(
+        create: (c) => UsernameStepCubit(c.read<ProfileSetupCubit>()),
+        child: UsernameStep(onNext: onNext),
+      ),
       ProfilePhotoStep(onNext: onNext),
       DisplayNameStep(initialValue: cubit.state.displayName, onNext: onNext),
     ];

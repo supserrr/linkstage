@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../bloc/onboarding/profile_setup_cubit.dart';
+import '../../../bloc/onboarding/username_step_cubit.dart';
+import '../../../bloc/onboarding/username_step_state.dart';
 import '../../../widgets/atoms/app_button.dart';
 import '../../../widgets/atoms/glass_card.dart';
 
@@ -19,8 +21,6 @@ class UsernameStep extends StatefulWidget {
 class _UsernameStepState extends State<UsernameStep> {
   final _controller = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _checking = false;
-  bool? _isAvailable; // null = not checked, true = available, false = taken
 
   @override
   void initState() {
@@ -37,27 +37,13 @@ class _UsernameStepState extends State<UsernameStep> {
     super.dispose();
   }
 
-  Future<void> _checkAvailability() async {
-    final value = _controller.text.trim();
-    if (value.length < 3) return;
-    setState(() {
-      _checking = true;
-      _isAvailable = null;
-    });
-    final available = await context
-        .read<ProfileSetupCubit>()
-        .checkUsernameAvailable(value);
-    if (mounted) {
-      setState(() {
-        _checking = false;
-        _isAvailable = available;
-      });
-    }
+  Future<void> _checkAvailability(BuildContext context) async {
+    await context.read<UsernameStepCubit>().checkAvailability(_controller.text);
   }
 
-  void _submit() {
+  void _submit(BuildContext context) {
     if (!_formKey.currentState!.validate()) return;
-    if (_isAvailable != true) return;
+    if (context.read<UsernameStepCubit>().state.isAvailable != true) return;
     final value = _controller.text.trim();
     if (value.length < 3) return;
     context.read<ProfileSetupCubit>().setUsername(value);
@@ -91,116 +77,139 @@ class _UsernameStepState extends State<UsernameStep> {
               padding: const EdgeInsets.all(24),
               child: GlassCard(
                 padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Center(
-                      child: Column(
-                        children: [
-                          Text(
-                            'Choose your username',
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.headlineMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '3-20 characters. Letters, numbers, underscore only.',
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyLarge,
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: titleGap),
-                    TextFormField(
-                      controller: _controller,
-                      decoration: const InputDecoration(
-                        labelText: 'Username',
-                        prefixText: '@ ',
-                        hintText: 'johndoe',
-                      ),
-                      autofocus: true,
-                      textCapitalization: TextCapitalization.none,
-                      autocorrect: false,
-                      onChanged: (_) => setState(() => _isAvailable = null),
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) {
-                          return 'Username is required';
-                        }
-                        if (v.trim().length < 3) {
-                          return 'At least 3 characters';
-                        }
-                        if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(v.trim())) {
-                          return 'Letters, numbers, underscore only';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: OutlinedButton.icon(
-                        onPressed:
-                            _checking || _controller.text.trim().length < 3
-                            ? null
-                            : _checkAvailability,
-                        icon: _checking
-                            ? SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: LoadingAnimationWidget.stretchedDots(
-                                  color: theme.colorScheme.primary,
-                                  size: 20,
-                                ),
-                              )
-                            : Icon(
-                                Icons.search,
-                                size: 20,
-                                color: theme.colorScheme.primary,
+                child: ListenableBuilder(
+                  listenable: _controller,
+                  builder: (context, _) {
+                    return BlocBuilder<UsernameStepCubit, UsernameStepState>(
+                      builder: (context, availState) {
+                        final checking = availState.checking;
+                        final isAvailable = availState.isAvailable;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Center(
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'Choose your username',
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.headlineMedium,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '3-20 characters. Letters, numbers, underscore only.',
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.bodyLarge,
+                                  ),
+                                ],
                               ),
-                        label: Text(
-                          _checking ? 'Checking...' : 'Check availability',
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: theme.colorScheme.primary,
-                          side: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                    if (!_checking && _isAvailable != null) ...[
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Icon(
-                            _isAvailable! ? Icons.check_circle : Icons.cancel,
-                            size: 20,
-                            color: _isAvailable!
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.error,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _isAvailable!
-                                ? 'Username is available'
-                                : 'Username is taken',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: _isAvailable!
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.error,
-                              fontWeight: FontWeight.w500,
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    SizedBox(height: bottomGap),
-                    AppButton(
-                      label: 'Next',
-                      onPressed: _isAvailable == true ? _submit : null,
-                    ),
-                  ],
+                            SizedBox(height: titleGap),
+                            TextFormField(
+                              controller: _controller,
+                              decoration: const InputDecoration(
+                                labelText: 'Username',
+                                prefixText: '@ ',
+                                hintText: 'johndoe',
+                              ),
+                              autofocus: true,
+                              textCapitalization: TextCapitalization.none,
+                              autocorrect: false,
+                              onChanged: (_) => context
+                                  .read<UsernameStepCubit>()
+                                  .onUsernameChanged(),
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) {
+                                  return 'Username is required';
+                                }
+                                if (v.trim().length < 3) {
+                                  return 'At least 3 characters';
+                                }
+                                if (!RegExp(
+                                  r'^[a-zA-Z0-9_]+$',
+                                ).hasMatch(v.trim())) {
+                                  return 'Letters, numbers, underscore only';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: OutlinedButton.icon(
+                                onPressed:
+                                    checking ||
+                                        _controller.text.trim().length < 3
+                                    ? null
+                                    : () => _checkAvailability(context),
+                                icon: checking
+                                    ? SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child:
+                                            LoadingAnimationWidget.stretchedDots(
+                                              color: theme.colorScheme.primary,
+                                              size: 20,
+                                            ),
+                                      )
+                                    : Icon(
+                                        Icons.search,
+                                        size: 20,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                label: Text(
+                                  checking
+                                      ? 'Checking...'
+                                      : 'Check availability',
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: theme.colorScheme.primary,
+                                  side: BorderSide.none,
+                                ),
+                              ),
+                            ),
+                            if (!checking && isAvailable != null) ...[
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Icon(
+                                    isAvailable
+                                        ? Icons.check_circle
+                                        : Icons.cancel,
+                                    size: 20,
+                                    color: isAvailable
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.error,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    isAvailable
+                                        ? 'Username is available'
+                                        : 'Username is taken',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: isAvailable
+                                          ? theme.colorScheme.primary
+                                          : theme.colorScheme.error,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                            SizedBox(height: bottomGap),
+                            AppButton(
+                              label: 'Next',
+                              onPressed: isAvailable == true
+                                  ? () => _submit(context)
+                                  : null,
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ),

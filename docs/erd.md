@@ -490,6 +490,36 @@ Visibility preferences for a creative’s completed collaborations (past work).
 
 Collaboration proposals allow planners or creatives to send a brief to a creative. When the requester is an event planner, optional event details (budget, date, time, location, event type) can be included. The target creative sees pending proposals in the Gigs tab and can Accept or Decline. On Accept, they can chat with the requester.
 
+## Firestore security rules for report
+
+Use this section in coursework PDFs: it summarizes how [`firestore.rules`](../firestore.rules) protects data. Deployed rules must match this file.
+
+### Principles
+
+- **Authentication**: Most collections require `request.auth != null`.
+- **Ownership**: Writes to user-owned paths use `request.auth.uid` compared to document IDs or fields such as `userId` / `plannerId` / `creativeId`.
+- **Least privilege**: Legacy or unused paths (e.g. `conversations/*`) are denied. Some denormalized data (e.g. `users/{uid}/accepted_event_ids/*`) is **read-only** for clients; only backend (Admin SDK) may write.
+- **Chat**: Participation is enforced via `chats/{chatId}/users/{uid}`. Messages cap length server-side. `chat_users` writes require the document `id` field to match the path `userId`.
+
+### Rules by area (high level)
+
+| Area | Read | Write |
+| ---- | ---- | ----- |
+| `users/{userId}` | Any authenticated user | Owner only |
+| Subcollections under `users/{userId}` (saved creatives, follows, tokens, notification reads, planner notifications) | Owner | Owner |
+| `profiles`, `planner_profiles` | Authenticated | Create/update/delete tied to owner or controlled updates (e.g. aggregate `rating` / `reviewCount` on others’ profiles) |
+| `events` | Authenticated | Planner (owner) for create/update/delete; `locationVisibility` enum validated |
+| `bookings` | Authenticated | Planner or creative on that booking |
+| `reviews` | Authenticated | Create as reviewer; structured updates (reply, likes, flags); no delete |
+| `collaborations` | Participants or completed (for past work) | Create as requester; update rules for target user flows |
+| `chat_users`, `chats`, `chats/.../users`, `chats/.../messages`, `user_chats` | Participant / owner rules as in file | As in file |
+
+### Known limitation (course discussion)
+
+Firestore rules operate on **whole documents**. Fields such as event `location` cannot be hidden per-field for some users while exposing the rest of the same document; the app combines rules with client-side display logic. See [privacy.md](privacy.md).
+
+Canonical source: [`firestore.rules`](../firestore.rules). Deploy with `firebase deploy --only firestore`.
+
 ## Storage (Supabase)
 
 Portfolio media (images and videos) are stored in Supabase Storage at `users/{userId}/portfolio/images/` and `users/{userId}/portfolio/videos/`. Profile documents in Firestore store the resulting public URLs in `portfolioUrls` and `portfolioVideoUrls`.

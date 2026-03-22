@@ -45,15 +45,16 @@ class _DisplayNameStepState extends State<DisplayNameStep> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final hasName = _controller.text.trim().isNotEmpty;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final asset = isDark
         ? 'assets/images/display_name_page_illustration_dark.svg'
         : 'assets/images/display_name_page_illustration_light.svg';
 
     return BlocBuilder<ProfileSetupCubit, ProfileSetupState>(
-      buildWhen: (a, b) => a.isLoading != b.isLoading,
+      buildWhen: (a, b) =>
+          a.displayName != b.displayName || a.isLoading != b.isLoading,
       builder: (context, state) {
+        final hasName = state.displayName.trim().isNotEmpty;
         return Padding(
           padding: const EdgeInsets.only(top: 16),
           child: Column(
@@ -95,7 +96,6 @@ class _DisplayNameStepState extends State<DisplayNameStep> {
                         label: 'Display name',
                         onChanged: (v) {
                           context.read<ProfileSetupCubit>().setDisplayName(v);
-                          setState(() {});
                         },
                       ),
                       const SizedBox(height: 24),

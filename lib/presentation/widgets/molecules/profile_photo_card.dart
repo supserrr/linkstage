@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../bloc/profile_photo_upload/profile_photo_upload_cubit.dart';
 import '../atoms/glass_card.dart';
 import '../../../core/constants/app_borders.dart';
 import '../../../core/di/injection.dart';
@@ -75,10 +77,13 @@ class ProfilePhotoCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 20),
-            _ProfilePhotoSection(
-              onPhotoUpdated: onPhotoUpdated,
-              compact: compact,
-              inline: inline,
+            BlocProvider(
+              create: (_) => ProfilePhotoUploadCubit(),
+              child: _ProfilePhotoSection(
+                onPhotoUpdated: onPhotoUpdated,
+                compact: compact,
+                inline: inline,
+              ),
             ),
           ],
         ),
@@ -87,7 +92,7 @@ class ProfilePhotoCard extends StatelessWidget {
   }
 }
 
-class _ProfilePhotoSection extends StatefulWidget {
+class _ProfilePhotoSection extends StatelessWidget {
   const _ProfilePhotoSection({
     this.onPhotoUpdated,
     this.compact = false,
@@ -98,15 +103,9 @@ class _ProfilePhotoSection extends StatefulWidget {
   final bool compact;
   final bool inline;
 
-  @override
-  State<_ProfilePhotoSection> createState() => _ProfilePhotoSectionState();
-}
-
-class _ProfilePhotoSectionState extends State<_ProfilePhotoSection> {
-  bool _isUploading = false;
-
-  Future<void> _changePhoto() async {
-    if (_isUploading) return;
+  Future<void> _changePhoto(BuildContext context) async {
+    final uploadCubit = context.read<ProfilePhotoUploadCubit>();
+    if (uploadCubit.state) return;
     final user = sl<AuthRedirectNotifier>().user;
     if (user == null) return;
     final picker = ImagePicker();
@@ -116,8 +115,8 @@ class _ProfilePhotoSectionState extends State<_ProfilePhotoSection> {
       maxHeight: 512,
       imageQuality: 85,
     );
-    if (x == null || !mounted) return;
-    setState(() => _isUploading = true);
+    if (x == null || !context.mounted) return;
+    uploadCubit.setUploading(true);
     try {
       final url = await sl<PortfolioStorageDataSource>().uploadProfilePhoto(
         x,
@@ -136,9 +135,9 @@ class _ProfilePhotoSectionState extends State<_ProfilePhotoSection> {
         ),
       );
       await sl<AuthRedirectNotifier>().refresh();
-      widget.onPhotoUpdated?.call();
+      onPhotoUpdated?.call();
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         showToast(
           context,
           e.toString().replaceAll('Exception:', '').trim(),
@@ -146,60 +145,66 @@ class _ProfilePhotoSectionState extends State<_ProfilePhotoSection> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isUploading = false);
+      if (context.mounted) {
+        uploadCubit.setUploading(false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final authNotifier = sl<AuthRedirectNotifier>();
-    final radius = widget.compact ? 28.0 : 48.0;
-    final iconSize = widget.compact ? 28.0 : 48.0;
+    final radius = compact ? 28.0 : 48.0;
+    final iconSize = compact ? 28.0 : 48.0;
     return ListenableBuilder(
       listenable: authNotifier,
       builder: (context, _) {
         final photoUrl = authNotifier.user?.photoUrl;
-        final stack = Stack(
-          clipBehavior: Clip.none,
-          children: [
-            CircleAvatar(
-              radius: radius,
-              backgroundColor: Theme.of(
-                context,
-              ).colorScheme.surfaceContainerHighest,
-              backgroundImage: photoUrl != null && photoUrl.isNotEmpty
-                  ? CachedNetworkImageProvider(photoUrl)
-                  : null,
-              child: photoUrl == null || photoUrl.isEmpty
-                  ? Icon(Icons.person, size: iconSize)
-                  : null,
-            ),
-            Positioned(
-              right: -2,
-              bottom: -2,
-              child: IconButton(
-                style: IconButton.styleFrom(
-                  padding: widget.compact ? const EdgeInsets.all(4) : null,
-                  minimumSize: widget.compact ? const Size(28, 28) : null,
+        return BlocBuilder<ProfilePhotoUploadCubit, bool>(
+          builder: (context, isUploading) {
+            final stack = Stack(
+              clipBehavior: Clip.none,
+              children: [
+                CircleAvatar(
+                  radius: radius,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
+                  backgroundImage: photoUrl != null && photoUrl.isNotEmpty
+                      ? CachedNetworkImageProvider(photoUrl)
+                      : null,
+                  child: photoUrl == null || photoUrl.isEmpty
+                      ? Icon(Icons.person, size: iconSize)
+                      : null,
                 ),
-                icon: _isUploading
-                    ? SizedBox(
-                        width: widget.compact ? 16 : 24,
-                        height: widget.compact ? 16 : 24,
-                        child: LoadingAnimationWidget.stretchedDots(
-                          color: Theme.of(context).colorScheme.primary,
-                          size: widget.compact ? 16 : 24,
-                        ),
-                      )
-                    : Icon(Icons.camera_alt, size: widget.compact ? 18 : 24),
-                onPressed: _isUploading ? null : _changePhoto,
-              ),
-            ),
-          ],
+                Positioned(
+                  right: -2,
+                  bottom: -2,
+                  child: IconButton(
+                    style: IconButton.styleFrom(
+                      padding: compact ? const EdgeInsets.all(4) : null,
+                      minimumSize: compact ? const Size(28, 28) : null,
+                    ),
+                    icon: isUploading
+                        ? SizedBox(
+                            width: compact ? 16 : 24,
+                            height: compact ? 16 : 24,
+                            child: LoadingAnimationWidget.stretchedDots(
+                              color: Theme.of(context).colorScheme.primary,
+                              size: compact ? 16 : 24,
+                            ),
+                          )
+                        : Icon(Icons.camera_alt, size: compact ? 18 : 24),
+                    onPressed: isUploading ? null : () => _changePhoto(context),
+                  ),
+                ),
+              ],
+            );
+            if (compact) return stack;
+            if (inline) return stack;
+            return Center(child: stack);
+          },
         );
-        if (widget.compact) return stack;
-        if (widget.inline) return stack;
-        return Center(child: stack);
       },
     );
   }

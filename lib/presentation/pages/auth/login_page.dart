@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/auth/auth_event.dart';
 import '../../bloc/auth/auth_state.dart';
+import '../../bloc/login_form/login_form_cubit.dart';
+import '../../bloc/login_form/login_form_state.dart';
 import '../../widgets/atoms/app_button.dart';
 import '../../widgets/atoms/app_text_field.dart';
 import '../../widgets/atoms/auth_sign_illustration.dart';
@@ -20,7 +22,10 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _LoginView();
+    return BlocProvider(
+      create: (_) => LoginFormCubit(),
+      child: const _LoginView(),
+    );
   }
 }
 
@@ -34,7 +39,6 @@ class _LoginView extends StatefulWidget {
 class _LoginViewState extends State<_LoginView> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  bool _showEmailForm = false;
 
   @override
   void dispose() {
@@ -120,52 +124,63 @@ class _LoginViewState extends State<_LoginView> {
                           },
                           builder: (context, state) {
                             final loading = state is AuthLoading;
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                GoogleSignInButton(
-                                  onPressed: loading ? null : _signInWithGoogle,
-                                  isLoading: loading && !_showEmailForm,
-                                ),
-                                SizedBox(
-                                  height: _showEmailForm
-                                      ? betweenInputs
-                                      : beforeButton,
-                                ),
-                                if (_showEmailForm) ...[
-                                  AppTextField(
-                                    controller: _emailController,
-                                    label: 'Email',
-                                    keyboardType: TextInputType.emailAddress,
-                                    textInputAction: TextInputAction.done,
-                                    validator: Validators.email,
-                                  ),
-                                  SizedBox(height: beforeButton),
-                                  AppButton(
-                                    label: 'Send sign-in link',
-                                    onPressed: loading ? null : _sendEmailLink,
-                                    isLoading: loading,
-                                  ),
-                                  SizedBox(height: betweenInputs),
-                                  TextButton(
-                                    onPressed: loading
-                                        ? null
-                                        : () => setState(
-                                            () => _showEmailForm = false,
-                                          ),
-                                    child: const Text('Back'),
-                                  ),
-                                ] else
-                                  AppButton(
-                                    label: 'Continue with Email',
-                                    onPressed: loading
-                                        ? null
-                                        : () => setState(
-                                            () => _showEmailForm = true,
-                                          ),
-                                    isLoading: false,
-                                  ),
-                              ],
+                            return BlocBuilder<LoginFormCubit, LoginFormState>(
+                              builder: (context, formState) {
+                                final showEmail = formState.showEmailForm;
+                                return Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    GoogleSignInButton(
+                                      onPressed: loading
+                                          ? null
+                                          : _signInWithGoogle,
+                                      isLoading: loading && !showEmail,
+                                    ),
+                                    SizedBox(
+                                      height: showEmail
+                                          ? betweenInputs
+                                          : beforeButton,
+                                    ),
+                                    if (showEmail) ...[
+                                      AppTextField(
+                                        controller: _emailController,
+                                        label: 'Email',
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        textInputAction: TextInputAction.done,
+                                        validator: Validators.email,
+                                      ),
+                                      SizedBox(height: beforeButton),
+                                      AppButton(
+                                        label: 'Send sign-in link',
+                                        onPressed: loading
+                                            ? null
+                                            : _sendEmailLink,
+                                        isLoading: loading,
+                                      ),
+                                      SizedBox(height: betweenInputs),
+                                      TextButton(
+                                        onPressed: loading
+                                            ? null
+                                            : () => context
+                                                  .read<LoginFormCubit>()
+                                                  .setShowEmailForm(false),
+                                        child: const Text('Back'),
+                                      ),
+                                    ] else
+                                      AppButton(
+                                        label: 'Continue with Email',
+                                        onPressed: loading
+                                            ? null
+                                            : () => context
+                                                  .read<LoginFormCubit>()
+                                                  .setShowEmailForm(true),
+                                        isLoading: false,
+                                      ),
+                                  ],
+                                );
+                              },
                             );
                           },
                         ),

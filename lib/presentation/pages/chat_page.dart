@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../bloc/chat_page/chat_page_cubit.dart';
+import '../bloc/chat_page/chat_page_state.dart';
 import '../../core/constants/app_borders.dart';
 import '../../core/constants/app_icons.dart';
 import '../../core/di/injection.dart';
@@ -35,17 +38,9 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final _scrollController = ScrollController();
-  int _lastSeenMessageCount = 0;
-  int _currentMessageCount = 0;
-  bool _showNewMessagesBanner = false;
+  late final ChatPageCubit _chatCubit;
+  int _layoutMessageCount = 0;
   static const double _atBottomThreshold = 100;
-
-  String? _resolvedChatId;
-  String? _otherUserId;
-  UserRole? _otherUserRole;
-  String _otherUserName = 'Chat';
-  String? _otherUserPhotoUrl;
-  Object? _error;
 
   static String _displayNameFor(UserEntity? u, String fallbackId) {
     if (u == null) return fallbackId;
@@ -55,16 +50,21 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _navigateToProfile() {
-    if (_otherUserId == null || _otherUserId!.isEmpty) return;
-    final userId = _otherUserId!;
-    final route = _otherUserRole == UserRole.eventPlanner
-        ? AppRoutes.plannerProfileView(userId)
-        : AppRoutes.creativeProfileView(userId);
+    final otherUserId = _chatCubit.state.otherUserId;
+    if (otherUserId == null || otherUserId.isEmpty) return;
+    final route = _chatCubit.state.otherUserRole == UserRole.eventPlanner
+        ? AppRoutes.plannerProfileView(otherUserId)
+        : AppRoutes.creativeProfileView(otherUserId);
     context.push(route);
   }
 
-  Widget _buildAppBarTitle(ColorScheme colorScheme, ThemeData theme) {
-    final canNavigate = _otherUserId != null && _otherUserId!.isNotEmpty;
+  Widget _buildAppBarTitle(
+    ColorScheme colorScheme,
+    ThemeData theme,
+    ChatPageState chatState,
+  ) {
+    final canNavigate =
+        chatState.otherUserId != null && chatState.otherUserId!.isNotEmpty;
     const pillBorder = StadiumBorder();
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -79,10 +79,13 @@ class _ChatPageState extends State<ChatPage> {
               radius: 28,
               backgroundColor: colorScheme.surfaceContainerHighest,
               backgroundImage:
-                  _otherUserPhotoUrl != null && _otherUserPhotoUrl!.isNotEmpty
-                  ? CachedNetworkImageProvider(_otherUserPhotoUrl!)
+                  chatState.otherUserPhotoUrl != null &&
+                      chatState.otherUserPhotoUrl!.isNotEmpty
+                  ? CachedNetworkImageProvider(chatState.otherUserPhotoUrl!)
                   : null,
-              child: _otherUserPhotoUrl == null || _otherUserPhotoUrl!.isEmpty
+              child:
+                  chatState.otherUserPhotoUrl == null ||
+                      chatState.otherUserPhotoUrl!.isEmpty
                   ? Icon(
                       AppIcons.person,
                       size: 32,
@@ -101,7 +104,7 @@ class _ChatPageState extends State<ChatPage> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
               child: Text(
-                _otherUserName,
+                chatState.otherUserName,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -118,6 +121,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
+    _chatCubit = ChatPageCubit();
     unawaited(_initChat());
     _scrollController.addListener(_onScroll);
   }
@@ -126,6 +130,7 @@ class _ChatPageState extends State<ChatPage> {
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _chatCubit.close();
     super.dispose();
   }
 
@@ -133,13 +138,7 @@ class _ChatPageState extends State<ChatPage> {
     if (!_scrollController.hasClients) return;
     final atBottom = _scrollController.position.pixels <= _atBottomThreshold;
     if (atBottom) {
-      if (_showNewMessagesBanner ||
-          _lastSeenMessageCount != _currentMessageCount) {
-        setState(() {
-          _showNewMessagesBanner = false;
-          _lastSeenMessageCount = _currentMessageCount;
-        });
-      }
+      _chatCubit.syncScrollAtBottom(_layoutMessageCount);
     }
   }
 
@@ -150,17 +149,14 @@ class _ChatPageState extends State<ChatPage> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
     );
-    setState(() {
-      _showNewMessagesBanner = false;
-      _lastSeenMessageCount = _currentMessageCount;
-    });
+    _chatCubit.scrollToNewMessagesConsumed(_layoutMessageCount);
   }
 
   Future<void> _initChat() async {
     final authRepo = sl<AuthRepository>();
     final currentUser = authRepo.currentUser;
     if (currentUser == null) {
-      if (mounted) setState(() => _error = 'Not signed in');
+      if (mounted) _chatCubit.setError('Not signed in');
       return;
     }
 
@@ -168,7 +164,7 @@ class _ChatPageState extends State<ChatPage> {
       await sl<ChatUserRepository>().ensureChatUser(currentUser);
 
       if (widget.chatId != null && widget.chatId!.isNotEmpty) {
-        _resolvedChatId = widget.chatId;
+        _chatCubit.setChatSession(resolvedChatId: widget.chatId!);
         unawaited(
           sl<ConversationRepository>().markChatAsRead(
             widget.chatId!,
@@ -183,12 +179,13 @@ class _ChatPageState extends State<ChatPage> {
           final otherUser = await sl<UserRepository>().getUser(
             other.otherUserId,
           );
-          setState(() {
-            _otherUserId = other.otherUserId;
-            _otherUserRole = otherUser?.role;
-            _otherUserName = _displayNameFor(otherUser, other.displayName);
-            _otherUserPhotoUrl = otherUser?.photoUrl;
-          });
+          _chatCubit.setChatSession(
+            resolvedChatId: widget.chatId!,
+            otherUserId: other.otherUserId,
+            otherUserRole: otherUser?.role,
+            otherUserName: _displayNameFor(otherUser, other.displayName),
+            otherUserPhotoUrl: otherUser?.photoUrl,
+          );
         }
       } else if (widget.otherUserId != null && widget.otherUserId!.isNotEmpty) {
         final otherUser = await sl<UserRepository>().getUser(
@@ -201,27 +198,27 @@ class _ChatPageState extends State<ChatPage> {
             widget.otherUserId!,
           );
         }
-        _resolvedChatId = await sl<ConversationRepository>()
+        final resolvedId = await sl<ConversationRepository>()
             .getOrCreateOneToOneChat(currentUser.id, widget.otherUserId!);
         if (mounted) {
-          setState(() {
-            _otherUserId = widget.otherUserId;
-            _otherUserRole = otherUser?.role;
-            _otherUserName = _displayNameFor(otherUser, widget.otherUserId!);
-            _otherUserPhotoUrl = otherUser?.photoUrl;
-          });
+          _chatCubit.setChatSession(
+            resolvedChatId: resolvedId,
+            otherUserId: widget.otherUserId,
+            otherUserRole: otherUser?.role,
+            otherUserName: _displayNameFor(otherUser, widget.otherUserId!),
+            otherUserPhotoUrl: otherUser?.photoUrl,
+          );
         }
         unawaited(
           sl<ConversationRepository>().markChatAsRead(
-            _resolvedChatId!,
+            resolvedId,
             currentUser.id,
           ),
         );
       } else {
-        if (mounted) setState(() => _error = 'Missing chat or user');
+        if (mounted) _chatCubit.setError('Missing chat or user');
         return;
       }
-      if (mounted) setState(() {});
     } catch (e, st) {
       if (mounted) {
         final msg = e.toString().replaceFirst('Exception: ', '');
@@ -234,7 +231,7 @@ class _ChatPageState extends State<ChatPage> {
           context.pop();
           return;
         }
-        setState(() => _error = e);
+        _chatCubit.setError(e);
         debugPrint('Chat init error: $e $st');
       }
     }
@@ -242,118 +239,131 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_error != null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Chat')),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              'Unable to open chat: $_error',
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      );
-    }
-
-    final chatId = _resolvedChatId;
-    if (chatId == null || chatId.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(toolbarHeight: 92, title: const ChatAppBarSkeleton()),
-        body: Column(
-          children: [
-            Expanded(
-              child: Container(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerLowest.withValues(alpha: 0.3),
-                child: const ChatMessagesSkeleton(),
-              ),
-            ),
-            ChatInputBar(
-              onSend: (_) {},
-              enabled: false,
-              disabledHint: 'Connecting...',
-            ),
-          ],
-        ),
-      );
-    }
-
-    final currentUser = sl<AuthRepository>().currentUser;
-    if (currentUser == null) {
-      return Scaffold(
-        appBar: AppBar(
-          leading: BackButton(
-            onPressed: () => context.canPop()
-                ? context.pop()
-                : context.go(AppRoutes.messages),
-          ),
-          title: Text(_otherUserName),
-        ),
-        body: const Center(child: Text('Not signed in')),
-      );
-    }
-
-    final messagesStream = sl<ConversationRepository>().watchMessages(chatId);
-    final colorScheme = Theme.of(context).colorScheme;
-    final theme = Theme.of(context);
-
-    return StreamBuilder<List<MessageEntity>>(
-      stream: messagesStream,
-      builder: (context, snapshot) {
-        final showAppBarSkeleton = !snapshot.hasData;
-        return Scaffold(
-          appBar: AppBar(
-            leading: BackButton(
-              onPressed: () => context.canPop()
-                  ? context.pop()
-                  : context.go(AppRoutes.messages),
-            ),
-            toolbarHeight: 92,
-            title: showAppBarSkeleton
-                ? const ChatAppBarSkeleton()
-                : _buildAppBarTitle(colorScheme, theme),
-          ),
-          body: Column(
-            children: [
-              Expanded(
-                child: Container(
-                  color: colorScheme.surfaceContainerLowest.withValues(
-                    alpha: 0.3,
-                  ),
-                  child: _buildMessagesContent(
-                    context,
-                    snapshot,
-                    chatId,
-                    currentUser,
+    return BlocProvider<ChatPageCubit>.value(
+      value: _chatCubit,
+      child: BlocBuilder<ChatPageCubit, ChatPageState>(
+        builder: (context, chatState) {
+          if (chatState.error != null) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Chat')),
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    'Unable to open chat: ${chatState.error}',
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
-              ChatInputBar(
-                onSend: (text) async {
-                  try {
-                    await sl<ConversationRepository>().sendMessage(
-                      chatId,
-                      currentUser.id,
-                      text,
-                    );
-                  } catch (e) {
-                    if (context.mounted) {
-                      showToast(
-                        context,
-                        'Send failed: ${firestoreErrorMessage(e)}',
-                        isError: true,
-                      );
-                    }
-                  }
-                },
+            );
+          }
+
+          final chatId = chatState.resolvedChatId;
+          if (chatId == null || chatId.isEmpty) {
+            return Scaffold(
+              appBar: AppBar(
+                toolbarHeight: 92,
+                title: const ChatAppBarSkeleton(),
               ),
-            ],
-          ),
-        );
-      },
+              body: Column(
+                children: [
+                  Expanded(
+                    child: Container(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerLowest
+                          .withValues(alpha: 0.3),
+                      child: const ChatMessagesSkeleton(),
+                    ),
+                  ),
+                  ChatInputBar(
+                    onSend: (_) {},
+                    enabled: false,
+                    disabledHint: 'Connecting...',
+                  ),
+                ],
+              ),
+            );
+          }
+
+          final currentUser = sl<AuthRepository>().currentUser;
+          if (currentUser == null) {
+            return Scaffold(
+              appBar: AppBar(
+                leading: BackButton(
+                  onPressed: () => context.canPop()
+                      ? context.pop()
+                      : context.go(AppRoutes.messages),
+                ),
+                title: Text(chatState.otherUserName),
+              ),
+              body: const Center(child: Text('Not signed in')),
+            );
+          }
+
+          final messagesStream = sl<ConversationRepository>().watchMessages(
+            chatId,
+          );
+          final colorScheme = Theme.of(context).colorScheme;
+          final theme = Theme.of(context);
+
+          return StreamBuilder<List<MessageEntity>>(
+            stream: messagesStream,
+            builder: (context, snapshot) {
+              final showAppBarSkeleton = !snapshot.hasData;
+              return Scaffold(
+                appBar: AppBar(
+                  leading: BackButton(
+                    onPressed: () => context.canPop()
+                        ? context.pop()
+                        : context.go(AppRoutes.messages),
+                  ),
+                  toolbarHeight: 92,
+                  title: showAppBarSkeleton
+                      ? const ChatAppBarSkeleton()
+                      : _buildAppBarTitle(colorScheme, theme, chatState),
+                ),
+                body: Column(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        color: colorScheme.surfaceContainerLowest.withValues(
+                          alpha: 0.3,
+                        ),
+                        child: _buildMessagesContent(
+                          context,
+                          snapshot,
+                          chatId,
+                          currentUser,
+                        ),
+                      ),
+                    ),
+                    ChatInputBar(
+                      onSend: (text) async {
+                        try {
+                          await sl<ConversationRepository>().sendMessage(
+                            chatId,
+                            currentUser.id,
+                            text,
+                          );
+                        } catch (e) {
+                          if (context.mounted) {
+                            showToast(
+                              context,
+                              'Send failed: ${firestoreErrorMessage(e)}',
+                              isError: true,
+                            );
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -370,7 +380,9 @@ class _ChatPageState extends State<ChatPage> {
         hasError: true,
         error: snapshot.error,
         onRefresh: () async {
-          if (mounted) setState(() {});
+          if (context.mounted) {
+            context.read<ChatPageCubit>().bumpStreamRefresh();
+          }
         },
         onBack: () => context.pop(),
         child: const ChatMessagesSkeleton(),
@@ -380,21 +392,12 @@ class _ChatPageState extends State<ChatPage> {
       return const ChatMessagesSkeleton();
     }
     final messages = snapshot.data!;
-    _currentMessageCount = messages.length;
-    if (messages.length > _lastSeenMessageCount &&
-        _scrollController.hasClients) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        if (!_scrollController.hasClients) return;
-        final atBottom =
-            _scrollController.position.pixels <= _atBottomThreshold;
-        if (!atBottom && !_showNewMessagesBanner) {
-          setState(() => _showNewMessagesBanner = true);
-        } else if (atBottom) {
-          _lastSeenMessageCount = messages.length;
-        }
-      });
-    }
+    _layoutMessageCount = messages.length;
+    _chatCubit.afterMessagesLayout(
+      scrollController: _scrollController,
+      messageCount: messages.length,
+      atBottomThreshold: _atBottomThreshold,
+    );
     if (messages.isEmpty) {
       return Center(
         child: Column(
@@ -423,100 +426,107 @@ class _ChatPageState extends State<ChatPage> {
         ),
       );
     }
-    return Stack(
-      children: [
-        ListView.builder(
-          controller: _scrollController,
-          reverse: true,
-          padding: const EdgeInsets.only(top: 12, bottom: 12),
-          itemCount: messages.length + 1,
-          itemBuilder: (context, index) {
-            if (index == messages.length) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.8,
-                      ),
-                      borderRadius: AppBorders.borderRadius,
-                    ),
-                    child: Text(
-                      _formatDateHeader(
-                        messages.isNotEmpty
-                            ? messages.last.createdAt
-                            : DateTime.now(),
-                      ),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }
-            final message = messages[messages.length - 1 - index];
-            final isSentByMe = message.senderId == currentUser.id;
-            return MessageBubble(message: message, isSentByMe: isSentByMe);
-          },
-        ),
-        if (_showNewMessagesBanner)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 12,
-            child: Center(
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: _scrollToNewMessages,
-                  borderRadius: AppBorders.borderRadius,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer,
-                      borderRadius: AppBorders.borderRadius,
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.shadow.withValues(alpha: 0.15),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+    return BlocBuilder<ChatPageCubit, ChatPageState>(
+      buildWhen: (prev, curr) =>
+          prev.showNewMessagesBanner != curr.showNewMessagesBanner,
+      builder: (context, bannerState) {
+        return Stack(
+          children: [
+            ListView.builder(
+              controller: _scrollController,
+              reverse: true,
+              padding: const EdgeInsets.only(top: 12, bottom: 12),
+              itemCount: messages.length + 1,
+              itemBuilder: (context, index) {
+                if (index == messages.length) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
                         ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 20,
-                          color: colorScheme.onPrimaryContainer,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'New messages',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.w600,
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.8,
                           ),
+                          borderRadius: AppBorders.borderRadius,
                         ),
-                      ],
+                        child: Text(
+                          _formatDateHeader(
+                            messages.isNotEmpty
+                                ? messages.last.createdAt
+                                : DateTime.now(),
+                          ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                final message = messages[messages.length - 1 - index];
+                final isSentByMe = message.senderId == currentUser.id;
+                return MessageBubble(message: message, isSentByMe: isSentByMe);
+              },
+            ),
+            if (bannerState.showNewMessagesBanner)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 12,
+                child: Center(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _scrollToNewMessages,
+                      borderRadius: AppBorders.borderRadius,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primaryContainer,
+                          borderRadius: AppBorders.borderRadius,
+                          boxShadow: [
+                            BoxShadow(
+                              color: colorScheme.shadow.withValues(alpha: 0.15),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 20,
+                              color: colorScheme.onPrimaryContainer,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'New messages',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
-      ],
+          ],
+        );
+      },
     );
   }
 

@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../bloc/creative_profile/creative_profile_cubit.dart';
 import '../../bloc/creative_profile/creative_profile_state.dart';
+import '../../bloc/profile_photo_upload/profile_photo_upload_cubit.dart';
 import '../../../core/constants/app_borders.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/utils/toast_utils.dart';
@@ -242,9 +243,12 @@ class _CreativeProfileView extends StatelessWidget {
                     icon: Icons.photo_library_outlined,
                     title: 'Portfolio',
                     subtitle: 'Photos or videos of your work',
-                    child: _PortfolioSection(
-                      profile: profile,
-                      userId: sl<AuthRedirectNotifier>().user!.id,
+                    child: BlocProvider(
+                      create: (_) => ProfilePhotoUploadCubit(),
+                      child: _PortfolioSection(
+                        profile: profile,
+                        userId: sl<AuthRedirectNotifier>().user!.id,
+                      ),
                     ),
                   ),
                 ],
@@ -295,20 +299,14 @@ class _AvailabilitySelector extends StatelessWidget {
   }
 }
 
-class _PortfolioSection extends StatefulWidget {
+class _PortfolioSection extends StatelessWidget {
   const _PortfolioSection({required this.profile, required this.userId});
 
   final ProfileEntity profile;
   final String userId;
 
-  @override
-  State<_PortfolioSection> createState() => _PortfolioSectionState();
-}
-
-class _PortfolioSectionState extends State<_PortfolioSection> {
-  bool _isUploading = false;
-
-  Future<void> _showAddOptions() async {
+  Future<void> _showAddOptions(BuildContext context) async {
+    final uploadCubit = context.read<ProfilePhotoUploadCubit>();
     final isVideo = await showModalBottomSheet<bool>(
       context: context,
       useRootNavigator: true,
@@ -332,7 +330,7 @@ class _PortfolioSectionState extends State<_PortfolioSection> {
         ),
       ),
     );
-    if (isVideo == null || !mounted) return;
+    if (isVideo == null || !context.mounted) return;
     final picker = ImagePicker();
     final XFile? file = isVideo
         ? await picker.pickVideo(source: ImageSource.gallery)
@@ -342,16 +340,16 @@ class _PortfolioSectionState extends State<_PortfolioSection> {
             maxHeight: 1920,
             imageQuality: 85,
           );
-    if (file == null || !mounted) return;
-    setState(() => _isUploading = true);
+    if (file == null || !context.mounted) return;
+    uploadCubit.setUploading(true);
     try {
       final storage = sl<PortfolioStorageDataSource>();
       final url = await storage.uploadPortfolioMedia(
         file,
-        widget.userId,
+        userId,
         isVideo: isVideo,
       );
-      if (!mounted) return;
+      if (!context.mounted) return;
       final cubit = context.read<CreativeProfileCubit>();
       final p = cubit.state.profile;
       if (p == null) return;
@@ -361,17 +359,18 @@ class _PortfolioSectionState extends State<_PortfolioSection> {
         cubit.setPortfolioUrls([...p.portfolioUrls, url]);
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         showToast(context, 'Upload failed: ${e.toString()}', isError: true);
       }
     } finally {
-      if (mounted) setState(() => _isUploading = false);
+      if (context.mounted) {
+        uploadCubit.setUploading(false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final profile = widget.profile;
     final images = profile.portfolioUrls;
     final videos = profile.portfolioVideoUrls;
     const itemSize = 80.0;
@@ -387,44 +386,52 @@ class _PortfolioSectionState extends State<_PortfolioSection> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GestureDetector(
-                  onTap: _isUploading ? null : _showAddOptions,
-                  child: Container(
-                    width: itemSize,
-                    height: itemSize,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outline.withValues(alpha: 0.6),
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignInside,
-                      ),
-                      borderRadius: BorderRadius.circular(
-                        AppBorders.chipRadius,
-                      ),
-                    ),
-                    child: _isUploading
-                        ? Center(
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: LoadingAnimationWidget.stretchedDots(
-                                color: Theme.of(context).colorScheme.primary,
-                                size: 24,
-                              ),
-                            ),
-                          )
-                        : Center(
-                            child: Icon(
-                              Icons.add,
-                              size: 32,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
+                BlocBuilder<ProfilePhotoUploadCubit, bool>(
+                  builder: (context, isUploading) {
+                    return GestureDetector(
+                      onTap: isUploading
+                          ? null
+                          : () => _showAddOptions(context),
+                      child: Container(
+                        width: itemSize,
+                        height: itemSize,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withValues(alpha: 0.6),
+                            width: 1,
+                            strokeAlign: BorderSide.strokeAlignInside,
                           ),
-                  ),
+                          borderRadius: BorderRadius.circular(
+                            AppBorders.chipRadius,
+                          ),
+                        ),
+                        child: isUploading
+                            ? Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: LoadingAnimationWidget.stretchedDots(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    size: 24,
+                                  ),
+                                ),
+                              )
+                            : Center(
+                                child: Icon(
+                                  Icons.add,
+                                  size: 32,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(width: spacing),
                 ...images.map(
