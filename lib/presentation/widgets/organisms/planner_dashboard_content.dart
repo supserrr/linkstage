@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../atoms/glass_card.dart';
 import '../../../core/constants/app_borders.dart';
+import '../../../core/di/injection.dart';
 import '../../../core/constants/app_icons.dart';
 import '../../../core/utils/event_location_utils.dart';
 import '../molecules/connection_error_overlay.dart';
@@ -28,77 +29,88 @@ class PlannerDashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PlannerDashboardCubit, PlannerDashboardState>(
-      builder: (context, state) {
-        if (state.isLoading &&
-            state.events.isEmpty &&
-            state.recentActivities.isEmpty &&
-            state.error == null) {
-          return const PlannerDashboardSkeleton();
-        }
-        final cubit = context.read<PlannerDashboardCubit>();
-        final body = state.error != null
-            ? const PlannerDashboardSkeleton()
-            : CustomMaterialIndicator(
-                onRefresh: () async => cubit.load(),
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                useMaterialContainer: false,
-                indicatorBuilder: (context, controller) => Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: LoadingAnimationWidget.threeRotatingDots(
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 40,
-                  ),
-                ),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 60),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      BlocBuilder<
-                        UnreadNotificationsCubit,
-                        UnreadNotificationsState
-                      >(
-                        builder: (context, unreadState) => _DashboardHeader(
-                          displayName: displayName,
-                          notificationCount: unreadState.unreadCount,
-                        ),
+    return ListenableBuilder(
+      listenable: plannerHomeActivityAckRevision,
+      builder: (context, _) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          context.read<PlannerDashboardCubit>().refreshAfterAcknowledgements();
+        });
+        return BlocBuilder<PlannerDashboardCubit, PlannerDashboardState>(
+          builder: (context, state) {
+            if (state.isLoading &&
+                state.events.isEmpty &&
+                state.recentActivities.isEmpty &&
+                state.error == null) {
+              return const PlannerDashboardSkeleton();
+            }
+            final cubit = context.read<PlannerDashboardCubit>();
+            final body = state.error != null
+                ? const PlannerDashboardSkeleton()
+                : CustomMaterialIndicator(
+                    onRefresh: () async => cubit.load(),
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    useMaterialContainer: false,
+                    indicatorBuilder: (context, controller) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: LoadingAnimationWidget.threeRotatingDots(
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 40,
                       ),
-                      const SizedBox(height: 16),
-                      _PostAGigCard(
-                        onTap: () => context.push<bool?>(AppRoutes.createEvent),
+                    ),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 60),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          BlocBuilder<
+                            UnreadNotificationsCubit,
+                            UnreadNotificationsState
+                          >(
+                            builder: (context, unreadState) =>
+                                _DashboardHeader(
+                              displayName: displayName,
+                              notificationCount: unreadState.unreadCount,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          _PostAGigCard(
+                            onTap: () =>
+                                context.push<bool?>(AppRoutes.createEvent),
+                          ),
+                          const SizedBox(height: 20),
+                          _UnifiedSummaryCard(
+                            applicantsCount: state.applicantsCount,
+                            eventsCount: state.eventsCount,
+                            unreadCount: state.unreadCount,
+                          ),
+                          const SizedBox(height: 24),
+                          _YourEventsSection(
+                            events: state.events
+                                .where((e) => e.status == EventStatus.open)
+                                .toList(),
+                            pendingCountByEventId: state.pendingCountByEventId,
+                            onViewAll: () => context.go(AppRoutes.bookings),
+                          ),
+                          const SizedBox(height: 24),
+                          _RecentActivitySection(
+                            activities: state.recentActivities,
+                          ),
+                          const SizedBox(height: 36),
+                        ],
                       ),
-                      const SizedBox(height: 20),
-                      _UnifiedSummaryCard(
-                        applicantsCount: state.applicantsCount,
-                        eventsCount: state.eventsCount,
-                        unreadCount: state.unreadCount,
-                      ),
-                      const SizedBox(height: 24),
-                      _YourEventsSection(
-                        events: state.events
-                            .where((e) => e.status == EventStatus.open)
-                            .toList(),
-                        pendingCountByEventId: state.pendingCountByEventId,
-                        onViewAll: () => context.go(AppRoutes.bookings),
-                      ),
-                      const SizedBox(height: 24),
-                      _RecentActivitySection(
-                        activities: state.recentActivities,
-                      ),
-                      const SizedBox(height: 36),
-                    ],
-                  ),
-                ),
-              );
-        return ConnectionErrorOverlay(
-          hasError: state.error != null,
-          error: state.error,
-          onRefresh: () async => cubit.load(),
-          onBack: null,
-          child: body,
+                    ),
+                  );
+            return ConnectionErrorOverlay(
+              hasError: state.error != null,
+              error: state.error,
+              onRefresh: () async => cubit.load(),
+              onBack: null,
+              child: body,
+            );
+          },
         );
       },
     );
@@ -721,8 +733,9 @@ class _RecentActivitySection extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: EmptyStateDotted(
                   icon: AppIcons.proposal,
-                  headline: 'No proposals yet',
-                  description: 'Proposals from creatives will appear here.',
+                  headline: 'You are all caught up',
+                  description:
+                      "New applications and invitation responses appear here until you open that event's applicants list.",
                   compact: true,
                 ),
               ),
@@ -737,6 +750,8 @@ class _RecentActivitySection extends StatelessWidget {
             itemBuilder: (context, index) {
               final a = activities[index];
               return _ActivityTile(
+                kind: a.kind,
+                eventId: a.eventId,
                 creativeName: a.creativeName,
                 eventTitle: a.eventTitle,
                 createdAt: a.createdAt,
@@ -750,14 +765,29 @@ class _RecentActivitySection extends StatelessWidget {
 
 class _ActivityTile extends StatelessWidget {
   const _ActivityTile({
+    required this.kind,
+    required this.eventId,
     required this.creativeName,
     required this.eventTitle,
     required this.createdAt,
   });
 
+  final PlannerHomeActivityKind kind;
+  final String eventId;
   final String creativeName;
   final String eventTitle;
   final DateTime createdAt;
+
+  String _headline() {
+    switch (kind) {
+      case PlannerHomeActivityKind.creativeApplication:
+        return '$creativeName applied to $eventTitle';
+      case PlannerHomeActivityKind.invitationAccepted:
+        return '$creativeName accepted your invitation to $eventTitle';
+      case PlannerHomeActivityKind.invitationDeclined:
+        return '$creativeName declined your invitation to $eventTitle';
+    }
+  }
 
   String _timeAgo(DateTime dateTime) {
     final now = DateTime.now();
@@ -771,30 +801,47 @@ class _ActivityTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(AppIcons.proposal, size: 24, color: theme.colorScheme.primary),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
+    final canOpen = eventId.isNotEmpty;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: canOpen
+            ? () => context.push(AppRoutes.eventApplicants(eventId))
+            : null,
+        borderRadius: AppBorders.borderRadius,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '$creativeName sent a proposal for $eventTitle',
-                style: theme.textTheme.bodyMedium,
+              Icon(
+                AppIcons.proposal,
+                size: 24,
+                color: theme.colorScheme.primary,
               ),
-              const SizedBox(height: 2),
-              Text(
-                _timeAgo(createdAt),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _headline(),
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _timeAgo(createdAt),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
-      ],
+      ),
     );
   }
 }

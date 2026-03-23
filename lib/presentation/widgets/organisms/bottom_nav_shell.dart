@@ -12,6 +12,16 @@ import '../../../core/di/injection.dart';
 import '../../../core/router/auth_redirect.dart';
 import '../../../domain/entities/user_entity.dart';
 
+/// Paths where the bottom tab bar is shown: only the five shell roots linked from
+/// the bar (not nested routes such as profile edit, chat thread, explore subpages).
+const Set<String> _bottomNavTabRootPaths = {
+  '/home',
+  '/explore',
+  '/messages',
+  '/bookings',
+  '/profile',
+};
+
 /// Shell with bottom navigation for main app tabs.
 /// Tab labels differ by role: creatives see "Gigs", planners see "Events".
 /// Matches [animated_bubble_navigation_bar] package design: bar with bubble items,
@@ -26,10 +36,24 @@ class BottomNavShell extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final router = GoRouter.of(context);
 
     return ListenableBuilder(
-      listenable: sl<AuthRedirectNotifier>(),
+      listenable: Listenable.merge([
+        sl<AuthRedirectNotifier>(),
+        router.routerDelegate,
+      ]),
       builder: (context, _) {
+        // Use the full URI path, not GoRouterState.of(context).matchedLocation:
+        // from the shell builder, matchedLocation is often only the branch root
+        // (e.g. /profile) even when the user is on /profile/view, so the bar
+        // would incorrectly stay visible.
+        final path = router.state.uri.path;
+        final normalizedPath = path.isEmpty
+            ? '/'
+            : path.replaceAll(RegExp(r'/+$'), '');
+        final showBottomNav = _bottomNavTabRootPaths.contains(normalizedPath);
+
         final role = sl<AuthRedirectNotifier>().user?.role;
         final l10n = AppLocalizations.of(context)!;
         final activityLabel = role == UserRole.eventPlanner
@@ -83,36 +107,37 @@ class BottomNavShell extends StatelessWidget {
         return Stack(
           children: [
             Positioned.fill(child: navigationShell),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: SafeArea(
-                top: false,
-                bottom: true,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: _BubbleNavBar(
-                    items: menuItems,
-                    bubbleDecoration: bubbleDecoration,
-                    containerBorder: Border.all(
-                      color: colorScheme.primary.withValues(alpha: 0.3),
-                      width: 0.5,
+            if (showBottomNav)
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  top: false,
+                  bottom: true,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: _BubbleNavBar(
+                      items: menuItems,
+                      bubbleDecoration: bubbleDecoration,
+                      containerBorder: Border.all(
+                        color: colorScheme.primary.withValues(alpha: 0.3),
+                        width: 0.5,
+                      ),
+                      selectedIndex: navigationShell.currentIndex,
+                      onTabChange: (index) {
+                        if (index >= 0 && index < 5) {
+                          navigationShell.goBranch(
+                            index,
+                            initialLocation:
+                                index == navigationShell.currentIndex,
+                          );
+                        }
+                      },
                     ),
-                    selectedIndex: navigationShell.currentIndex,
-                    onTabChange: (index) {
-                      if (index >= 0 && index < 5) {
-                        navigationShell.goBranch(
-                          index,
-                          initialLocation:
-                              index == navigationShell.currentIndex,
-                        );
-                      }
-                    },
                   ),
                 ),
               ),
-            ),
           ],
         );
       },

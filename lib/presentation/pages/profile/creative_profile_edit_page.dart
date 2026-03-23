@@ -17,6 +17,7 @@ import '../../../domain/repositories/booking_repository.dart';
 import '../../../domain/repositories/profile_repository.dart';
 import '../../../domain/repositories/review_repository.dart';
 import '../../../domain/repositories/user_repository.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/router/auth_redirect.dart';
 import '../../widgets/atoms/glass_card.dart';
 import '../../widgets/molecules/chip_editor.dart';
@@ -75,7 +76,7 @@ class _CreativeProfileView extends StatelessWidget {
             showToast(context, state.error!, isError: true);
           } else {
             sl<AuthRedirectNotifier>().refresh();
-            context.pop();
+            context.go(AppRoutes.viewProfile);
           }
         },
         builder: (context, state) {
@@ -110,7 +111,7 @@ class _CreativeProfileView extends StatelessWidget {
                             sl<AuthRedirectNotifier>().user?.displayName ??
                             '',
                         decoration: const InputDecoration(
-                          hintText: 'e.g. Jane Smith',
+                          hintText: 'e.g. Marie Mukamana',
                         ),
                         maxLength: 80,
                         onChanged: (v) => context
@@ -131,7 +132,7 @@ class _CreativeProfileView extends StatelessWidget {
                         maxLines: 4,
                         decoration: const InputDecoration(
                           hintText:
-                              'e.g. Professional DJ with 7+ years experience...',
+                              'e.g. DJ and MC for weddings and events across Rwanda...',
                           alignLabelWithHint: true,
                         ),
                         onChanged: (v) =>
@@ -187,7 +188,7 @@ class _CreativeProfileView extends StatelessWidget {
                           child: TextFormField(
                             initialValue: profile.location,
                             decoration: const InputDecoration(
-                              hintText: 'e.g. Los Angeles, CA',
+                              hintText: 'e.g. Kigali, or Musanze, Northern Province',
                             ),
                             onChanged: (v) => context
                                 .read<CreativeProfileCubit>()
@@ -201,7 +202,7 @@ class _CreativeProfileView extends StatelessWidget {
                           child: TextFormField(
                             initialValue: profile.priceRange,
                             decoration: const InputDecoration(
-                              hintText: 'e.g. \$200/hr or 50,000–100,000 RWF',
+                              hintText: 'e.g. 75,000 RWF/hr or 50,000–150,000 RWF',
                             ),
                             onChanged: (v) => context
                                 .read<CreativeProfileCubit>()
@@ -231,7 +232,7 @@ class _CreativeProfileView extends StatelessWidget {
                       title: 'Add languages',
                       child: ChipEditor(
                         values: profile.languages,
-                        hintText: 'e.g. English, Spanish',
+                        hintText: 'e.g. Kinyarwanda, English, French',
                         onChanged: (v) => context
                             .read<CreativeProfileCubit>()
                             .setLanguages(v),

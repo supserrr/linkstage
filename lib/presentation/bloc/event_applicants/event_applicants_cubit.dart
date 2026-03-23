@@ -1,7 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/router/auth_redirect.dart';
+import '../../../domain/entities/booking_entity.dart';
 import '../../../domain/entities/user_entity.dart';
 import '../../../domain/repositories/booking_repository.dart';
 import '../../../domain/repositories/event_repository.dart';
@@ -64,6 +67,8 @@ class EventApplicantsCubit extends Cubit<EventApplicantsState> {
           clearError: true,
         ),
       );
+      await _persistPlannerHomeActivityAck(allBookings, plannerId);
+      plannerHomeActivityAckRevision.value++;
     } catch (e) {
       emit(
         state.copyWith(
@@ -103,4 +108,32 @@ class EventApplicantsCubit extends Cubit<EventApplicantsState> {
     m[bookingId] = true;
     emit(state.copyWith(hasReviewedByBookingId: m));
   }
+}
+
+/// Marks home-feed activity rows as seen for this planner (pending applications
+/// and invitation outcomes only; not open invitations).
+Future<void> _persistPlannerHomeActivityAck(
+  List<BookingEntity> allBookings,
+  String plannerId,
+) async {
+  if (plannerId.isEmpty) return;
+  final toAck = <String>{};
+  for (final b in allBookings) {
+    if (b.status == BookingStatus.pending) toAck.add(b.id);
+    if (b.wasInvitation == true &&
+        (b.status == BookingStatus.accepted ||
+            b.status == BookingStatus.declined)) {
+      toAck.add(b.id);
+    }
+  }
+  if (toAck.isEmpty) return;
+  final prefs = sl<SharedPreferences>();
+  final key = AppConstants.plannerHomeActivityAckBookingsKey(plannerId);
+  final existing = prefs.getStringList(key) ?? [];
+  final merged = {...existing, ...toAck}.toList();
+  const maxIds = 500;
+  if (merged.length > maxIds) {
+    merged.removeRange(0, merged.length - maxIds);
+  }
+  await prefs.setStringList(key, merged);
 }

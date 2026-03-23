@@ -128,7 +128,8 @@ class _CreateEventView extends StatelessWidget {
                 child: TextFormField(
                   initialValue: state.title,
                   decoration: const InputDecoration(
-                    hintText: 'e.g. Wedding Reception, Corporate Gala',
+                    hintText:
+                        'e.g. Kigali wedding reception, corporate year-end party',
                   ),
                   onChanged: (v) =>
                       context.read<CreateEventCubit>().setTitle(v),
@@ -176,7 +177,8 @@ class _CreateEventView extends StatelessWidget {
                       TextFormField(
                         initialValue: state.eventType,
                         decoration: const InputDecoration(
-                          hintText: 'Enter event type (e.g. Festival, Meetup)',
+                          hintText:
+                              'Enter event type (e.g. Umuganura, tech meetup)',
                           border: OutlineInputBorder(),
                           isDense: true,
                         ),
@@ -276,7 +278,8 @@ class _CreateEventView extends StatelessWidget {
                       initialValue: state.venueName,
                       decoration: const InputDecoration(
                         labelText: 'Place name',
-                        hintText: 'e.g. Innovation Hub, Convention Center',
+                        hintText:
+                            'e.g. Kigali Convention Centre, Intare Arena',
                       ),
                       onChanged: (v) =>
                           context.read<CreateEventCubit>().setVenueName(v),
@@ -286,7 +289,7 @@ class _CreateEventView extends StatelessWidget {
                       initialValue: state.location,
                       decoration: const InputDecoration(
                         labelText: 'Address',
-                        hintText: 'e.g. 124 Main St, City',
+                        hintText: 'e.g. KG 11 Ave, Remera, Kigali',
                       ),
                       onChanged: (v) =>
                           context.read<CreateEventCubit>().setLocation(v),

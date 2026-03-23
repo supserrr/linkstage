@@ -58,6 +58,7 @@ class ProfileEntity extends Equatable {
   ProfileEntity copyWith({
     String? photoUrl,
     ProfileVisibility? profileVisibility,
+    String? displayName,
   }) {
     return ProfileEntity(
       id: id,
@@ -75,7 +76,7 @@ class ProfileEntity extends Equatable {
       languages: languages,
       rating: rating,
       reviewCount: reviewCount,
-      displayName: displayName,
+      displayName: displayName ?? this.displayName,
       photoUrl: photoUrl ?? this.photoUrl,
       profileVisibility: profileVisibility ?? this.profileVisibility,
     );

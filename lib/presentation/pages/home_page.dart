@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/di/injection.dart';
@@ -83,6 +83,7 @@ class _HomeContent extends StatelessWidget {
               sl<EventRepository>(),
               sl<BookingRepository>(),
               sl<UserRepository>(),
+              sl<SharedPreferences>(),
               user.id,
             ),
           ),

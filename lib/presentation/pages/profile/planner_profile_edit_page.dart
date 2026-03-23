@@ -17,6 +17,7 @@ import '../../../domain/repositories/event_repository.dart';
 import '../../../domain/repositories/planner_profile_repository.dart';
 import '../../../domain/repositories/profile_repository.dart';
 import '../../../domain/repositories/user_repository.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/router/auth_redirect.dart';
 import '../../bloc/planner_profile/planner_profile_cubit.dart';
 import '../../bloc/planner_profile/planner_profile_state.dart';
@@ -80,7 +81,7 @@ class _PlannerProfileView extends StatelessWidget {
             showToast(context, state.error!, isError: true);
           } else {
             sl<AuthRedirectNotifier>().refresh();
-            context.pop();
+            context.go(AppRoutes.viewProfile);
           }
         },
         builder: (context, state) {
@@ -144,7 +145,7 @@ class _PlannerProfileView extends StatelessWidget {
                         initialValue:
                             profile.displayName ?? user.displayName ?? '',
                         decoration: const InputDecoration(
-                          hintText: 'e.g. Jane Smith',
+                          hintText: 'Name and surname',
                         ),
                         maxLength: 80,
                         onChanged: (v) => context
@@ -165,7 +166,7 @@ class _PlannerProfileView extends StatelessWidget {
                         maxLines: 4,
                         decoration: const InputDecoration(
                           hintText:
-                              'e.g. Corporate and wedding event planner with 10+ years experience...',
+                              'e.g. Wedding and corporate planner in Kigali with 10+ years experience...',
                           alignLabelWithHint: true,
                         ),
                         onChanged: (v) =>
@@ -219,7 +220,7 @@ class _PlannerProfileView extends StatelessWidget {
                       child: TextFormField(
                         initialValue: profile.location,
                         decoration: const InputDecoration(
-                          hintText: 'e.g. Los Angeles, CA',
+                          hintText: 'e.g. Kigali, or Musanze, Northern Province',
                         ),
                         onChanged: (v) =>
                             context.read<PlannerProfileCubit>().setLocation(v),
@@ -235,7 +236,7 @@ class _PlannerProfileView extends StatelessWidget {
                       title: 'Add languages',
                       child: ChipEditor(
                         values: profile.languages,
-                        hintText: 'e.g. English, Spanish',
+                        hintText: 'e.g. Kinyarwanda, English, French',
                         onChanged: (v) =>
                             context.read<PlannerProfileCubit>().setLanguages(v),
                       ),

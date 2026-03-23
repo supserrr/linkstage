@@ -91,6 +91,31 @@ flutter test
 - Firebase: `firebase deploy` for rules and hosting
 - Supabase: CLI for functions and secrets
 
+### Android release signing
+
+Release builds use your **upload keystore** when `android/key.properties` is present (the file is gitignored). If it is missing, release APKs still build but are signed with the **debug** key—not suitable for Play Store or long-term installs.
+
+1. Create a keystore (one-time; store the file and passwords securely):
+
+   ```bash
+   keytool -genkey -v -keystore ~/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+   ```
+
+2. Add `android/key.properties` (never commit):
+
+   ```properties
+   storePassword=<keystore password>
+   keyPassword=<key password>
+   keyAlias=upload
+   storeFile=<path to .jks, e.g. /Users/you/upload-keystore.jks>
+   ```
+
+   Paths in `storeFile` can be absolute, or relative to the **`android/`** directory (Gradle resolves them via `rootProject.file`).
+
+3. Build: `flutter build apk --release` → `build/app/outputs/flutter-apk/app-release.apk`
+
+See also: [Flutter — Sign the app](https://docs.flutter.dev/deployment/android#signing-the-app).
+
 ## Project layout
 
 ```

@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/event_date_utils.dart';
 import '../../../domain/entities/booking_entity.dart';
 import '../../../domain/entities/event_entity.dart';
@@ -15,12 +17,13 @@ import 'planner_dashboard_state.dart';
 const Duration _deferredLoadingDelay = Duration(milliseconds: 150);
 
 /// Cubit for the event planner home dashboard.
-/// Subscribes to Firestore streams for events and pending bookings.
+/// Subscribes to Firestore streams for events and booking activity.
 class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
   PlannerDashboardCubit(
     this._eventRepository,
     this._bookingRepository,
     this._userRepository,
+    this._prefs,
     this._plannerId,
   ) : super(const PlannerDashboardState()) {
     _subscribe();
@@ -29,26 +32,58 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
   final EventRepository _eventRepository;
   final BookingRepository _bookingRepository;
   final UserRepository _userRepository;
+  final SharedPreferences _prefs;
   final String _plannerId;
 
   StreamSubscription<List<EventEntity>>? _eventsSubscription;
   StreamSubscription<List<BookingEntity>>? _bookingsSubscription;
+  StreamSubscription<List<BookingEntity>>? _acceptedInvitesSubscription;
+  StreamSubscription<List<BookingEntity>>? _declinedInvitesSubscription;
   Timer? _loadingDeferTimer;
   int _subscribeId = 0;
   List<EventEntity> _latestEvents = [];
-  List<BookingEntity> _latestBookings = [];
+  List<BookingEntity> _latestPending = [];
+  List<BookingEntity> _latestAcceptedInvites = [];
+  List<BookingEntity> _latestDeclinedInvites = [];
   int _emitSequence = 0;
   bool _hasEmittedData = false;
 
   static const int _recentActivityLimit = 10;
 
+  Set<String> _acknowledgedBookingIds() {
+    final key = AppConstants.plannerHomeActivityAckBookingsKey(_plannerId);
+    final list = _prefs.getStringList(key);
+    if (list == null || list.isEmpty) return {};
+    return Set<String>.from(list);
+  }
+
+  static DateTime _sortTimeForActivity(
+    BookingEntity b,
+    PlannerHomeActivityKind kind,
+  ) {
+    switch (kind) {
+      case PlannerHomeActivityKind.invitationAccepted:
+        return b.creativeConfirmedAt ??
+            b.plannerConfirmedAt ??
+            b.createdAt ??
+            DateTime.fromMillisecondsSinceEpoch(0);
+      case PlannerHomeActivityKind.creativeApplication:
+      case PlannerHomeActivityKind.invitationDeclined:
+        return b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+    }
+  }
+
   void _subscribe() {
     _eventsSubscription?.cancel();
     _bookingsSubscription?.cancel();
+    _acceptedInvitesSubscription?.cancel();
+    _declinedInvitesSubscription?.cancel();
     _loadingDeferTimer?.cancel();
     _hasEmittedData = false;
     _latestEvents = [];
-    _latestBookings = [];
+    _latestPending = [];
+    _latestAcceptedInvites = [];
+    _latestDeclinedInvites = [];
     final subscribeId = ++_subscribeId;
 
     _loadingDeferTimer = Timer(_deferredLoadingDelay, () {
@@ -81,7 +116,45 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
         .watchPendingBookingsByPlannerId(_plannerId)
         .listen(
           (bookings) {
-            _latestBookings = bookings;
+            _latestPending = bookings;
+            _rebuildAndEmit();
+          },
+          onError: (e) {
+            _loadingDeferTimer?.cancel();
+            _loadingDeferTimer = null;
+            emit(
+              state.copyWith(
+                isLoading: false,
+                error: e.toString().replaceAll('Exception:', '').trim(),
+              ),
+            );
+          },
+        );
+
+    _acceptedInvitesSubscription = _bookingRepository
+        .watchAcceptedInvitationBookingsByPlannerId(_plannerId)
+        .listen(
+          (bookings) {
+            _latestAcceptedInvites = bookings;
+            _rebuildAndEmit();
+          },
+          onError: (e) {
+            _loadingDeferTimer?.cancel();
+            _loadingDeferTimer = null;
+            emit(
+              state.copyWith(
+                isLoading: false,
+                error: e.toString().replaceAll('Exception:', '').trim(),
+              ),
+            );
+          },
+        );
+
+    _declinedInvitesSubscription = _bookingRepository
+        .watchDeclinedInvitationBookingsByPlannerId(_plannerId)
+        .listen(
+          (bookings) {
+            _latestDeclinedInvites = bookings;
             _rebuildAndEmit();
           },
           onError: (e) {
@@ -100,7 +173,9 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
   Future<void> _rebuildAndEmit() async {
     final seq = ++_emitSequence;
     final events = List<EventEntity>.from(_latestEvents);
-    final pendingBookings = List<BookingEntity>.from(_latestBookings);
+    final pendingBookings = List<BookingEntity>.from(_latestPending);
+    final acceptedInvites = List<BookingEntity>.from(_latestAcceptedInvites);
+    final declinedInvites = List<BookingEntity>.from(_latestDeclinedInvites);
 
     final eventById = {for (final e in events) e.id: e};
     final pendingCountByEventId = <String, int>{};
@@ -112,22 +187,59 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
     final upcomingEvents = events
         .where(EventDateUtils.isUpcomingEvent)
         .toList();
-    final recentBookings = pendingBookings
-        .where((b) {
-          final event = eventById[b.eventId];
-          return event != null && !EventDateUtils.isPastEvent(event);
-        })
-        .take(_recentActivityLimit)
-        .toList();
-    final creativeIds = recentBookings
-        .map((b) => b.creativeId)
-        .toSet()
-        .toList();
+
+    final ackIds = _acknowledgedBookingIds();
+
+    final candidates = <({
+      BookingEntity b,
+      PlannerHomeActivityKind kind,
+      DateTime sortAt,
+    })>[];
+
+    for (final b in pendingBookings) {
+      if (ackIds.contains(b.id)) continue;
+      final event = eventById[b.eventId];
+      if (event == null || EventDateUtils.isPastEvent(event)) continue;
+      candidates.add((
+        b: b,
+        kind: PlannerHomeActivityKind.creativeApplication,
+        sortAt: _sortTimeForActivity(b, PlannerHomeActivityKind.creativeApplication),
+      ));
+    }
+
+    for (final b in acceptedInvites) {
+      if (ackIds.contains(b.id)) continue;
+      final event = eventById[b.eventId];
+      if (event == null || EventDateUtils.isPastEvent(event)) continue;
+      candidates.add((
+        b: b,
+        kind: PlannerHomeActivityKind.invitationAccepted,
+        sortAt: _sortTimeForActivity(b, PlannerHomeActivityKind.invitationAccepted),
+      ));
+    }
+
+    for (final b in declinedInvites) {
+      if (ackIds.contains(b.id)) continue;
+      final event = eventById[b.eventId];
+      if (event == null || EventDateUtils.isPastEvent(event)) continue;
+      candidates.add((
+        b: b,
+        kind: PlannerHomeActivityKind.invitationDeclined,
+        sortAt: _sortTimeForActivity(b, PlannerHomeActivityKind.invitationDeclined),
+      ));
+    }
+
+    candidates.sort((a, b) => b.sortAt.compareTo(a.sortAt));
+    final top = candidates.take(_recentActivityLimit).toList();
+
+    final creativeIds = top.map((c) => c.b.creativeId).toSet().toList();
     final usersMap = creativeIds.isEmpty
         ? <String, UserEntity>{}
         : await _userRepository.getUsersByIds(creativeIds);
+
     final recentActivities = <PlannerDashboardActivityItem>[];
-    for (final b in recentBookings) {
+    for (final c in top) {
+      final b = c.b;
       final user = usersMap[b.creativeId];
       final creativeName =
           user?.displayName ??
@@ -136,9 +248,11 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
           'Someone';
       final event = eventById[b.eventId];
       final eventTitle = event?.title ?? 'Event';
-      final createdAt = b.createdAt ?? DateTime.now();
+      final createdAt = c.sortAt;
       recentActivities.add(
         PlannerDashboardActivityItem(
+          kind: c.kind,
+          eventId: b.eventId,
           creativeName: creativeName,
           eventTitle: eventTitle,
           createdAt: createdAt,
@@ -168,11 +282,18 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
     _subscribe();
   }
 
+  /// Rebuild recent activity after acknowledgements were saved (e.g. viewed applicants).
+  void refreshAfterAcknowledgements() {
+    if (!isClosed) _rebuildAndEmit();
+  }
+
   @override
   Future<void> close() {
     _loadingDeferTimer?.cancel();
     _eventsSubscription?.cancel();
     _bookingsSubscription?.cancel();
+    _acceptedInvitesSubscription?.cancel();
+    _declinedInvitesSubscription?.cancel();
     return super.close();
   }
 }
