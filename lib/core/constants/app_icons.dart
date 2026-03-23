@@ -55,4 +55,8 @@ class AppIcons {
 
   // --- Activity / proposal (e.g. "creative sent a proposal") ---
   static const IconData proposal = Icons.description_outlined;
+
+  // --- Planner home: invitation response in recent activity ---
+  static const IconData invitationAccepted = Icons.task_alt_outlined;
+  static const IconData invitationDeclined = Icons.highlight_off_outlined;
 }
