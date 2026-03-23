@@ -184,8 +184,9 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
                       ),
                       validator: (v) {
                         final t = v?.trim() ?? '';
-                        if (t.isEmpty)
+                        if (t.isEmpty) {
                           return 'Please enter a project or event name';
+                        }
                         return null;
                       },
                     ),

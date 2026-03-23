@@ -462,4 +462,25 @@ class BookingRemoteDataSource {
               .toList(),
         );
   }
+
+  /// Accepted bookings from creative applications (excludes invitation flows).
+  ///
+  /// Firestore returns all accepted rows for the planner; we filter out
+  /// `wasInvitation == true` client-side so older docs without the field stay
+  /// included.
+  Stream<List<BookingEntity>> watchAcceptedApplicationBookingsByPlannerId(
+    String plannerId,
+  ) {
+    return _firestore
+        .collection(_bookingsCollection)
+        .where('plannerId', isEqualTo: plannerId)
+        .where('status', isEqualTo: 'accepted')
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((d) => BookingModel.fromFirestore(d).toEntity())
+              .where((b) => b.wasInvitation != true)
+              .toList(),
+        );
+  }
 }

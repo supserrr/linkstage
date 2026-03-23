@@ -66,5 +66,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>LinkStage uses your location to fill in the event address when you choose &quot;Use current location.&quot;</string>
 </dict>
 </plist>

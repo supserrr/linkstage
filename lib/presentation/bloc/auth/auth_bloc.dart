@@ -100,6 +100,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   String _authErrorMessage(Object e) {
+    if (e is FirebaseAuthException && e.code == 'client-cooldown') {
+      if (e.message != null && e.message!.isNotEmpty) {
+        return e.message!;
+      }
+      return 'Please wait before trying again.';
+    }
     final s = e.toString();
     if (s.contains('invalid-email')) {
       return 'Invalid email address.';

@@ -5,6 +5,9 @@ enum PlannerHomeActivityKind {
   /// Creative submitted an application (pending booking).
   creativeApplication,
 
+  /// Planner accepted a creative's application (booking is hired / accepted).
+  applicationAccepted,
+
   /// Creative accepted the planner's gig invitation.
   invitationAccepted,
 

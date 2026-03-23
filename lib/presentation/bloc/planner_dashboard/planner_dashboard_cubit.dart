@@ -39,12 +39,14 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
   StreamSubscription<List<BookingEntity>>? _bookingsSubscription;
   StreamSubscription<List<BookingEntity>>? _acceptedInvitesSubscription;
   StreamSubscription<List<BookingEntity>>? _declinedInvitesSubscription;
+  StreamSubscription<List<BookingEntity>>? _acceptedApplicationsSubscription;
   Timer? _loadingDeferTimer;
   int _subscribeId = 0;
   List<EventEntity> _latestEvents = [];
   List<BookingEntity> _latestPending = [];
   List<BookingEntity> _latestAcceptedInvites = [];
   List<BookingEntity> _latestDeclinedInvites = [];
+  List<BookingEntity> _latestAcceptedApplications = [];
   int _emitSequence = 0;
   bool _hasEmittedData = false;
 
@@ -63,6 +65,7 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
   ) {
     switch (kind) {
       case PlannerHomeActivityKind.invitationAccepted:
+      case PlannerHomeActivityKind.applicationAccepted:
         return b.creativeConfirmedAt ??
             b.plannerConfirmedAt ??
             b.createdAt ??
@@ -78,12 +81,14 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
     _bookingsSubscription?.cancel();
     _acceptedInvitesSubscription?.cancel();
     _declinedInvitesSubscription?.cancel();
+    _acceptedApplicationsSubscription?.cancel();
     _loadingDeferTimer?.cancel();
     _hasEmittedData = false;
     _latestEvents = [];
     _latestPending = [];
     _latestAcceptedInvites = [];
     _latestDeclinedInvites = [];
+    _latestAcceptedApplications = [];
     final subscribeId = ++_subscribeId;
 
     _loadingDeferTimer = Timer(_deferredLoadingDelay, () {
@@ -168,6 +173,25 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
             );
           },
         );
+
+    _acceptedApplicationsSubscription = _bookingRepository
+        .watchAcceptedApplicationBookingsByPlannerId(_plannerId)
+        .listen(
+          (bookings) {
+            _latestAcceptedApplications = bookings;
+            _rebuildAndEmit();
+          },
+          onError: (e) {
+            _loadingDeferTimer?.cancel();
+            _loadingDeferTimer = null;
+            emit(
+              state.copyWith(
+                isLoading: false,
+                error: e.toString().replaceAll('Exception:', '').trim(),
+              ),
+            );
+          },
+        );
   }
 
   Future<void> _rebuildAndEmit() async {
@@ -176,6 +200,8 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
     final pendingBookings = List<BookingEntity>.from(_latestPending);
     final acceptedInvites = List<BookingEntity>.from(_latestAcceptedInvites);
     final declinedInvites = List<BookingEntity>.from(_latestDeclinedInvites);
+    final acceptedApplications =
+        List<BookingEntity>.from(_latestAcceptedApplications);
 
     final eventById = {for (final e in events) e.id: e};
     final pendingCountByEventId = <String, int>{};
@@ -197,7 +223,6 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
     })>[];
 
     for (final b in pendingBookings) {
-      if (ackIds.contains(b.id)) continue;
       final event = eventById[b.eventId];
       if (event == null || EventDateUtils.isPastEvent(event)) continue;
       candidates.add((
@@ -226,6 +251,19 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
         b: b,
         kind: PlannerHomeActivityKind.invitationDeclined,
         sortAt: _sortTimeForActivity(b, PlannerHomeActivityKind.invitationDeclined),
+      ));
+    }
+
+    for (final b in acceptedApplications) {
+      final event = eventById[b.eventId];
+      if (event == null || EventDateUtils.isPastEvent(event)) continue;
+      candidates.add((
+        b: b,
+        kind: PlannerHomeActivityKind.applicationAccepted,
+        sortAt: _sortTimeForActivity(
+          b,
+          PlannerHomeActivityKind.applicationAccepted,
+        ),
       ));
     }
 
@@ -294,6 +332,7 @@ class PlannerDashboardCubit extends Cubit<PlannerDashboardState> {
     _bookingsSubscription?.cancel();
     _acceptedInvitesSubscription?.cancel();
     _declinedInvitesSubscription?.cancel();
+    _acceptedApplicationsSubscription?.cancel();
     return super.close();
   }
 }

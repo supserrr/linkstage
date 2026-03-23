@@ -782,10 +782,43 @@ class _ActivityTile extends StatelessWidget {
     switch (kind) {
       case PlannerHomeActivityKind.creativeApplication:
         return '$creativeName applied to $eventTitle';
+      case PlannerHomeActivityKind.applicationAccepted:
+        return 'Application accepted';
       case PlannerHomeActivityKind.invitationAccepted:
         return '$creativeName accepted your invitation to $eventTitle';
       case PlannerHomeActivityKind.invitationDeclined:
         return '$creativeName declined your invitation to $eventTitle';
+    }
+  }
+
+  (IconData icon, Color background, Color foreground) _kindStyle(
+    ColorScheme scheme,
+  ) {
+    switch (kind) {
+      case PlannerHomeActivityKind.creativeApplication:
+        return (
+          AppIcons.applicants,
+          scheme.primary.withValues(alpha: 0.22),
+          scheme.primary,
+        );
+      case PlannerHomeActivityKind.applicationAccepted:
+        return (
+          AppIcons.invitationAccepted,
+          scheme.tertiary.withValues(alpha: 0.28),
+          scheme.tertiary,
+        );
+      case PlannerHomeActivityKind.invitationAccepted:
+        return (
+          AppIcons.invitationAccepted,
+          scheme.tertiary.withValues(alpha: 0.28),
+          scheme.tertiary,
+        );
+      case PlannerHomeActivityKind.invitationDeclined:
+        return (
+          AppIcons.invitationDeclined,
+          scheme.error.withValues(alpha: 0.18),
+          scheme.error,
+        );
     }
   }
 

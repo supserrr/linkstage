@@ -112,4 +112,10 @@ abstract class BookingRepository {
   Stream<List<BookingEntity>> watchDeclinedInvitationBookingsByPlannerId(
     String plannerId,
   );
+
+  /// Stream of accepted bookings that started as creative applications
+  /// (`wasInvitation` not true), for planner home recent activity.
+  Stream<List<BookingEntity>> watchAcceptedApplicationBookingsByPlannerId(
+    String plannerId,
+  );
 }

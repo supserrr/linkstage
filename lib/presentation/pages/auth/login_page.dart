@@ -171,11 +171,11 @@ class _LoginViewState extends State<_LoginView> {
                                     ] else
                                       AppButton(
                                         label: 'Continue with Email',
-                                        onPressed: loading
-                                            ? null
-                                            : () => context
-                                                  .read<LoginFormCubit>()
-                                                  .setShowEmailForm(true),
+                                        // Do not tie to [loading]: Google sign-in can leave AuthLoading
+                                        // or block the user from switching to the email flow.
+                                        onPressed: () => context
+                                            .read<LoginFormCubit>()
+                                            .setShowEmailForm(true),
                                         isLoading: false,
                                       ),
                                   ],

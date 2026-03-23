@@ -148,4 +148,9 @@ class BookingRepositoryImpl implements BookingRepository {
   Stream<List<BookingEntity>> watchDeclinedInvitationBookingsByPlannerId(
     String plannerId,
   ) => _remote.watchDeclinedInvitationBookingsByPlannerId(plannerId);
+
+  @override
+  Stream<List<BookingEntity>> watchAcceptedApplicationBookingsByPlannerId(
+    String plannerId,
+  ) => _remote.watchAcceptedApplicationBookingsByPlannerId(plannerId);
 }

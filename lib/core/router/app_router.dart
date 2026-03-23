@@ -216,6 +216,15 @@ class AppRouter {
           name: 'splash',
           builder: (context, state) => const SplashPage(),
         ),
+        GoRoute(
+          path: AppRoutes.createEvent,
+          name: 'createEvent',
+          builder: (context, state) {
+            final creativeId =
+                state.uri.queryParameters['creativeId'] ?? '';
+            return CreateEventPage(invitedCreativeId: creativeId);
+          },
+        ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) =>
               BottomNavShell(navigationShell: navigationShell),
@@ -328,17 +337,6 @@ class AppRouter {
                   name: 'bookings',
                   pageBuilder: (context, state) =>
                       const NoTransitionPage(child: ActivityTabPage()),
-                  routes: [
-                    GoRoute(
-                      path: 'create-event',
-                      name: 'createEvent',
-                      builder: (context, state) {
-                        final creativeId =
-                            state.uri.queryParameters['creativeId'] ?? '';
-                        return CreateEventPage(invitedCreativeId: creativeId);
-                      },
-                    ),
-                  ],
                 ),
               ],
             ),

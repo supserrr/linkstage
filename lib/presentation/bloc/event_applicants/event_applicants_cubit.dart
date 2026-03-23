@@ -110,8 +110,9 @@ class EventApplicantsCubit extends Cubit<EventApplicantsState> {
   }
 }
 
-/// Marks home-feed activity rows as seen for this planner (pending applications
-/// and invitation outcomes only; not open invitations).
+/// Marks invitation outcome rows as seen for planner home (creative accepted or
+/// declined an invite). Pending applications stay in recent activity until
+/// declined or accepted regardless of viewing the applicants list.
 Future<void> _persistPlannerHomeActivityAck(
   List<BookingEntity> allBookings,
   String plannerId,
@@ -119,7 +120,6 @@ Future<void> _persistPlannerHomeActivityAck(
   if (plannerId.isEmpty) return;
   final toAck = <String>{};
   for (final b in allBookings) {
-    if (b.status == BookingStatus.pending) toAck.add(b.id);
     if (b.wasInvitation == true &&
         (b.status == BookingStatus.accepted ||
             b.status == BookingStatus.declined)) {

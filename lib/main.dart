@@ -2,6 +2,8 @@ import 'package:app_links/app_links.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -96,10 +98,13 @@ Future<void> _handleInitialAuthLink() async {
     if (uri != null) {
       await _completeSignInWithEmailLink(uri.toString());
     }
-  } catch (e) {
-    if (kDebugMode) {
-      debugPrint('[AuthLink] Error handling initial link: $e');
-    }
+  } catch (e, st) {
+    developer.log(
+      'Error handling initial link: $e',
+      name: 'linkstage.auth',
+      error: e,
+      stackTrace: st,
+    );
   }
 }
 
@@ -111,10 +116,13 @@ void _listenForAuthLinks() {
           await _completeSignInWithEmailLink(uri.toString());
         }
       })
-      .onError((Object e) {
-        if (kDebugMode) {
-          debugPrint('[AuthLink] Stream error: $e');
-        }
+      .onError((Object e, StackTrace st) {
+        developer.log(
+          'Auth link stream error: $e',
+          name: 'linkstage.auth',
+          error: e,
+          stackTrace: st,
+        );
       });
 }
 
@@ -123,11 +131,21 @@ Future<void> _completeSignInWithEmailLink(String link) async {
     final auth = sl<AuthRepository>();
     if (!auth.isSignInWithEmailLink(link)) return;
     final email = auth.pendingEmailForLinkSignIn;
-    if (email == null || email.isEmpty) return;
-    await auth.signInWithEmailLink(email, link);
-  } catch (e) {
-    if (kDebugMode) {
-      debugPrint('[AuthLink] Error completing sign-in: $e');
+    if (email == null || email.isEmpty) {
+      developer.log(
+        'Email link opened but no pending email in storage. '
+        'Use the same device/app session after "Send sign-in link", or open the link in the browser and use "Open in app".',
+        name: 'linkstage.auth',
+      );
+      return;
     }
+    await auth.signInWithEmailLink(email, link);
+  } catch (e, st) {
+    developer.log(
+      'Error completing email link sign-in: $e',
+      name: 'linkstage.auth',
+      error: e,
+      stackTrace: st,
+    );
   }
 }

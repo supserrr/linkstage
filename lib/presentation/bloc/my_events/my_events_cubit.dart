@@ -142,6 +142,7 @@ class MyEventsCubit extends Cubit<MyEventsState> {
       emit(
         state.copyWith(error: e.toString().replaceAll('Exception:', '').trim()),
       );
+      rethrow;
     }
   }
 
