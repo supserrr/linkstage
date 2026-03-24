@@ -49,6 +49,15 @@ class AuthRemoteDataSource {
       email: email,
       actionCodeSettings: settings,
     );
+    if (kDebugMode &&
+        const bool.fromEnvironment('USE_AUTH_EMULATOR', defaultValue: false)) {
+      debugPrint(
+        '[Auth] The Auth emulator does not send email. Copy the sign-in URL '
+        'from the terminal running firebase emulators:start (line starting '
+        'with "To sign in as"). On Android emulator, replace 127.0.0.1 with '
+        '10.0.2.2 in that URL before opening it.',
+      );
+    }
   }
 
   Future<UserEntity> signInWithEmailLink(String email, String emailLink) async {

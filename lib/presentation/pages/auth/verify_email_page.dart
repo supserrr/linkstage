@@ -13,6 +13,9 @@ import '../../widgets/atoms/app_button.dart';
 import '../../widgets/atoms/auth_sign_illustration.dart';
 import '../../widgets/atoms/glass_card.dart';
 
+bool get _useAuthEmulator =>
+    const bool.fromEnvironment('USE_AUTH_EMULATOR', defaultValue: false);
+
 /// Shown after sending sign-in link, or when authenticated but email not verified.
 class VerifyEmailPage extends StatelessWidget {
   const VerifyEmailPage({super.key, this.email = ''});
@@ -78,7 +81,12 @@ class _LinkSentView extends StatelessWidget {
           showToast(context, state.message, isError: true);
         }
         if (state is AuthLinkSent) {
-          showToast(context, 'Link sent. Check your email.');
+          showToast(
+            context,
+            _useAuthEmulator
+                ? 'Link ready — see instructions below (emulator does not email).'
+                : 'Link sent. Check your email.',
+          );
         }
       },
       builder: (context, state) {
@@ -96,10 +104,35 @@ class _LinkSentView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'We sent a sign-in link to $email. Click the link to sign in.',
+              _useAuthEmulator
+                  ? 'The Firebase Auth emulator does not send email. After you tap '
+                      'Send sign-in link, open the terminal where '
+                      'firebase emulators:start is running and find the line '
+                      'that starts with "To sign in as" — copy that full URL and '
+                      'open it in a browser on this device.'
+                  : 'We sent a sign-in link to $email. Click the link to sign in.',
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
+            if (_useAuthEmulator) ...[
+              const SizedBox(height: 16),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Android emulator: the URL in the terminal uses '
+                    '127.0.0.1 — replace that host with 10.0.2.2 so the link '
+                    'points at your computer (e.g. http://10.0.2.2:9099/emulator/...). '
+                    'Then open that URL in Chrome on the emulator.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             AppButton(
               label: 'Resend link',
