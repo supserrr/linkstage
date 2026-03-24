@@ -97,6 +97,7 @@ class PlannerDashboardContent extends StatelessWidget {
                           const SizedBox(height: 24),
                           _RecentActivitySection(
                             activities: state.recentActivities,
+                            onViewBookings: () => context.go(AppRoutes.bookings),
                           ),
                           const SizedBox(height: 36),
                         ],
@@ -708,9 +709,13 @@ class _StageCard extends StatelessWidget {
 }
 
 class _RecentActivitySection extends StatelessWidget {
-  const _RecentActivitySection({required this.activities});
+  const _RecentActivitySection({
+    required this.activities,
+    required this.onViewBookings,
+  });
 
   final List<PlannerDashboardActivityItem> activities;
+  final VoidCallback onViewBookings;
 
   @override
   Widget build(BuildContext context) {
@@ -718,25 +723,38 @@ class _RecentActivitySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Recent Activity',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent activity',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextButton(
+              onPressed: onViewBookings,
+              child: const Text('Bookings'),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
         if (activities.isEmpty)
-          SizedBox(
-            height: 200,
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: EmptyStateDotted(
-                  icon: AppIcons.proposal,
-                  headline: 'You are all caught up',
-                  description:
-                      "New applications and invitation responses appear here until you open that event's applicants list.",
-                  compact: true,
+          GlassCard(
+            margin: EdgeInsets.zero,
+            padding: EdgeInsets.zero,
+            child: SizedBox(
+              height: 200,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: EmptyStateDotted(
+                    icon: AppIcons.proposal,
+                    headline: 'You are all caught up',
+                    description:
+                        "New applications and invitation responses appear here until you open that event's applicants list.",
+                    compact: true,
+                  ),
                 ),
               ),
             ),
@@ -746,7 +764,7 @@ class _RecentActivitySection extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: activities.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final a = activities[index];
               return _ActivityTile(
@@ -778,16 +796,41 @@ class _ActivityTile extends StatelessWidget {
   final String eventTitle;
   final DateTime createdAt;
 
-  String _headline() {
+  String _kindLabel() {
     switch (kind) {
       case PlannerHomeActivityKind.creativeApplication:
         return '$creativeName applied to $eventTitle';
       case PlannerHomeActivityKind.applicationAccepted:
         return 'Application accepted';
       case PlannerHomeActivityKind.invitationAccepted:
-        return '$creativeName accepted your invitation to $eventTitle';
+        return 'Invitation accepted';
       case PlannerHomeActivityKind.invitationDeclined:
-        return '$creativeName declined your invitation to $eventTitle';
+        return 'Invitation declined';
+    }
+  }
+
+  (IconData icon, Color background, Color foreground) _kindStyle(
+    ColorScheme scheme,
+  ) {
+    switch (kind) {
+      case PlannerHomeActivityKind.creativeApplication:
+        return (
+          AppIcons.applicants,
+          scheme.primary.withValues(alpha: 0.22),
+          scheme.primary,
+        );
+      case PlannerHomeActivityKind.invitationAccepted:
+        return (
+          AppIcons.invitationAccepted,
+          scheme.tertiary.withValues(alpha: 0.28),
+          scheme.tertiary,
+        );
+      case PlannerHomeActivityKind.invitationDeclined:
+        return (
+          AppIcons.invitationDeclined,
+          scheme.error.withValues(alpha: 0.18),
+          scheme.error,
+        );
     }
   }
 
@@ -825,53 +868,125 @@ class _ActivityTile extends StatelessWidget {
   String _timeAgo(DateTime dateTime) {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
-    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
-    if (diff.inHours < 24) return '${diff.inHours} hours ago';
-    if (diff.inDays < 7) return '${diff.inDays} days ago';
-    return '${dateTime.month}/${dateTime.day}';
+    if (diff.inSeconds < 60) return 'Just now';
+    if (diff.inMinutes < 60) {
+      final m = diff.inMinutes;
+      return m == 1 ? '1 min ago' : '$m min ago';
+    }
+    if (diff.inHours < 24) {
+      final h = diff.inHours;
+      return h == 1 ? '1 hour ago' : '$h hours ago';
+    }
+    if (diff.inDays < 7) {
+      final d = diff.inDays;
+      return d == 1 ? '1 day ago' : '$d days ago';
+    }
+    return '${dateTime.month}/${dateTime.day}/${dateTime.year}';
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final canOpen = eventId.isNotEmpty;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: canOpen
-            ? () => context.push(AppRoutes.eventApplicants(eventId))
-            : null,
-        borderRadius: AppBorders.borderRadius,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                AppIcons.proposal,
-                size: 24,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _headline(),
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _timeAgo(createdAt),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+    final style = _kindStyle(scheme);
+    final variant = scheme.onSurfaceVariant;
+
+    return GlassCard(
+      margin: EdgeInsets.zero,
+      padding: EdgeInsets.zero,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: canOpen
+              ? () => context.push(AppRoutes.eventApplicants(eventId))
+              : null,
+          borderRadius: AppBorders.borderRadius,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: style.$2,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(style.$1, size: 22, color: style.$3),
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _kindLabel(),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: variant,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        creativeName,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Icon(
+                              AppIcons.event,
+                              size: 16,
+                              color: variant,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              eventTitle,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: scheme.onSurface,
+                                height: 1.35,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _timeAgo(createdAt),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: variant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (canOpen) ...[
+                  const SizedBox(width: 4),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Icon(
+                      AppIcons.chevronRight,
+                      size: 22,
+                      color: variant.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       ),
