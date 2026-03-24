@@ -819,31 +819,6 @@ class _ActivityTile extends StatelessWidget {
           scheme.primary.withValues(alpha: 0.22),
           scheme.primary,
         );
-      case PlannerHomeActivityKind.invitationAccepted:
-        return (
-          AppIcons.invitationAccepted,
-          scheme.tertiary.withValues(alpha: 0.28),
-          scheme.tertiary,
-        );
-      case PlannerHomeActivityKind.invitationDeclined:
-        return (
-          AppIcons.invitationDeclined,
-          scheme.error.withValues(alpha: 0.18),
-          scheme.error,
-        );
-    }
-  }
-
-  (IconData icon, Color background, Color foreground) _kindStyle(
-    ColorScheme scheme,
-  ) {
-    switch (kind) {
-      case PlannerHomeActivityKind.creativeApplication:
-        return (
-          AppIcons.applicants,
-          scheme.primary.withValues(alpha: 0.22),
-          scheme.primary,
-        );
       case PlannerHomeActivityKind.applicationAccepted:
         return (
           AppIcons.invitationAccepted,

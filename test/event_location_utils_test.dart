@@ -187,6 +187,80 @@ void main() {
         'Convention Center',
       );
     });
+
+    test('returns Place when visible but venue empty', () {
+      final event = EventEntity(
+        id: '1',
+        plannerId: 'p1',
+        title: 'Event',
+        venueName: '',
+        locationVisibility: LocationVisibility.public,
+      );
+      expect(
+        getEventVenueDisplay(
+          event,
+          isPlanner: false,
+          hasAcceptedBooking: false,
+        ),
+        'Place',
+      );
+    });
+  });
+
+  group('getEventAddressDisplay', () {
+    test('returns placeholder when hidden', () {
+      final event = EventEntity(
+        id: '1',
+        plannerId: 'p1',
+        title: 'Event',
+        location: 'Addr',
+        locationVisibility: LocationVisibility.private,
+      );
+      expect(
+        getEventAddressDisplay(
+          event,
+          isPlanner: false,
+          hasAcceptedBooking: false,
+        ),
+        kEventLocationHiddenPlaceholder,
+      );
+    });
+
+    test('returns address when visible and non-empty', () {
+      final event = EventEntity(
+        id: '1',
+        plannerId: 'p1',
+        title: 'Event',
+        location: 'KN 4',
+        locationVisibility: LocationVisibility.public,
+      );
+      expect(
+        getEventAddressDisplay(
+          event,
+          isPlanner: false,
+          hasAcceptedBooking: false,
+        ),
+        'KN 4',
+      );
+    });
+
+    test('returns default text when visible but location empty', () {
+      final event = EventEntity(
+        id: '1',
+        plannerId: 'p1',
+        title: 'Event',
+        location: '',
+        locationVisibility: LocationVisibility.public,
+      );
+      expect(
+        getEventAddressDisplay(
+          event,
+          isPlanner: false,
+          hasAcceptedBooking: false,
+        ),
+        'Address not specified',
+      );
+    });
   });
 
   group('eventMapsDestinationIfVisible', () {
@@ -225,6 +299,44 @@ void main() {
           hasAcceptedBooking: false,
         ),
         'Hall, 123 Main St',
+      );
+    });
+
+    test('returns only venue when location empty but venue set', () {
+      final event = EventEntity(
+        id: '1',
+        plannerId: 'p1',
+        title: 'Event',
+        location: '',
+        venueName: 'Intare Arena',
+        locationVisibility: LocationVisibility.public,
+      );
+      expect(
+        eventMapsDestinationIfVisible(
+          event,
+          isPlanner: false,
+          hasAcceptedBooking: false,
+        ),
+        'Intare Arena',
+      );
+    });
+
+    test('returns null when visible but both venue and location empty', () {
+      final event = EventEntity(
+        id: '1',
+        plannerId: 'p1',
+        title: 'Event',
+        location: '',
+        venueName: '',
+        locationVisibility: LocationVisibility.public,
+      );
+      expect(
+        eventMapsDestinationIfVisible(
+          event,
+          isPlanner: false,
+          hasAcceptedBooking: false,
+        ),
+        isNull,
       );
     });
   });

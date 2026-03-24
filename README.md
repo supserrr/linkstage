@@ -26,6 +26,7 @@ Full documentation is available in the [`docs/`](docs/) directory:
   - [State Management](docs/state_management.md)
   - [Entity Relationship Diagram (ERD)](docs/erd.md)
   - [Firestore Troubleshooting](docs/troubleshooting_firestore.md)
+  - [Line coverage (tests + scoped metrics)](docs/setup.md#line-coverage-for-reports) — see Setup guide
 - **Features**
   - [Event Creation Flow](docs/create_event_flow.md)
   - [Chat System](docs/chat.md)

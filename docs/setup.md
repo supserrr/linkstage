@@ -130,6 +130,25 @@ supabase/functions/   # Edge Functions (uploads, push, etc.)
 
 Architecture notes: [state_management.md](state_management.md).
 
+## Line coverage (for reports)
+
+Run:
+
+```bash
+flutter test --coverage
+```
+
+- **Whole codebase** (all paths in `coverage/lcov.info`): sum every `LF:` / `LH:` record. Last measured: **731 / 14,535 (5.03%)**.
+- **Scoped: `lib/domain` + `lib/core/utils`** (entities, use cases, shared utils—not the whole UI layer):
+
+  ```bash
+  dart run tool/coverage_domain_utils.dart
+  ```
+
+  Last measured: **383 / 444 (86.26%)** (~**86%** for report text).
+
+For coursework PDF **Figure 9.3**, the terminal screenshot usually shows the **whole-repo** line aggregate; state the **scoped** percentage separately in §9.3 so graders do not confuse partial coverage with full-app coverage.
+
 ## Course submission checklist
 
 Use when preparing the PDF, demo video, and repository for grading.
@@ -137,7 +156,7 @@ Use when preparing the PDF, demo video, and repository for grading.
 - **Repository**: Public or shared-access GitHub; include everything needed to build and run on **Android or iOS** (device or emulator). Course policy often requires a **mobile** demo—not web, desktop, or Chrome-only.
 - **Report**: Setup (this guide + [erd.md](erd.md)), database / ERD description, features, Firebase security summary ([erd.md — Firestore security rules](erd.md#firestore-security-rules-for-report)), **Known limitations and future work**, group contribution tracker. PDF formatting (e.g. font, file name `Group#_Final_Project_Submission.pdf`) applies to the document, not the repo.
 - **Alignment**: Flutter + **go_router**; **BLoC** and clean layers (`presentation` / `domain` / `data`); two auth methods (email/password and Google); Firestore CRUD via repositories; [`firestore.rules`](../firestore.rules).
-- **Before report screenshots**: `dart format .`, `flutter analyze`, `flutter test`; capture analyzer output if required.
+- **Before report screenshots**: `dart format .`, `flutter analyze`, `flutter test`; capture analyzer output if required. For **coverage** numbers (whole-app vs `domain` + `core/utils` scoped), see [Line coverage (for reports)](#line-coverage-for-reports) above.
 
 ## Documentation index
 

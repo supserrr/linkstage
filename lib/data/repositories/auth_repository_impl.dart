@@ -79,6 +79,9 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   void _enforceSignInLinkCooldown(String email) {
+    if (const bool.fromEnvironment('USE_AUTH_EMULATOR', defaultValue: false)) {
+      return;
+    }
     final normalized = email.trim().toLowerCase();
     final lastEmail = _prefs.getString(AppConstants.lastSignInLinkEmailForCooldownKey);
     final lastMs = _prefs.getInt(AppConstants.lastSignInLinkSentAtMsKey);

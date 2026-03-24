@@ -1,5 +1,6 @@
 import 'package:app_links/app_links.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:developer' as developer;
@@ -49,11 +50,36 @@ void main() async {
     FirebaseFirestore.instance.settings = const Settings(
       persistenceEnabled: true,
     );
-    if (const bool.fromEnvironment(
+    final useAuthEmulator = const bool.fromEnvironment(
+      'USE_AUTH_EMULATOR',
+      defaultValue: false,
+    );
+    final useFirestoreEmulator = const bool.fromEnvironment(
       'USE_FIRESTORE_EMULATOR',
       defaultValue: false,
-    )) {
+    );
+
+    if (useAuthEmulator) {
+      const customHost = String.fromEnvironment('AUTH_EMULATOR_HOST');
+      final host = customHost.isEmpty ? 'localhost' : customHost;
+      const authEmulatorPort = 9099;
+      await FirebaseAuth.instance.useAuthEmulator(host, authEmulatorPort);
+      if (kDebugMode) {
+        debugPrint(
+          'Firebase Auth emulator: $host:$authEmulatorPort '
+          '(run: firebase emulators:start --only auth, or include auth in suite)',
+        );
+      }
+    }
+    // Auth emulator tokens are not valid on production Firestore; rules see no user → permission-denied.
+    if (useFirestoreEmulator || useAuthEmulator) {
       FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+      if (kDebugMode && useAuthEmulator) {
+        debugPrint(
+          'Firebase Firestore emulator: localhost:8080 '
+          '(enabled with auth emulator so signed-in writes match security rules)',
+        );
+      }
     }
   } on UnimplementedError catch (_) {
     if (kDebugMode) {
