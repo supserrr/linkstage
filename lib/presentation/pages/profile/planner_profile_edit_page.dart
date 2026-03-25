@@ -30,7 +30,10 @@ import '../../widgets/molecules/profile_save_bar.dart';
 
 /// Event planner profile edit page.
 class PlannerProfileEditPage extends StatelessWidget {
-  const PlannerProfileEditPage({super.key});
+  const PlannerProfileEditPage({super.key, this.plannerProfileCubit});
+
+  /// Optional injected cubit (primarily for deterministic widget tests).
+  final PlannerProfileCubit? plannerProfileCubit;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +48,11 @@ class PlannerProfileEditPage extends StatelessWidget {
         ),
       );
     }
+    final child = const _PlannerProfileView();
+    final injected = plannerProfileCubit;
+    if (injected != null) {
+      return BlocProvider<PlannerProfileCubit>.value(value: injected, child: child);
+    }
     return BlocProvider(
       create: (_) => PlannerProfileCubit(
         sl<UserRepository>(),
@@ -56,7 +64,7 @@ class PlannerProfileEditPage extends StatelessWidget {
         user.id,
         viewingUserId: user.id,
       ),
-      child: const _PlannerProfileView(),
+      child: child,
     );
   }
 }

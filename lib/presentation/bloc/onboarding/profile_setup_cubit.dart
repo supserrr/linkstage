@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -81,7 +83,7 @@ class ProfileSetupCubit extends Cubit<ProfileSetupState> {
       );
       return true;
     } catch (e, stackTrace) {
-      if (kDebugMode) {
+      if (kDebugMode && Platform.environment['FLUTTER_TEST'] != 'true') {
         debugPrint('Profile photo upload failed: $e');
         debugPrint(stackTrace.toString());
       }

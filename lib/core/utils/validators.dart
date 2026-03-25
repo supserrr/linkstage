@@ -2,6 +2,8 @@ import '../constants/app_constants.dart';
 
 /// Input validation helpers.
 class Validators {
+  // Intentionally uncovered: library-private constructor prevents instantiation
+  // of this static-only utility class, and is not reachable from tests.
   Validators._();
 
   /// Returns null if valid, otherwise error message.

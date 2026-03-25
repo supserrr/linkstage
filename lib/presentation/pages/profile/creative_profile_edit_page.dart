@@ -28,7 +28,10 @@ import '../../widgets/molecules/profile_save_bar.dart';
 
 /// Creative professional profile edit page.
 class CreativeProfileEditPage extends StatelessWidget {
-  const CreativeProfileEditPage({super.key});
+  const CreativeProfileEditPage({super.key, this.creativeProfileCubit});
+
+  /// Optional injected cubit (primarily for deterministic widget tests).
+  final CreativeProfileCubit? creativeProfileCubit;
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +46,11 @@ class CreativeProfileEditPage extends StatelessWidget {
         ),
       );
     }
+    final child = const _CreativeProfileView();
+    final injected = creativeProfileCubit;
+    if (injected != null) {
+      return BlocProvider<CreativeProfileCubit>.value(value: injected, child: child);
+    }
     return BlocProvider(
       create: (_) => CreativeProfileCubit(
         sl<ProfileRepository>(),
@@ -51,7 +59,7 @@ class CreativeProfileEditPage extends StatelessWidget {
         sl<UserRepository>(),
         user.id,
       ),
-      child: const _CreativeProfileView(),
+      child: child,
     );
   }
 }

@@ -2,6 +2,8 @@
 /// Note: Supabase image transforms (/render/image/public/) require Pro plan.
 /// Use the original public URL so images load on free tier.
 class ImageUrlUtils {
+  // Intentionally uncovered: library-private constructor prevents instantiation
+  // of this static-only utility class, and is not reachable from tests.
   ImageUrlUtils._();
 
   /// Returns the URL for display. For Supabase/other storage, returns [url] as-is.

@@ -1,5 +1,7 @@
 /// Formats numbers and money with comma-separated thousands (e.g. 1,000).
 class NumberFormatter {
+  // Intentionally uncovered: library-private constructor prevents instantiation
+  // of this static-only utility class, and is not reachable from tests.
   NumberFormatter._();
 
   /// Formats a whole number with comma separators (e.g. 1000 -> "1,000").

@@ -33,15 +33,27 @@ import '../../widgets/molecules/skeleton_loaders.dart';
 /// Past Work page for a creative: past events (from completed bookings) and
 /// past collaborations.
 class CreativePastWorkPage extends StatelessWidget {
-  const CreativePastWorkPage({super.key, required this.userId});
+  const CreativePastWorkPage({
+    super.key,
+    required this.userId,
+    this.creativePastWorkCubit,
+  });
 
   final String userId;
+  final CreativePastWorkCubit? creativePastWorkCubit;
 
   @override
   Widget build(BuildContext context) {
     final authNotifier = sl<AuthRedirectNotifier>();
     final viewerUserId = authNotifier.user?.id ?? '';
     final isViewingOwn = viewerUserId == userId;
+    final child = _CreativePastWorkView(isViewingOwn: isViewingOwn);
+    if (creativePastWorkCubit != null) {
+      return BlocProvider<CreativePastWorkCubit>.value(
+        value: creativePastWorkCubit!,
+        child: child,
+      );
+    }
     return BlocProvider(
       create: (_) => CreativePastWorkCubit(
         sl<BookingRepository>(),
@@ -53,7 +65,7 @@ class CreativePastWorkPage extends StatelessWidget {
         userId,
         viewerUserId,
       ),
-      child: _CreativePastWorkView(isViewingOwn: isViewingOwn),
+      child: child,
     );
   }
 }

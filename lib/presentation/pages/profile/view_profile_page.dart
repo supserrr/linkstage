@@ -49,7 +49,13 @@ void _shareProfile(BuildContext context, String userId) {
 /// When [profileUserId] is set, shows that user's profile in read-only mode.
 /// Use [profileRole] to show planner profile (e.g. when opening from event host); otherwise creative.
 class ViewProfilePage extends StatelessWidget {
-  const ViewProfilePage({super.key, this.profileUserId, this.profileRole});
+  const ViewProfilePage({
+    super.key,
+    this.profileUserId,
+    this.profileRole,
+    this.creativeProfileCubit,
+    this.plannerProfileCubit,
+  });
 
   /// When non-empty, view this user's profile (read-only). Otherwise view own profile.
   final String? profileUserId;
@@ -57,12 +63,24 @@ class ViewProfilePage extends StatelessWidget {
   /// When viewing another user, use this to show planner profile. Omit for creative profile.
   final UserRole? profileRole;
 
+  /// Optional injected cubits (primarily for deterministic widget tests).
+  final CreativeProfileCubit? creativeProfileCubit;
+  final PlannerProfileCubit? plannerProfileCubit;
+
   @override
   Widget build(BuildContext context) {
     final isViewingOther = profileUserId != null && profileUserId!.isNotEmpty;
     if (isViewingOther) {
       final isPlanner = profileRole == UserRole.eventPlanner;
       if (isPlanner) {
+        final child = const _ViewProfileScaffold(
+          showEditButton: false,
+          child: _PlannerProfileView(),
+        );
+        final injected = plannerProfileCubit;
+        if (injected != null) {
+          return BlocProvider<PlannerProfileCubit>.value(value: injected, child: child);
+        }
         return BlocProvider(
           create: (_) => PlannerProfileCubit(
             sl<UserRepository>(),
@@ -74,11 +92,17 @@ class ViewProfilePage extends StatelessWidget {
             profileUserId!,
             viewingUserId: sl<AuthRedirectNotifier>().user?.id,
           ),
-          child: const _ViewProfileScaffold(
-            showEditButton: false,
-            child: _PlannerProfileView(),
-          ),
+          child: child,
         );
+      }
+      final child = const _ViewProfileScaffold(
+        showEditButton: false,
+        showShareFavorite: true,
+        child: _CreativeProfileView(),
+      );
+      final injected = creativeProfileCubit;
+      if (injected != null) {
+        return BlocProvider<CreativeProfileCubit>.value(value: injected, child: child);
       }
       return BlocProvider(
         create: (_) => CreativeProfileCubit(
@@ -88,11 +112,7 @@ class ViewProfilePage extends StatelessWidget {
           sl<UserRepository>(),
           profileUserId!,
         ),
-        child: const _ViewProfileScaffold(
-          showEditButton: false,
-          showShareFavorite: true,
-          child: _CreativeProfileView(),
-        ),
+        child: child,
       );
     }
 
@@ -109,6 +129,16 @@ class ViewProfilePage extends StatelessWidget {
     }
     final role = user.role;
     if (role == UserRole.creativeProfessional) {
+      final injected = creativeProfileCubit;
+      if (injected != null) {
+        return BlocProvider<CreativeProfileCubit>.value(
+          value: injected,
+          child: const _ViewProfileScaffold(
+            showEditButton: true,
+            child: _CreativeProfileView(),
+          ),
+        );
+      }
       return BlocProvider(
         create: (_) => CreativeProfileCubit(
           sl<ProfileRepository>(),
@@ -128,6 +158,16 @@ class ViewProfilePage extends StatelessWidget {
       );
     }
     if (role == UserRole.eventPlanner) {
+      final injected = plannerProfileCubit;
+      if (injected != null) {
+        return BlocProvider<PlannerProfileCubit>.value(
+          value: injected,
+          child: const _ViewProfileScaffold(
+            showEditButton: true,
+            child: _PlannerProfileView(),
+          ),
+        );
+      }
       return BlocProvider(
         create: (_) => PlannerProfileCubit(
           sl<UserRepository>(),

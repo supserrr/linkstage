@@ -22,10 +22,15 @@ import '../../widgets/molecules/profile_avatar.dart';
 /// Dedicated screen showing all reviews for the creative's profile.
 /// Supports reply, flag, and like.
 class ProfileReviewsPage extends StatelessWidget {
-  const ProfileReviewsPage({super.key, this.revieweeUserId = ''});
+  const ProfileReviewsPage({
+    super.key,
+    this.revieweeUserId = '',
+    this.profileReviewsCubit,
+  });
 
   /// When empty, loads reviews for the signed-in user (own profile).
   final String revieweeUserId;
+  final ProfileReviewsCubit? profileReviewsCubit;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +46,11 @@ class ProfileReviewsPage extends StatelessWidget {
       );
     }
     final revieweeId = revieweeUserId.isNotEmpty ? revieweeUserId : user.id;
+    final child = _ProfileReviewsView(viewerUserId: user.id);
+    final injected = profileReviewsCubit;
+    if (injected != null) {
+      return BlocProvider<ProfileReviewsCubit>.value(value: injected, child: child);
+    }
     return BlocProvider(
       create: (_) => ProfileReviewsCubit(
         sl<ReviewRepository>(),
@@ -48,7 +58,7 @@ class ProfileReviewsPage extends StatelessWidget {
         revieweeId,
         user.id,
       ),
-      child: _ProfileReviewsView(viewerUserId: user.id),
+      child: child,
     );
   }
 }

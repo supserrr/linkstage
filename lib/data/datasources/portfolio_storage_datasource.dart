@@ -16,18 +16,52 @@ class PortfolioStorageDataSource {
   PortfolioStorageDataSource({
     String? getUploadUrlUrl,
     SupabaseClient? supabaseClient,
+    FirebaseAuth? firebaseAuth,
+    FastImageCompress? imageCompress,
+    Future<http.Response> Function(
+      Uri url, {
+      Map<String, String>? headers,
+      Object? body,
+    })?
+    httpPost,
+    Future<void> Function(String path, String token, Uint8List bytes)?
+    uploadBinaryToSignedUrl,
   }) : _getUploadUrlUrl =
            getUploadUrlUrl ??
            '${SupabaseConfig.url}/functions/v1/get-upload-url',
-       _supabase =
-           supabaseClient ??
-           SupabaseClient(SupabaseConfig.url, SupabaseConfig.anonKey);
+       _auth = firebaseAuth ?? FirebaseAuth.instance,
+       _imageCompress = imageCompress ?? FastImageCompress(),
+       _httpPost = httpPost ?? http.post,
+       _uploadBinaryToSignedUrl =
+           uploadBinaryToSignedUrl ??
+           _defaultUploadBinaryToSignedUrl(
+             supabaseClient ??
+                 SupabaseClient(SupabaseConfig.url, SupabaseConfig.anonKey),
+           );
 
   static const Duration _uploadTimeout = Duration(seconds: 90);
 
   final String _getUploadUrlUrl;
-  final SupabaseClient _supabase;
-  final FastImageCompress _imageCompress = FastImageCompress();
+  final FirebaseAuth _auth;
+  final FastImageCompress _imageCompress;
+  final Future<http.Response> Function(
+    Uri url, {
+    Map<String, String>? headers,
+    Object? body,
+  }) _httpPost;
+  final Future<void> Function(String path, String token, Uint8List bytes)
+  _uploadBinaryToSignedUrl;
+
+  static Future<void> Function(String, String, Uint8List)
+  _defaultUploadBinaryToSignedUrl(SupabaseClient client) {
+    return (String path, String token, Uint8List bytes) async {
+      await client.storage.from('portfolio').uploadBinaryToSignedUrl(
+        path,
+        token,
+        bytes,
+      );
+    };
+  }
 
   /// Requests a signed upload URL from the Edge Function (auth only, no file).
   Future<({String path, String token, String publicUrl})> _getSignedUploadUrl({
@@ -43,7 +77,7 @@ class PortfolioStorageDataSource {
             'isVideo': isVideo,
             'fileName': fileName,
           };
-    final response = await http.post(
+    final response = await _httpPost(
       Uri.parse(_getUploadUrlUrl),
       headers: {
         'Authorization': 'Bearer $firebaseToken',
@@ -87,7 +121,7 @@ class PortfolioStorageDataSource {
     String userId, {
     required bool isVideo,
   }) async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdToken(true);
+    final token = await _auth.currentUser?.getIdToken(true);
     if (token == null) {
       throw Exception('Not authenticated');
     }
@@ -109,9 +143,7 @@ class PortfolioStorageDataSource {
         imageQuality: ImageQuality.medium,
       );
     }
-    await _supabase.storage
-        .from('portfolio')
-        .uploadBinaryToSignedUrl(signed.path, signed.token, bytes)
+    await _uploadBinaryToSignedUrl(signed.path, signed.token, bytes)
         .timeout(
           _uploadTimeout,
           onTimeout: () =>
@@ -148,7 +180,7 @@ class PortfolioStorageDataSource {
   /// Uploads a profile photo and returns its public URL.
   /// Path: users/{uid}/profile/avatar.{ext} (overwrites previous).
   Future<String> uploadProfilePhoto(XFile file, String userId) async {
-    final token = await FirebaseAuth.instance.currentUser?.getIdToken(true);
+    final token = await _auth.currentUser?.getIdToken(true);
     if (token == null) {
       throw Exception('Not authenticated');
     }
@@ -174,9 +206,7 @@ class PortfolioStorageDataSource {
       fileName: fileName,
     );
 
-    await _supabase.storage
-        .from('portfolio')
-        .uploadBinaryToSignedUrl(signed.path, signed.token, uploadBytes)
+    await _uploadBinaryToSignedUrl(signed.path, signed.token, uploadBytes)
         .timeout(
           _uploadTimeout,
           onTimeout: () =>

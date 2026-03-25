@@ -32,7 +32,30 @@ void main() {
 
   test('categoryKey and categoryFromKey', () {
     expect(base.categoryKey, 'photographer');
+    expect(
+      const ProfileEntity(id: '1', userId: 'u', category: ProfileCategory.dj)
+          .categoryKey,
+      'dj',
+    );
+    expect(
+      const ProfileEntity(
+        id: '1',
+        userId: 'u',
+        category: ProfileCategory.decorator,
+      ).categoryKey,
+      'decorator',
+    );
+    expect(
+      const ProfileEntity(
+        id: '1',
+        userId: 'u',
+        category: ProfileCategory.contentCreator,
+      ).categoryKey,
+      'content_creator',
+    );
+    expect(const ProfileEntity(id: '1', userId: 'u').categoryKey, '');
     expect(ProfileEntity.categoryFromKey('dj'), ProfileCategory.dj);
+    expect(ProfileEntity.categoryFromKey('decorator'), ProfileCategory.decorator);
     expect(ProfileEntity.categoryFromKey('content_creator'),
         ProfileCategory.contentCreator);
     expect(ProfileEntity.categoryFromKey('bad'), null);
@@ -51,5 +74,28 @@ void main() {
 
   test('props', () {
     expect(base, base);
+  });
+
+  test('inequality when props fields differ', () {
+    const a = ProfileEntity(
+      id: '1',
+      userId: 'u',
+      bio: 'a',
+      professions: ['p'],
+      priceRange: '1',
+      location: 'Kigali',
+      portfolioUrls: ['x'],
+      portfolioVideoUrls: ['v'],
+      services: ['s'],
+      languages: ['en'],
+      photoUrl: 'http://p',
+      profileVisibility: ProfileVisibility.everyone,
+    );
+    const b = ProfileEntity(
+      id: '1',
+      userId: 'u',
+      bio: 'b',
+    );
+    expect(a == b, isFalse);
   });
 }
