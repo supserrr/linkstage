@@ -18,12 +18,15 @@ import '../../../core/utils/validators.dart';
 
 /// Unified auth screen: Google Sign-In and Email Link (passwordless).
 class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+  const LoginPage({super.key, this.initialShowEmailForm = false});
+
+  final bool initialShowEmailForm;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => LoginFormCubit(),
+      create: (_) =>
+          LoginFormCubit(initialShowEmailForm: initialShowEmailForm),
       child: const _LoginView(),
     );
   }

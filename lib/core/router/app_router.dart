@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+    show defaultTargetPlatform, kIsWeb, TargetPlatform, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
@@ -111,7 +111,19 @@ class AppRoutes {
 class AppRouter {
   AppRouter._();
 
-  static final GoRouter router = _createRouter();
+  static GoRouter? _router;
+
+  /// Lazily builds the router so tests can reset [sl] and call
+  /// [resetRouterForTest] before first use in a test isolate.
+  static GoRouter get router => _router ??= _createRouter();
+
+  /// Clears the cached [GoRouter] so the next [router] access rebuilds with
+  /// current service-locator registrations. For tests only.
+  @visibleForTesting
+  static void resetRouterForTest() {
+    _router?.dispose();
+    _router = null;
+  }
 
   static GoRouter _createRouter() {
     final authNotifier = sl<AuthRedirectNotifier>();
@@ -220,8 +232,7 @@ class AppRouter {
           path: AppRoutes.createEvent,
           name: 'createEvent',
           builder: (context, state) {
-            final creativeId =
-                state.uri.queryParameters['creativeId'] ?? '';
+            final creativeId = state.uri.queryParameters['creativeId'] ?? '';
             return CreateEventPage(invitedCreativeId: creativeId);
           },
         ),
@@ -443,7 +454,11 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.login,
           name: 'login',
-          builder: (context, state) => const LoginPage(),
+          builder: (context, state) {
+            final mode = state.uri.queryParameters['mode'];
+            final showEmail = mode == 'email';
+            return LoginPage(initialShowEmailForm: showEmail);
+          },
         ),
         GoRoute(
           path: AppRoutes.verifyEmail,

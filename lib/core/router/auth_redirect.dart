@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart'
     show kDebugMode, ChangeNotifier, debugPrint;
@@ -168,7 +169,7 @@ class AuthRedirectNotifier extends ChangeNotifier {
         _profile = null;
       }
     } catch (e, st) {
-      if (kDebugMode) {
+      if (kDebugMode && Platform.environment['FLUTTER_TEST'] != 'true') {
         debugPrint(
           '[AuthRedirect] Firestore load failed: $e\n'
           'Stack: $st',

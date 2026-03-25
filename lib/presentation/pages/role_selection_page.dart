@@ -17,29 +17,38 @@ import '../widgets/atoms/app_button.dart';
 
 /// Role selection after registration (Event Planner vs Creative Professional).
 class RoleSelectionPage extends StatelessWidget {
-  const RoleSelectionPage({super.key, required this.user});
+  const RoleSelectionPage({
+    super.key,
+    required this.user,
+    this.roleSelectionCubit,
+  });
 
   final UserEntity user;
+  final RoleSelectionCubit? roleSelectionCubit;
 
   @override
   Widget build(BuildContext context) {
+    final child = BlocConsumer<RoleSelectionCubit, RoleSelectionState>(
+      listener: (context, state) {
+        if (state.status == RoleSelectionStatus.success && state.user != null) {
+          context.go(AppRoutes.profileSetup, extra: state.user);
+        }
+        if (state.status == RoleSelectionStatus.error && state.error != null) {
+          showToast(context, state.error!, isError: true);
+        }
+      },
+      builder: (context, state) {
+        return _RoleSelectionView(user: user, state: state);
+      },
+    );
+
+    final injected = roleSelectionCubit;
+    if (injected != null) {
+      return BlocProvider<RoleSelectionCubit>.value(value: injected, child: child);
+    }
     return BlocProvider(
       create: (_) => RoleSelectionCubit(sl<UpsertUserUseCase>()),
-      child: BlocConsumer<RoleSelectionCubit, RoleSelectionState>(
-        listener: (context, state) {
-          if (state.status == RoleSelectionStatus.success &&
-              state.user != null) {
-            context.go(AppRoutes.profileSetup, extra: state.user);
-          }
-          if (state.status == RoleSelectionStatus.error &&
-              state.error != null) {
-            showToast(context, state.error!, isError: true);
-          }
-        },
-        builder: (context, state) {
-          return _RoleSelectionView(user: user, state: state);
-        },
-      ),
+      child: child,
     );
   }
 }

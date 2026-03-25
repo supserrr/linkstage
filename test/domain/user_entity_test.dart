@@ -42,6 +42,14 @@ void main() {
       UserEntity.profileVisibilityToKey(ProfileVisibility.everyone),
       'everyone',
     );
+    expect(
+      UserEntity.profileVisibilityToKey(ProfileVisibility.connectionsOnly),
+      'connections_only',
+    );
+    expect(
+      UserEntity.profileVisibilityToKey(ProfileVisibility.onlyMe),
+      'only_me',
+    );
   });
 
   test('whoCanMessageFromKey and toKey', () {
@@ -56,6 +64,14 @@ void main() {
       UserEntity.whoCanMessageToKey(WhoCanMessage.workedWith),
       'worked_with',
     );
+    expect(
+      UserEntity.whoCanMessageToKey(WhoCanMessage.everyone),
+      'everyone',
+    );
+    expect(
+      UserEntity.whoCanMessageToKey(WhoCanMessage.noOne),
+      'no_one',
+    );
   });
 
   test('props equality', () {
@@ -66,6 +82,23 @@ void main() {
     expect(
       const UserEntity(id: '1', email: 'a@b.com'),
       isNot(const UserEntity(id: '2', email: 'a@b.com')),
+    );
+    expect(
+      const UserEntity(
+        id: '1',
+        email: 'a@b.com',
+        emailVerified: true,
+        showOnlineStatus: false,
+        lastSeen: null,
+      ),
+      isNot(
+        const UserEntity(
+          id: '1',
+          email: 'a@b.com',
+          emailVerified: false,
+          showOnlineStatus: true,
+        ),
+      ),
     );
   });
 }

@@ -147,7 +147,21 @@ class _LinkSentView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             TextButton(
-              onPressed: loading ? null : () => context.go(AppRoutes.login),
+              onPressed: loading
+                  ? null
+                  : () async {
+                      final auth = sl<AuthRepository>();
+                      await auth.clearPendingEmailForLinkSignIn();
+                      if (context.mounted) {
+                        showToast(context, 'Saved email cleared.');
+                        context.go(
+                          Uri(
+                            path: AppRoutes.login,
+                            queryParameters: const {'mode': 'email'},
+                          ).toString(),
+                        );
+                      }
+                    },
               child: const Text('Use a different email'),
             ),
           ],
