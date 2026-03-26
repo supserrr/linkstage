@@ -6,10 +6,22 @@ import 'package:http/http.dart' as http;
 
 import '../config/supabase_config.dart';
 
+typedef HttpPost =
+    Future<http.Response> Function(
+      Uri url, {
+      Map<String, String>? headers,
+      Object? body,
+    });
+
 /// Sends push notifications via the Supabase Edge Function.
 /// Called by the app after Firestore writes (bookings, collaborations).
 class PushNotificationService {
-  PushNotificationService();
+  PushNotificationService({FirebaseAuth? firebaseAuth, HttpPost? httpPost})
+    : _auth = firebaseAuth ?? FirebaseAuth.instance,
+      _httpPost = httpPost ?? http.post;
+
+  final FirebaseAuth _auth;
+  final HttpPost _httpPost;
 
   static const String _functionName = 'send-push-notification';
   static const String _plannerEventFunctionName =
@@ -26,7 +38,7 @@ class PushNotificationService {
     required String plannerName,
   }) async {
     try {
-      final firebaseUser = FirebaseAuth.instance.currentUser;
+      final firebaseUser = _auth.currentUser;
       if (firebaseUser == null) return;
 
       final token = await firebaseUser.getIdToken(false);
@@ -43,7 +55,7 @@ class PushNotificationService {
         'plannerName': plannerName,
       };
 
-      final response = await http.post(
+      final response = await _httpPost(
         url,
         headers: {
           'Authorization': 'Bearer $token',
@@ -76,7 +88,7 @@ class PushNotificationService {
     required Map<String, String> data,
   }) async {
     try {
-      final firebaseUser = FirebaseAuth.instance.currentUser;
+      final firebaseUser = _auth.currentUser;
       if (firebaseUser == null) return;
 
       final token = await firebaseUser.getIdToken(false);
@@ -93,7 +105,7 @@ class PushNotificationService {
         'data': data,
       };
 
-      final response = await http.post(
+      final response = await _httpPost(
         url,
         headers: {
           'Authorization': 'Bearer $token',
@@ -127,7 +139,7 @@ class PushNotificationService {
     required bool add,
   }) async {
     try {
-      final firebaseUser = FirebaseAuth.instance.currentUser;
+      final firebaseUser = _auth.currentUser;
       if (firebaseUser == null) return;
 
       final token = await firebaseUser.getIdToken(false);
@@ -143,7 +155,7 @@ class PushNotificationService {
         'action': add ? 'add' : 'remove',
       };
 
-      final response = await http.post(
+      final response = await _httpPost(
         url,
         headers: {
           'Authorization': 'Bearer $token',

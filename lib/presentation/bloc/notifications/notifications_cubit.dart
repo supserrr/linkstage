@@ -57,10 +57,21 @@ class NotificationsCubit extends Cubit<NotificationsState> {
 
     _readIdsSubscription = _notificationRepository
         .watchReadNotificationIds(_userId)
-        .listen((readIds) {
-          _readIds = readIds;
-          _emitMerged();
-        });
+        .listen(
+          (readIds) {
+            _readIds = readIds;
+            _emitMerged();
+          },
+          onError: (e) {
+            _emptyDebounceTimer?.cancel();
+            emit(
+              state.copyWith(
+                hasLoaded: true,
+                error: e.toString().replaceAll('Exception:', '').trim(),
+              ),
+            );
+          },
+        );
   }
 
   void _emitMerged() {
