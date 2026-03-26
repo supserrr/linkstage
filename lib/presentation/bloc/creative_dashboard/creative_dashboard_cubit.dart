@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -271,7 +272,7 @@ class CreativeDashboardCubit extends Cubit<CreativeDashboardState> {
     } catch (e, st) {
       _loadingDeferTimer?.cancel();
       _loadingDeferTimer = null;
-      if (kDebugMode) {
+      if (kDebugMode && Platform.environment['FLUTTER_TEST'] != 'true') {
         debugPrint('[CreativeDashboard] load failed: $e\nStack: $st');
       }
       emit(

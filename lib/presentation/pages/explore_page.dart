@@ -263,7 +263,18 @@ class UnifiedExploreCubit extends Cubit<UnifiedExploreUiState> {
 /// - Event Planners: Creatives | Event Planners (find creatives to hire, discover planners).
 /// Event planners never see other planners' events or "Apply to collaborate".
 class ExplorePage extends StatelessWidget {
-  const ExplorePage({super.key});
+  const ExplorePage({
+    super.key,
+    this.profilesBloc,
+    this.unifiedExploreCubit,
+    this.creativeExploreCubit,
+  });
+
+  /// Optional injected blocs/cubits (primarily for deterministic widget tests).
+  /// When null, ExplorePage uses the default sl-backed constructors.
+  final ProfilesBloc? profilesBloc;
+  final UnifiedExploreCubit? unifiedExploreCubit;
+  final CreativeExploreCubit? creativeExploreCubit;
 
   @override
   Widget build(BuildContext context) {
@@ -274,21 +285,36 @@ class ExplorePage extends StatelessWidget {
         final currentUserId = currentUser?.id;
         final isEventPlanner = currentUser?.role == UserRole.eventPlanner;
 
+        final Widget inner =
+            isEventPlanner
+                ? BlocProvider<UnifiedExploreCubit>(
+                    create:
+                        (_) =>
+                            unifiedExploreCubit ??
+                            UnifiedExploreCubit(currentUserId),
+                    child: _UnifiedExploreView(currentUserId: currentUserId),
+                  )
+                : (creativeExploreCubit != null
+                    ? BlocProvider<CreativeExploreCubit>.value(
+                        value: creativeExploreCubit!,
+                        child: const _ExploreView(),
+                      )
+                    : BlocProvider<CreativeExploreCubit>(
+                        create: (_) => CreativeExploreCubit()..loadEvents(),
+                        child: const _ExploreView(),
+                      ));
+
+        if (profilesBloc != null) {
+          return BlocProvider<ProfilesBloc>.value(value: profilesBloc!, child: inner);
+        }
+
         return BlocProvider(
           create: (_) => ProfilesBloc(
             sl<ProfileRepository>(),
             excludeUserId: currentUserId,
             onlyCreativeAccounts: true,
           )..add(ProfilesLoadRequested()),
-          child: isEventPlanner
-              ? BlocProvider(
-                  create: (_) => UnifiedExploreCubit(currentUserId),
-                  child: _UnifiedExploreView(currentUserId: currentUserId),
-                )
-              : BlocProvider(
-                  create: (_) => CreativeExploreCubit()..loadEvents(),
-                  child: const _ExploreView(),
-                ),
+          child: inner,
         );
       },
     );
