@@ -18,6 +18,14 @@ void main() {
     bookingRepository = MockBookingRepository();
   });
 
+  setUpAll(() {
+    registerFallbackValue(EventStatus.draft);
+    registerFallbackValue(LocationVisibility.public);
+    registerFallbackValue(
+      const EventEntity(id: 'fb', plannerId: 'planner-1', title: 'fb'),
+    );
+  });
+
   group('CreateEventCubit', () {
     group('setLocationVisibility', () {
       test('updates state to private visibility', () {
@@ -237,6 +245,113 @@ void main() {
           expect(cubit.state.error, 'Title is required');
         },
       );
+
+      test('create path returns new event id when save succeeds', () async {
+        when(
+          () => eventRepository.createEvent(
+            plannerId: any(named: 'plannerId'),
+            title: any(named: 'title'),
+            date: any(named: 'date'),
+            location: any(named: 'location'),
+            description: any(named: 'description'),
+            status: any(named: 'status'),
+            imageUrls: any(named: 'imageUrls'),
+            eventType: any(named: 'eventType'),
+            budget: any(named: 'budget'),
+            startTime: any(named: 'startTime'),
+            endTime: any(named: 'endTime'),
+            venueName: any(named: 'venueName'),
+            locationVisibility: any(named: 'locationVisibility'),
+          ),
+        ).thenAnswer(
+          (_) async => const EventEntity(
+            id: 'e-new',
+            plannerId: 'planner-1',
+            title: 'Party',
+          ),
+        );
+
+        final cubit = CreateEventCubit(
+          eventRepository,
+          bookingRepository,
+          'planner-1',
+        );
+        cubit.setTitle('Party');
+        final id = await cubit.save();
+        expect(id, 'e-new');
+        expect(cubit.state.isSaving, false);
+        expect(cubit.state.error, isNull);
+      });
+
+      test('update path calls updateEvent when editing', () async {
+        const initial = EventEntity(
+          id: 'e-edit',
+          plannerId: 'planner-1',
+          title: 'Old',
+          status: EventStatus.draft,
+        );
+        when(() => eventRepository.updateEvent(any())).thenAnswer(
+          (inv) async => inv.positionalArguments[0] as EventEntity,
+        );
+
+        final cubit = CreateEventCubit(
+          eventRepository,
+          bookingRepository,
+          'planner-1',
+          initialEvent: initial,
+        );
+        cubit.setTitle('Updated');
+        final id = await cubit.save();
+        expect(id, isNull);
+        verify(() => eventRepository.updateEvent(any())).called(1);
+      });
+
+      test('maps repository exception on save', () async {
+        when(
+          () => eventRepository.createEvent(
+            plannerId: any(named: 'plannerId'),
+            title: any(named: 'title'),
+            date: any(named: 'date'),
+            location: any(named: 'location'),
+            description: any(named: 'description'),
+            status: any(named: 'status'),
+            imageUrls: any(named: 'imageUrls'),
+            eventType: any(named: 'eventType'),
+            budget: any(named: 'budget'),
+            startTime: any(named: 'startTime'),
+            endTime: any(named: 'endTime'),
+            venueName: any(named: 'venueName'),
+            locationVisibility: any(named: 'locationVisibility'),
+          ),
+        ).thenThrow(Exception('network'));
+
+        final cubit = CreateEventCubit(
+          eventRepository,
+          bookingRepository,
+          'planner-1',
+        );
+        cubit.setTitle('Party');
+        final id = await cubit.save();
+        expect(id, isNull);
+        expect(cubit.state.error, contains('network'));
+      });
+    });
+
+    group('status and upload helpers', () {
+      test('setStatus setUploadingImage setImageError', () {
+        final cubit = CreateEventCubit(
+          eventRepository,
+          bookingRepository,
+          'planner-1',
+        );
+        cubit.setStatus(EventStatus.open);
+        expect(cubit.state.status, EventStatus.open);
+        cubit.setUploadingImage(true);
+        expect(cubit.state.isUploadingImage, true);
+        cubit.setImageError('bad');
+        expect(cubit.state.isUploadingImage, false);
+        expect(cubit.state.error, 'bad');
+      });
     });
   });
 }

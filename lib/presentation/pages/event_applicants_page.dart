@@ -23,9 +23,14 @@ import '../widgets/molecules/profile_avatar.dart';
 /// For event planners: list of applicants (pending and accepted) for an event.
 /// Pending: View profile, Accept, Reject. Accepted: View profile, Message.
 class EventApplicantsPage extends StatefulWidget {
-  const EventApplicantsPage({super.key, required this.eventId});
+  const EventApplicantsPage({
+    super.key,
+    required this.eventId,
+    this.eventApplicantsCubit,
+  });
 
   final String eventId;
+  final EventApplicantsCubit? eventApplicantsCubit;
 
   @override
   State<EventApplicantsPage> createState() => _EventApplicantsPageState();
@@ -33,16 +38,26 @@ class EventApplicantsPage extends StatefulWidget {
 
 class _EventApplicantsPageState extends State<EventApplicantsPage> {
   late final EventApplicantsCubit _cubit;
+  late final bool _ownsCubit;
 
   @override
   void initState() {
     super.initState();
-    _cubit = EventApplicantsCubit(widget.eventId);
+    final injected = widget.eventApplicantsCubit;
+    if (injected != null) {
+      _cubit = injected;
+      _ownsCubit = false;
+    } else {
+      _cubit = EventApplicantsCubit(widget.eventId);
+      _ownsCubit = true;
+    }
   }
 
   @override
   void dispose() {
-    _cubit.close();
+    if (_ownsCubit) {
+      _cubit.close();
+    }
     super.dispose();
   }
 

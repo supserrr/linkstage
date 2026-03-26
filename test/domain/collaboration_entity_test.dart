@@ -11,7 +11,44 @@ void main() {
       CollaborationEntity.statusFromKey('accepted'),
       CollaborationStatus.accepted,
     );
+    expect(
+      CollaborationEntity.statusFromKey('declined'),
+      CollaborationStatus.declined,
+    );
+    expect(
+      CollaborationEntity.statusFromKey('completed'),
+      CollaborationStatus.completed,
+    );
     expect(CollaborationEntity.statusFromKey('x'), null);
+  });
+
+  test('inequality when optional collaboration fields differ', () {
+    final t = DateTime.utc(2026, 3, 1);
+    final full = CollaborationEntity(
+      id: '1',
+      requesterId: 'a',
+      targetUserId: 'b',
+      description: 'd',
+      status: CollaborationStatus.completed,
+      title: 't',
+      eventId: 'e',
+      createdAt: t,
+      budget: 99.5,
+      date: t,
+      startTime: '09:00',
+      endTime: '17:00',
+      location: 'Kigali',
+      eventType: 'Gala',
+      plannerConfirmedAt: t,
+      creativeConfirmedAt: t,
+    );
+    const minimal = CollaborationEntity(
+      id: '1',
+      requesterId: 'a',
+      targetUserId: 'b',
+      description: 'd',
+    );
+    expect(full == minimal, isFalse);
   });
 
   test('displayTitle prefers title', () {

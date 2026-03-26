@@ -24,10 +24,16 @@ class LocationPickerResult {
 /// Full-screen OSM map picker. Tap to select location; uses device geocoding
 /// (free) to get address from coordinates.
 class LocationPickerPage extends StatefulWidget {
-  const LocationPickerPage({super.key, this.initialLat, this.initialLng});
+  const LocationPickerPage({
+    super.key,
+    this.initialLat,
+    this.initialLng,
+    this.locationPickerCubit,
+  });
 
   final double? initialLat;
   final double? initialLng;
+  final LocationPickerCubit? locationPickerCubit;
 
   static const LatLng _kigali = LatLng(-1.9403, 29.8739);
 
@@ -106,9 +112,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
         ? LatLng(widget.initialLat!, widget.initialLng!)
         : null;
 
-    return BlocProvider(
-      create: (_) => LocationPickerCubit(initialPoint: initialPoint),
-      child: BlocBuilder<LocationPickerCubit, LocationPickerState>(
+    final child = BlocBuilder<LocationPickerCubit, LocationPickerState>(
         builder: (context, locState) {
           final initial =
               locState.selectedPoint ??
@@ -198,7 +202,14 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
             ),
           );
         },
-      ),
+      );
+    final injected = widget.locationPickerCubit;
+    if (injected != null) {
+      return BlocProvider<LocationPickerCubit>.value(value: injected, child: child);
+    }
+    return BlocProvider(
+      create: (_) => LocationPickerCubit(initialPoint: initialPoint),
+      child: child,
     );
   }
 }

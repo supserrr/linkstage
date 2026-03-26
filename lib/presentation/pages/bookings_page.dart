@@ -30,7 +30,11 @@ import '../widgets/molecules/profile_avatar.dart';
 
 /// Gigs tab for creatives: shows events they applied to (pending) and accepted gigs.
 class BookingsPage extends StatefulWidget {
-  const BookingsPage({super.key});
+  const BookingsPage({super.key, this.bookingsCubit});
+
+  /// When set (e.g. in tests), this cubit is used and not closed by the page.
+  /// When null, the page creates its own [BookingsCubit] and calls [BookingsCubit.load].
+  final BookingsCubit? bookingsCubit;
 
   @override
   State<BookingsPage> createState() => _BookingsPageState();
@@ -40,18 +44,28 @@ class _BookingsPageState extends State<BookingsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late final BookingsCubit _cubit;
+  late final bool _ownsCubit;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _cubit = BookingsCubit()..load();
+    final injected = widget.bookingsCubit;
+    if (injected != null) {
+      _cubit = injected;
+      _ownsCubit = false;
+    } else {
+      _cubit = BookingsCubit()..load();
+      _ownsCubit = true;
+    }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _cubit.close();
+    if (_ownsCubit) {
+      _cubit.close();
+    }
     super.dispose();
   }
 

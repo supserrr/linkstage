@@ -155,7 +155,7 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
       );
       if (mounted) {
         showToast(context, 'Review submitted');
-        context.read<CollaborationDetailUiCubit>().setHasReviewed(true);
+        _uiCubit.setHasReviewed(true);
       }
     } catch (e) {
       if (mounted) {
@@ -198,7 +198,7 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
   }
 
   Future<void> _confirmCompletionByCreative() async {
-    final cubit = context.read<CollaborationDetailUiCubit>();
+    final cubit = _uiCubit;
     if (cubit.state.isConfirmingCompletion) return;
     cubit.setConfirmingCompletion(true);
     try {
@@ -225,11 +225,11 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
         confirmingIsPlanner: !widget.viewerIsCreative,
       );
       if (mounted) {
-        context.read<CollaborationDetailUiCubit>().applyMarkAsDone(
+        _uiCubit.applyMarkAsDone(
           viewerIsCreative: widget.viewerIsCreative,
         );
         showToast(context, 'Collaboration marked as done');
-        await context.read<CollaborationDetailUiCubit>().loadHasReviewed();
+        await _uiCubit.loadHasReviewed();
       }
     } catch (e) {
       if (mounted) {

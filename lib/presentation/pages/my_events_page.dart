@@ -33,7 +33,11 @@ import '../widgets/molecules/skeleton_loaders.dart';
 
 /// Events list for event planners.
 class MyEventsPage extends StatelessWidget {
-  const MyEventsPage({super.key});
+  const MyEventsPage({super.key, this.myEventsCubit});
+
+  /// Optional injected cubit (primarily for deterministic widget tests).
+  /// When null, the page creates the default sl-backed [MyEventsCubit].
+  final MyEventsCubit? myEventsCubit;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +52,15 @@ class MyEventsPage extends StatelessWidget {
         ),
       );
     }
+    final child = DefaultTabController(
+      length: 2,
+      child: _MyEventsView(plannerId: user.id),
+    );
+
+    if (myEventsCubit != null) {
+      return BlocProvider<MyEventsCubit>.value(value: myEventsCubit!, child: child);
+    }
+
     return BlocProvider(
       create: (_) => MyEventsCubit(
         sl<EventRepository>(),
@@ -55,10 +68,7 @@ class MyEventsPage extends StatelessWidget {
         sl<CollaborationRepository>(),
         user.id,
       ),
-      child: DefaultTabController(
-        length: 2,
-        child: _MyEventsView(plannerId: user.id),
-      ),
+      child: child,
     );
   }
 }
