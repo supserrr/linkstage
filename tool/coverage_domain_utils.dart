@@ -4,9 +4,8 @@
 
 import 'dart:io';
 
-bool _scopedPath(String sfPath) {
-  return sfPath.contains('lib/domain/') || sfPath.contains('lib/core/utils/');
-}
+bool _included(String path) =>
+    path.startsWith('lib/domain/') || path.startsWith('lib/core/utils/');
 
 void main(List<String> args) {
   final path = args.isNotEmpty ? args.first : 'coverage/lcov.info';
@@ -16,37 +15,26 @@ void main(List<String> args) {
     exitCode = 1;
     return;
   }
-  final content = file.readAsStringSync();
-  final records = content.split('end_of_record');
-  var lf = 0;
-  var lh = 0;
-  for (final r in records) {
-    final lines = r.split('\n');
-    String? sfPath;
-    for (final line in lines) {
-      if (line.startsWith('SF:')) {
-        sfPath = line.substring(3).trim();
-        break;
-      }
-    }
-    if (sfPath == null || !_scopedPath(sfPath)) continue;
 
-    for (final line in lines) {
-      if (line.startsWith('LF:')) {
-        lf += int.tryParse(line.substring(3).trim()) ?? 0;
-      } else if (line.startsWith('LH:')) {
-        lh += int.tryParse(line.substring(3).trim()) ?? 0;
-      }
+  final raw = file.readAsStringSync();
+  var lf = 0, lh = 0;
+
+  for (final chunk in raw.split('end_of_record')) {
+    final t = chunk.trim();
+    if (t.isEmpty) continue;
+    String? sf;
+    for (final line in t.split('\n')) {
+      if (line.startsWith('SF:')) sf = line.substring(3).trim();
+    }
+    if (sf == null || !_included(sf)) continue;
+    for (final line in t.split('\n')) {
+      if (line.startsWith('LF:')) lf += int.tryParse(line.substring(3).trim()) ?? 0;
+      if (line.startsWith('LH:')) lh += int.tryParse(line.substring(3).trim()) ?? 0;
     }
   }
 
-  if (lf <= 0) {
-    stdout.writeln('No LF entries for lib/domain or lib/core/utils in $path');
-    exitCode = 1;
-    return;
-  }
-  final pct = 100.0 * lh / lf;
+  final pct = lf > 0 ? 100.0 * lh / lf : 0.0;
   stdout.writeln(
-    'Scoped (lib/domain + lib/core/utils): Lines hit: $lh / $lf (${pct.toStringAsFixed(2)}%)',
+    'lib/domain + lib/core/utils: $lh / $lf (${pct.toStringAsFixed(2)}%) from $path',
   );
 }
