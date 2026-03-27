@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LinkStage sign-in</title>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <main style="font-family:system-ui,sans-serif;max-width:24rem;margin:3rem auto;padding:0 1rem">
+    <h1>Almost there</h1>
+    <p id="status">Completing sign-in…</p>
+  </main>
+  <script>
+    firebase.initializeApp({
+      apiKey: "AIzaSyCUn4hDKIE6BYSlpItrlgi0YpJUNH11LE0",
+      authDomain: "linkstage-rw.firebaseapp.com",
+      projectId: "linkstage-rw",
+    });
+    var auth = firebase.auth();
+    var href = window.location.href;
+    if (auth.isSignInWithEmailLink(href)) {
+      addOpenInAppLink();
+      var email = window.localStorage.getItem('emailForSignIn');
+      if (!email) {
+        document.getElementById('status').textContent =
+          'If you started sign-in in the LinkStage app, tap "Open in app" below. Otherwise enter the email you used:';
+        var f = document.createElement('form');
+        f.innerHTML = '<p><label>Email<br><input type="email" id="em" required style="width:100%;box-sizing:border-box;margin-top:0.25rem"></label></p><p><button type="submit">Continue in browser</button></p>';
+        f.onsubmit = function (e) {
+          e.preventDefault();
+          doSignIn(document.getElementById('em').value.trim());
+        };
+        document.querySelector('main').appendChild(f);
+      } else {
+        doSignIn(email);
+      }
+    } else {
+      document.getElementById('status').textContent = 'Invalid or expired sign-in link.';
+    }
+    function addOpenInAppLink() {
+      var p = document.createElement('p');
+      p.style.marginTop = '1rem';
+      p.innerHTML = '<a href="#" id="openAppBtn" style="font-weight:600">Open in LinkStage app</a> — use this if the app did not open automatically.';
+      p.querySelector('#openAppBtn').onclick = function (e) {
+        e.preventDefault();
+        var intent = 'intent://linkstage-rw.firebaseapp.com' + location.pathname + (location.search || '') + (location.hash || '') + '#Intent;scheme=https;package=com.example.flutter_application_1;S.browser_fallback_url=' + encodeURIComponent(location.href) + ';end';
+        window.location.href = intent;
+      };
+      document.querySelector('main').appendChild(p);
+    }
+    function doSignIn(email) {
+      auth.signInWithEmailLink(email, href).then(function () {
+        document.getElementById('status').textContent =
+          'Signed in in this browser. You can close this tab; use the app for the mobile experience.';
+      }).catch(function (err) {
+        document.getElementById('status').textContent = err.message || 'Sign-in failed.';
+      });
+    }
+  </script>
+</body>
+</html>
