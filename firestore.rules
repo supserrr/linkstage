@@ -72,9 +72,11 @@ service cloud.firestore {
         && request.resource.data.plannerId == request.auth.uid
         && (!('locationVisibility' in request.resource.data)
             || request.resource.data.locationVisibility in ['public', 'private', 'acceptedCreatives']);
-      allow update, delete: if isAuthenticated() && resource.data.plannerId == request.auth.uid
+      // request.resource is null on delete; validate incoming data only on update.
+      allow update: if isAuthenticated() && resource.data.plannerId == request.auth.uid
         && (!('locationVisibility' in request.resource.data)
             || request.resource.data.locationVisibility in ['public', 'private', 'acceptedCreatives']);
+      allow delete: if isAuthenticated() && resource.data.plannerId == request.auth.uid;
     }
 
     match /bookings/{bookingId} {
