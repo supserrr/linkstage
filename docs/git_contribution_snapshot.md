@@ -13,14 +13,14 @@ Use this file to keep the **course report contribution table** aligned with repo
 Recorded after attribution commits landed (see `git log` for `Co-authored-by:` footers; GitHub also surfaces co-authors on the web UI).
 
 ```
-    40	Shima Serein
+    41	Shima Serein
     24	Christian
     14	Alliane Umutoniwase
     11	Sheilla Keza Ruvugabigwi
      9	Batonicarla
 ```
 
-*(Includes the commit that adds this snapshot file; re-run `git shortlog -sn HEAD` before final report freeze.)*
+*(Re-run `git shortlog -sn HEAD` on the report due date; totals change with every new commit.)*
 
 ## GitHub (optional cross-check)
 
