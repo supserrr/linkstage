@@ -7,7 +7,7 @@ LinkStage is a mobile marketplace connecting event planners with creative profes
 Please refer to our detailed [Setup Guide](docs/setup.md) to get the application running locally and configure dependencies like Firebase and Supabase.
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/supserrr/linkstage.git
 cd linkstage
 flutter pub get
 flutter run
