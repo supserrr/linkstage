@@ -42,4 +42,4 @@ If you need help or want to report an issue, please check the documentation or o
 
 ## License
 
-Private - LinkStage Project
+This project is licensed under the [MIT License](LICENSE).
