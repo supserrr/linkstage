@@ -3,7 +3,9 @@ import '../entities/booking_entity.dart';
 /// Abstract contract for booking operations.
 abstract class BookingRepository {
   /// Fetch completed bookings for a creative (for total gigs count).
-  Future<List<BookingEntity>> getCompletedBookingsByCreativeId(String creativeId);
+  Future<List<BookingEntity>> getCompletedBookingsByCreativeId(
+    String creativeId,
+  );
 
   /// Fetch completed bookings for a planner.
   Future<List<BookingEntity>> getCompletedBookingsByPlannerId(String plannerId);
@@ -20,7 +22,9 @@ abstract class BookingRepository {
   Future<List<BookingEntity>> getPendingBookingsByCreativeId(String creativeId);
 
   /// Fetch accepted bookings for a creative (upcoming gigs).
-  Future<List<BookingEntity>> getAcceptedBookingsByCreativeId(String creativeId);
+  Future<List<BookingEntity>> getAcceptedBookingsByCreativeId(
+    String creativeId,
+  );
 
   /// Count pending bookings (applications) for an event.
   Future<int> getPendingBookingsCountByEventId(String eventId);
@@ -57,7 +61,9 @@ abstract class BookingRepository {
   Future<List<BookingEntity>> getInvitedBookingsByCreativeId(String creativeId);
 
   /// Fetch declined bookings for a creative.
-  Future<List<BookingEntity>> getDeclinedBookingsByCreativeId(String creativeId);
+  Future<List<BookingEntity>> getDeclinedBookingsByCreativeId(
+    String creativeId,
+  );
 
   /// Fetch invited bookings for an event.
   Future<List<BookingEntity>> getInvitedBookingsByEventId(String eventId);

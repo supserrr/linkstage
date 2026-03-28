@@ -10,10 +10,7 @@ import '../router/app_router.dart';
 /// Handles FCM token registration and push notification events.
 /// Respects notificationsEnabled from settings (caller checks before init).
 class FcmService {
-  FcmService(
-    this._userRemoteDataSource,
-    this._authRepository,
-  );
+  FcmService(this._userRemoteDataSource, this._authRepository);
 
   final UserRemoteDataSource _userRemoteDataSource;
   final AuthRepository _authRepository;
@@ -23,11 +20,7 @@ class FcmService {
 
     // Request permission (iOS)
     if (Platform.isIOS) {
-      await messaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
     }
 
     // Create Android notification channel (recommended)
@@ -79,11 +72,15 @@ class FcmService {
   }
 
   static bool _isAllowedRoute(String route) {
-    if (route.startsWith('/event/') && route.contains('/applicants')) return true;
+    if (route.startsWith('/event/') && route.contains('/applicants')) {
+      return true;
+    }
     if (route == '/bookings') return true;
     if (route == '/collaboration/detail') return true;
     if (route == '/notifications') return true;
-    if (route.startsWith('/event/') && !route.contains('/applicants')) return true;
+    if (route.startsWith('/event/') && !route.contains('/applicants')) {
+      return true;
+    }
     if (route.startsWith('/messages/chat/')) return true;
     if (route.startsWith('/messages/with/')) return true;
     return false;

@@ -14,13 +14,11 @@ class AppBorders {
 
   static BorderRadius get borderRadius => BorderRadius.circular(radius);
 
-  static BorderSide cardBorder(ColorScheme scheme) => BorderSide(
-        color: scheme.primary.withValues(alpha: 0.5),
-        width: 0.5,
-      );
+  static BorderSide cardBorder(ColorScheme scheme) =>
+      BorderSide(color: scheme.primary.withValues(alpha: 0.5), width: 0.5);
 
   static ShapeBorder cardShape(ColorScheme scheme) => RoundedRectangleBorder(
-        borderRadius: borderRadius,
-        side: cardBorder(scheme),
-      );
+    borderRadius: borderRadius,
+    side: cardBorder(scheme),
+  );
 }

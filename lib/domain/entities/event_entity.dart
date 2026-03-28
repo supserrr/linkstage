@@ -7,8 +7,10 @@ enum EventStatus { draft, open, booked, completed }
 enum LocationVisibility {
   /// Shown to everyone.
   public,
+
   /// Hidden from everyone except the planner.
   private,
+
   /// Shown only to the planner and creatives with an accepted booking for this event.
   acceptedCreatives,
 }
@@ -103,20 +105,20 @@ class EventEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        plannerId,
-        title,
-        date,
-        location,
-        description,
-        status,
-        imageUrls,
-        eventType,
-        budget,
-        startTime,
-        endTime,
-        venueName,
-        showOnProfile,
-        locationVisibility,
-      ];
+    id,
+    plannerId,
+    title,
+    date,
+    location,
+    description,
+    status,
+    imageUrls,
+    eventType,
+    budget,
+    startTime,
+    endTime,
+    venueName,
+    showOnProfile,
+    locationVisibility,
+  ];
 }

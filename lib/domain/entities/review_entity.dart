@@ -36,19 +36,19 @@ class ReviewEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        bookingId,
-        collaborationId,
-        reviewerId,
-        revieweeId,
-        rating,
-        comment,
-        createdAt,
-        reply,
-        replyAt,
-        likeCount,
-        likedBy,
-        flagCount,
-        flaggedBy,
-      ];
+    id,
+    bookingId,
+    collaborationId,
+    reviewerId,
+    revieweeId,
+    rating,
+    comment,
+    createdAt,
+    reply,
+    replyAt,
+    likeCount,
+    likedBy,
+    flagCount,
+    flaggedBy,
+  ];
 }

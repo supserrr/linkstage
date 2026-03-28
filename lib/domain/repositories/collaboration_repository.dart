@@ -50,7 +50,10 @@ abstract class CollaborationRepository {
   Future<void> completeAcceptedCollaborationsForEvent(String eventId);
 
   /// Check if requester already has an active (pending/accepted) proposal to target.
-  Future<bool> hasExistingCollaboration(String requesterId, String targetUserId);
+  Future<bool> hasExistingCollaboration(
+    String requesterId,
+    String targetUserId,
+  );
 
   /// Check if there is any active collaboration between the two users (either direction).
   Future<bool> hasActiveCollaborationBetween(String userId1, String userId2);

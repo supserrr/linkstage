@@ -29,6 +29,7 @@ class CollaborationEntity extends Equatable {
   final String targetUserId;
   final String description;
   final CollaborationStatus status;
+
   /// Display name for collaborations not tied to an event.
   final String? title;
   final String? eventId;
@@ -47,7 +48,9 @@ class CollaborationEntity extends Equatable {
     if (title != null && title!.trim().isNotEmpty) return title!;
     if (eventType != null && eventType!.trim().isNotEmpty) return eventType!;
     if (description.isNotEmpty) {
-      final truncated = description.length > 50 ? '${description.substring(0, 50)}...' : description;
+      final truncated = description.length > 50
+          ? '${description.substring(0, 50)}...'
+          : description;
       return truncated;
     }
     return 'Collaboration';
@@ -70,21 +73,21 @@ class CollaborationEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        requesterId,
-        targetUserId,
-        description,
-        status,
-        title,
-        eventId,
-        createdAt,
-        budget,
-        date,
-        startTime,
-        endTime,
-        location,
-        eventType,
-        plannerConfirmedAt,
-        creativeConfirmedAt,
-      ];
+    id,
+    requesterId,
+    targetUserId,
+    description,
+    status,
+    title,
+    eventId,
+    createdAt,
+    budget,
+    date,
+    startTime,
+    endTime,
+    location,
+    eventType,
+    plannerConfirmedAt,
+    creativeConfirmedAt,
+  ];
 }

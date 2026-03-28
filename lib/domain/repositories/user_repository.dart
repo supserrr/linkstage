@@ -20,6 +20,7 @@ abstract class UserRepository {
 
   /// Update last seen timestamp.
   Future<void> updateLastSeen(String userId);
+
   /// Get user by ID.
   Future<UserEntity?> getUser(String userId);
 

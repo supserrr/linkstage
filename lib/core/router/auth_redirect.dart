@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kDebugMode, ChangeNotifier, debugPrint;
+import 'package:flutter/foundation.dart'
+    show kDebugMode, ChangeNotifier, debugPrint;
 
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/entities/user_entity.dart';
@@ -32,10 +33,7 @@ class OnboardingListenable extends ChangeNotifier {
 class SplashNotifier extends ChangeNotifier {
   SplashNotifier(this._authNotifier) {
     _authNotifier.addListener(_onAuthUpdate);
-    Future.delayed(
-      const Duration(milliseconds: 2800),
-      _onMinDurationPassed,
-    );
+    Future.delayed(const Duration(milliseconds: 2800), _onMinDurationPassed);
     _onAuthUpdate();
   }
 
@@ -138,7 +136,8 @@ class AuthRedirectNotifier extends ChangeNotifier {
     try {
       var user = await _userRepository.getUser(authUser.id);
       if (user != null) {
-        final needsPhotoSync = (user.photoUrl == null || user.photoUrl!.isEmpty) &&
+        final needsPhotoSync =
+            (user.photoUrl == null || user.photoUrl!.isEmpty) &&
             authUser.photoUrl != null &&
             authUser.photoUrl!.isNotEmpty;
         if (needsPhotoSync) {

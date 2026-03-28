@@ -24,28 +24,34 @@ class PlannerProfileEntity extends Equatable {
   final List<String> languages;
   final List<String> portfolioUrls;
   final String? displayName;
+
   /// Role/title shown in "Hosted by" section (e.g. Event Planner).
   final String? role;
+
   /// Profile picture URL (from user document); used for avatar display.
   final String? photoUrl;
+
   /// Denormalized from user; for query filtering (everyone | connections_only | only_me).
   final ProfileVisibility? profileVisibility;
 
   @override
   List<Object?> get props => [
-        userId,
-        bio,
-        location,
-        eventTypes,
-        languages,
-        portfolioUrls,
-        displayName,
-        role,
-        photoUrl,
-        profileVisibility,
-      ];
+    userId,
+    bio,
+    location,
+    eventTypes,
+    languages,
+    portfolioUrls,
+    displayName,
+    role,
+    photoUrl,
+    profileVisibility,
+  ];
 
-  PlannerProfileEntity copyWith({String? photoUrl, ProfileVisibility? profileVisibility}) {
+  PlannerProfileEntity copyWith({
+    String? photoUrl,
+    ProfileVisibility? profileVisibility,
+  }) {
     return PlannerProfileEntity(
       userId: userId,
       bio: bio,
