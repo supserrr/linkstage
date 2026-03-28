@@ -41,10 +41,7 @@ class EmptyStateIllustrated extends StatelessWidget {
           children: [
             SizedBox(
               height: illustrationHeight,
-              child: SvgPicture.asset(
-                asset,
-                fit: BoxFit.contain,
-              ),
+              child: SvgPicture.asset(asset, fit: BoxFit.contain),
             ),
             const SizedBox(height: 24),
             Text(

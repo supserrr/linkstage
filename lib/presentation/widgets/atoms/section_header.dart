@@ -29,11 +29,7 @@ class SectionHeader extends StatelessWidget {
       child: icon != null
           ? Row(
               children: [
-                Icon(
-                  icon,
-                  size: 20,
-                  color: theme.colorScheme.primary,
-                ),
+                Icon(icon, size: 20, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(title, style: effectiveStyle),
               ],

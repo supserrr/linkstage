@@ -10,10 +10,7 @@ class OnboardingState extends Equatable {
   final bool introComplete;
   final bool profileComplete;
 
-  OnboardingState copyWith({
-    bool? introComplete,
-    bool? profileComplete,
-  }) {
+  OnboardingState copyWith({bool? introComplete, bool? profileComplete}) {
     return OnboardingState(
       introComplete: introComplete ?? this.introComplete,
       profileComplete: profileComplete ?? this.profileComplete,

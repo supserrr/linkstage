@@ -13,10 +13,7 @@ import '../../../widgets/atoms/app_button.dart';
 import '../../../widgets/atoms/glass_card.dart';
 
 class ProfilePhotoStep extends StatefulWidget {
-  const ProfilePhotoStep({
-    super.key,
-    required this.onNext,
-  });
+  const ProfilePhotoStep({super.key, required this.onNext});
 
   final VoidCallback onNext;
 
@@ -66,10 +63,7 @@ class _ProfilePhotoStepState extends State<ProfilePhotoStep> {
             children: [
               Expanded(
                 child: Center(
-                  child: SvgPicture.asset(
-                    asset,
-                    fit: BoxFit.contain,
-                  ),
+                  child: SvgPicture.asset(asset, fit: BoxFit.contain),
                 ),
               ),
               Padding(
@@ -124,41 +118,45 @@ class _ProfilePhotoStepState extends State<ProfilePhotoStep> {
                                             fit: BoxFit.cover,
                                           )
                                         : hasRemoteImage
-                                            ? DecorationImage(
-                                                image:
-                                                    CachedNetworkImageProvider(
-                                                        photoUrl),
-                                                fit: BoxFit.cover,
-                                              )
-                                            : null,
+                                        ? DecorationImage(
+                                            image: CachedNetworkImageProvider(
+                                              photoUrl,
+                                            ),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
                                   ),
                                   child: hasPhoto
                                       ? (photoUrl != null
-                                          ? Align(
-                                              alignment:
-                                                  Alignment.bottomRight,
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.all(4),
-                                                decoration: BoxDecoration(
-                                                  color: theme
-                                                      .colorScheme.primary,
-                                                  shape: BoxShape.circle,
+                                            ? Align(
+                                                alignment:
+                                                    Alignment.bottomRight,
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(
+                                                    4,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: theme
+                                                        .colorScheme
+                                                        .primary,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: Icon(
+                                                    Icons.check,
+                                                    size: 16,
+                                                    color: theme
+                                                        .colorScheme
+                                                        .onPrimary,
+                                                  ),
                                                 ),
-                                                child: Icon(
-                                                  Icons.check,
-                                                  size: 16,
-                                                  color: theme.colorScheme
-                                                      .onPrimary,
-                                                ),
-                                              ),
-                                            )
-                                          : null)
+                                              )
+                                            : null)
                                       : Center(
                                           child: Icon(
                                             Icons.add_a_photo,
                                             size: 36,
-                                            color: theme.colorScheme
+                                            color: theme
+                                                .colorScheme
                                                 .onPrimaryContainer,
                                           ),
                                         ),

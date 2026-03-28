@@ -10,10 +10,13 @@ import 'profiles_state.dart';
 const Duration _deferredLoadingDelay = Duration(milliseconds: 150);
 
 class ProfilesBloc extends Bloc<ProfilesEvent, ProfilesState> {
-  ProfilesBloc(this._repository, {String? excludeUserId, bool onlyCreativeAccounts = false})
-      : _excludeUserId = excludeUserId,
-        _onlyCreativeAccounts = onlyCreativeAccounts,
-        super(const ProfilesState.initial()) {
+  ProfilesBloc(
+    this._repository, {
+    String? excludeUserId,
+    bool onlyCreativeAccounts = false,
+  }) : _excludeUserId = excludeUserId,
+       _onlyCreativeAccounts = onlyCreativeAccounts,
+       super(const ProfilesState.initial()) {
     on<ProfilesLoadRequested>(_onLoad);
     on<ProfilesProfilesReceived>(_onProfilesReceived);
     on<ProfilesLoadFailed>(_onLoadFailed);
@@ -36,22 +39,26 @@ class ProfilesBloc extends Bloc<ProfilesEvent, ProfilesState> {
     _loadingDeferTimer?.cancel();
     final loadId = ++_loadId;
     try {
-      _profilesSubscription = _repository.getProfiles(
-        category: event.category,
-        location: event.location,
-        excludeUserId: _excludeUserId,
-        onlyCreativeAccounts: _onlyCreativeAccounts,
-      ).listen(
-        (profiles) => add(ProfilesProfilesReceived(profiles)),
-        onError: (e) => add(ProfilesLoadFailed(e.toString())),
-      );
+      _profilesSubscription = _repository
+          .getProfiles(
+            category: event.category,
+            location: event.location,
+            excludeUserId: _excludeUserId,
+            onlyCreativeAccounts: _onlyCreativeAccounts,
+          )
+          .listen(
+            (profiles) => add(ProfilesProfilesReceived(profiles)),
+            onError: (e) => add(ProfilesLoadFailed(e.toString())),
+          );
       _loadingDeferTimer = Timer(_deferredLoadingDelay, () {
         if (loadId == _loadId && !isClosed) {
           _loadingDeferTimer = null;
-          emit(ProfilesState.loading(
-            profiles: state.profiles,
-            searchQuery: state.searchQuery,
-          ));
+          emit(
+            ProfilesState.loading(
+              profiles: state.profiles,
+              searchQuery: state.searchQuery,
+            ),
+          );
         }
       });
     } catch (e) {
@@ -65,16 +72,10 @@ class ProfilesBloc extends Bloc<ProfilesEvent, ProfilesState> {
   ) {
     _loadingDeferTimer?.cancel();
     _loadingDeferTimer = null;
-    emit(ProfilesState.loaded(
-      event.profiles,
-      searchQuery: state.searchQuery,
-    ));
+    emit(ProfilesState.loaded(event.profiles, searchQuery: state.searchQuery));
   }
 
-  void _onLoadFailed(
-    ProfilesLoadFailed event,
-    Emitter<ProfilesState> emit,
-  ) {
+  void _onLoadFailed(ProfilesLoadFailed event, Emitter<ProfilesState> emit) {
     _loadingDeferTimer?.cancel();
     _loadingDeferTimer = null;
     emit(ProfilesState.error(event.message));
@@ -84,12 +85,14 @@ class ProfilesBloc extends Bloc<ProfilesEvent, ProfilesState> {
     ProfilesSearchQueryChanged event,
     Emitter<ProfilesState> emit,
   ) {
-    emit(ProfilesState(
-      status: state.status,
-      profiles: state.profiles,
-      searchQuery: event.query,
-      error: state.error,
-    ));
+    emit(
+      ProfilesState(
+        status: state.status,
+        profiles: state.profiles,
+        searchQuery: event.query,
+        error: state.error,
+      ),
+    );
   }
 
   Future<void> _onFilterChanged(

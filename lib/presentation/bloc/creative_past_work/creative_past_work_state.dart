@@ -50,6 +50,7 @@ class CreativePastWorkState {
   final String? creativePhotoUrl;
   final List<PastEventItem> pastEvents;
   final List<PastCollaborationItem> pastCollaborations;
+
   /// IDs (booking or collaboration) hidden from public view.
   final Set<String> hiddenIds;
   final bool isLoading;

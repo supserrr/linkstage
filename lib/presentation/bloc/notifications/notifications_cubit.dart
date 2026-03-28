@@ -14,7 +14,7 @@ const Duration _emptyDebounceDelay = Duration(milliseconds: 600);
 /// Cubit for the notifications page. Subscribes to real-time notification stream.
 class NotificationsCubit extends Cubit<NotificationsState> {
   NotificationsCubit(this._notificationRepository, this._userId, this._role)
-      : super(const NotificationsState()) {
+    : super(const NotificationsState()) {
     _subscribe();
   }
 
@@ -46,43 +46,49 @@ class NotificationsCubit extends Cubit<NotificationsState> {
           },
           onError: (e) {
             _emptyDebounceTimer?.cancel();
-            emit(state.copyWith(
-              hasLoaded: true,
-              error: e.toString().replaceAll('Exception:', '').trim(),
-            ));
+            emit(
+              state.copyWith(
+                hasLoaded: true,
+                error: e.toString().replaceAll('Exception:', '').trim(),
+              ),
+            );
           },
         );
 
     _readIdsSubscription = _notificationRepository
         .watchReadNotificationIds(_userId)
         .listen((readIds) {
-      _readIds = readIds;
-      _emitMerged();
-    });
+          _readIds = readIds;
+          _emitMerged();
+        });
   }
 
   void _emitMerged() {
     if (_notifications.isNotEmpty) {
       _emptyDebounceTimer?.cancel();
       _emptyDebounceTimer = null;
-      emit(state.copyWith(
-        notifications: _notifications,
-        readIds: _readIds,
-        hasLoaded: true,
-        error: null,
-      ));
+      emit(
+        state.copyWith(
+          notifications: _notifications,
+          readIds: _readIds,
+          hasLoaded: true,
+          error: null,
+        ),
+      );
       return;
     }
     _emptyDebounceTimer?.cancel();
     _emptyDebounceTimer = Timer(_emptyDebounceDelay, () {
       if (!isClosed) {
         _emptyDebounceTimer = null;
-        emit(state.copyWith(
-          notifications: _notifications,
-          readIds: _readIds,
-          hasLoaded: true,
-          error: null,
-        ));
+        emit(
+          state.copyWith(
+            notifications: _notifications,
+            readIds: _readIds,
+            hasLoaded: true,
+            error: null,
+          ),
+        );
       }
     });
   }

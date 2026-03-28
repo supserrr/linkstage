@@ -8,10 +8,7 @@ import '../../../widgets/atoms/app_button.dart';
 import '../../../widgets/atoms/glass_card.dart';
 
 class UsernameStep extends StatefulWidget {
-  const UsernameStep({
-    super.key,
-    required this.onNext,
-  });
+  const UsernameStep({super.key, required this.onNext});
 
   final VoidCallback onNext;
 
@@ -87,10 +84,7 @@ class _UsernameStepState extends State<UsernameStep> {
           children: [
             Expanded(
               child: Center(
-                child: SvgPicture.asset(
-                  asset,
-                  fit: BoxFit.contain,
-                ),
+                child: SvgPicture.asset(asset, fit: BoxFit.contain),
               ),
             ),
             Padding(
@@ -148,8 +142,8 @@ class _UsernameStepState extends State<UsernameStep> {
                       width: double.infinity,
                       height: 48,
                       child: OutlinedButton.icon(
-                        onPressed: _checking ||
-                                _controller.text.trim().length < 3
+                        onPressed:
+                            _checking || _controller.text.trim().length < 3
                             ? null
                             : _checkAvailability,
                         icon: _checking
@@ -161,12 +155,14 @@ class _UsernameStepState extends State<UsernameStep> {
                                   size: 20,
                                 ),
                               )
-                            : Icon(Icons.search,
+                            : Icon(
+                                Icons.search,
                                 size: 20,
-                                color: theme.colorScheme.primary),
-                        label: Text(_checking
-                            ? 'Checking...'
-                            : 'Check availability'),
+                                color: theme.colorScheme.primary,
+                              ),
+                        label: Text(
+                          _checking ? 'Checking...' : 'Check availability',
+                        ),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: theme.colorScheme.primary,
                           side: BorderSide.none,
@@ -178,9 +174,7 @@ class _UsernameStepState extends State<UsernameStep> {
                       Row(
                         children: [
                           Icon(
-                            _isAvailable!
-                                ? Icons.check_circle
-                                : Icons.cancel,
+                            _isAvailable! ? Icons.check_circle : Icons.cancel,
                             size: 20,
                             color: _isAvailable!
                                 ? theme.colorScheme.primary

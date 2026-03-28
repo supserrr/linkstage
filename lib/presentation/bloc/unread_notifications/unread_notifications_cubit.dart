@@ -33,24 +33,28 @@ class UnreadNotificationsCubit extends Cubit<UnreadNotificationsState> {
 
     _subscription = _notificationRepository
         .watchNotifications(_userId, _role)
-        .listen((notifications) {
-      _notifications = notifications;
-      _emitCount();
-    }, onError: (_) {
-      emit(const UnreadNotificationsState(unreadCount: 0));
-    });
+        .listen(
+          (notifications) {
+            _notifications = notifications;
+            _emitCount();
+          },
+          onError: (_) {
+            emit(const UnreadNotificationsState(unreadCount: 0));
+          },
+        );
 
     _readIdsSubscription = _notificationRepository
         .watchReadNotificationIds(_userId)
         .listen((readIds) {
-      _readIds = readIds;
-      _emitCount();
-    });
+          _readIds = readIds;
+          _emitCount();
+        });
   }
 
   void _emitCount() {
-    final unreadCount =
-        _notifications.where((n) => !_readIds.contains(n.id)).length;
+    final unreadCount = _notifications
+        .where((n) => !_readIds.contains(n.id))
+        .length;
     emit(UnreadNotificationsState(unreadCount: unreadCount));
   }
 

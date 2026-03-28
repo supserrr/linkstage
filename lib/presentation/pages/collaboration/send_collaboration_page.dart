@@ -96,30 +96,28 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
     final locationVal = _locationController.text.trim().isEmpty
         ? null
         : _locationController.text.trim();
-    final eventTypeVal = (_eventType != null &&
-            _eventType!.isNotEmpty &&
-            _eventType != 'Other')
+    final eventTypeVal =
+        (_eventType != null && _eventType!.isNotEmpty && _eventType != 'Other')
         ? _eventType
         : null;
-    final startTimeVal =
-        _startTime.isNotEmpty ? _startTime : null;
+    final startTimeVal = _startTime.isNotEmpty ? _startTime : null;
     final endTimeVal = _endTime.isNotEmpty ? _endTime : null;
 
     try {
-      final collaboration = await sl<CollaborationRepository>().createCollaboration(
-        requesterId: user.id,
-        targetUserId: widget.targetUserId,
-        description: _descriptionController.text.trim(),
-        title: _titleController.text.trim(),
-        budget: budgetVal,
-        date: _date,
-        startTime: startTimeVal,
-        endTime: endTimeVal,
-        location: locationVal,
-        eventType: eventTypeVal,
-      );
-      final requesterName =
-          user.displayName ?? user.username ?? user.email;
+      final collaboration = await sl<CollaborationRepository>()
+          .createCollaboration(
+            requesterId: user.id,
+            targetUserId: widget.targetUserId,
+            description: _descriptionController.text.trim(),
+            title: _titleController.text.trim(),
+            budget: budgetVal,
+            date: _date,
+            startTime: startTimeVal,
+            endTime: endTimeVal,
+            location: locationVal,
+            eventType: eventTypeVal,
+          );
+      final requesterName = user.displayName ?? user.username ?? user.email;
       sl<PushNotificationService>().notifyUser(
         targetUserId: widget.targetUserId,
         title: 'New collaboration proposal',
@@ -136,16 +134,18 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
-      showToast(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
+      showToast(
+        context,
+        e.toString().replaceFirst('Exception: ', ''),
+        isError: true,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Send Collaboration Proposal'),
-      ),
+      appBar: AppBar(title: const Text('Send Collaboration Proposal')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -155,9 +155,9 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
             children: [
               Text(
                 'Project or event name',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               TextFormField(
@@ -177,9 +177,9 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
               const SizedBox(height: 16),
               Text(
                 'Your message',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -204,24 +204,23 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
                 Divider(
                   height: 1,
                   thickness: 1,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .outline
-                      .withValues(alpha: 0.6),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.6),
                 ),
                 const SizedBox(height: 24),
                 Text(
                   'Event details',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Optional — help the creative understand your project',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Container(
@@ -230,10 +229,9 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
                     color: Theme.of(context).colorScheme.surfaceContainerLowest,
                     borderRadius: AppBorders.borderRadius,
                     border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .outline
-                          .withValues(alpha: 0.6),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withValues(alpha: 0.6),
                       width: 1,
                     ),
                   ),
@@ -246,15 +244,14 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
                           labelText: 'Event type',
                           border: OutlineInputBorder(),
                           isDense: true,
-                          contentPadding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
                         ),
                         items: [
                           ..._standardEventTypes.map(
-                            (e) => DropdownMenuItem(
-                              value: e,
-                              child: Text(e),
-                            ),
+                            (e) => DropdownMenuItem(value: e, child: Text(e)),
                           ),
                           const DropdownMenuItem(
                             value: 'Other',
@@ -291,9 +288,9 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
                             style: TextStyle(
                               color: _date != null
                                   ? Theme.of(context).colorScheme.onSurface
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -304,8 +301,9 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
                           Expanded(
                             child: InkWell(
                               onTap: () async {
-                                final initial = _parseTime(_startTime) ??
-                                const TimeOfDay(hour: 9, minute: 0);
+                                final initial =
+                                    _parseTime(_startTime) ??
+                                    const TimeOfDay(hour: 9, minute: 0);
                                 final picked = await showTimePicker(
                                   context: context,
                                   initialTime: initial,
@@ -326,12 +324,12 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
                                   _formatTimeForDisplay(_startTime),
                                   style: TextStyle(
                                     color: _startTime.isNotEmpty
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -341,7 +339,8 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
                           Expanded(
                             child: InkWell(
                               onTap: () async {
-                                final initial = _parseTime(_endTime) ??
+                                final initial =
+                                    _parseTime(_endTime) ??
                                     const TimeOfDay(hour: 17, minute: 0);
                                 final picked = await showTimePicker(
                                   context: context,
@@ -363,12 +362,12 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
                                   _formatTimeForDisplay(_endTime),
                                   style: TextStyle(
                                     color: _endTime.isNotEmpty
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface
+                                        : Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -405,10 +404,9 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
               Divider(
                 height: 1,
                 thickness: 1,
-                color: Theme.of(context)
-                    .colorScheme
-                    .outline
-                    .withValues(alpha: 0.6),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.6),
               ),
               const SizedBox(height: 24),
               FilledButton(

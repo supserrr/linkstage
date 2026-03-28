@@ -63,14 +63,16 @@ class _EventApplicantsPageState extends State<EventApplicantsPage> {
         });
         return;
       }
-      final invited =
-          await sl<BookingRepository>().getInvitedBookingsByEventId(widget.eventId);
-      final pending =
-          await sl<BookingRepository>().getPendingBookingsByEventId(widget.eventId);
-      final accepted =
-          await sl<BookingRepository>().getAcceptedBookingsByEventId(widget.eventId);
-      final completed =
-          await sl<BookingRepository>().getCompletedBookingsByEventId(widget.eventId);
+      final invited = await sl<BookingRepository>().getInvitedBookingsByEventId(
+        widget.eventId,
+      );
+      final pending = await sl<BookingRepository>().getPendingBookingsByEventId(
+        widget.eventId,
+      );
+      final accepted = await sl<BookingRepository>()
+          .getAcceptedBookingsByEventId(widget.eventId);
+      final completed = await sl<BookingRepository>()
+          .getCompletedBookingsByEventId(widget.eventId);
       final allBookings = [...invited, ...pending, ...accepted, ...completed];
       final users = <String, UserEntity>{};
       for (final b in allBookings) {
@@ -80,10 +82,8 @@ class _EventApplicantsPageState extends State<EventApplicantsPage> {
       final plannerId = sl<AuthRedirectNotifier>().user?.id ?? '';
       final hasReviewed = <String, bool>{};
       for (final b in completed) {
-        final review = await sl<ReviewRepository>().getReviewByBookingAndReviewer(
-          b.id,
-          plannerId,
-        );
+        final review = await sl<ReviewRepository>()
+            .getReviewByBookingAndReviewer(b.id, plannerId);
         hasReviewed[b.id] = review != null;
       }
       if (mounted) {
@@ -121,7 +121,8 @@ class _EventApplicantsPageState extends State<EventApplicantsPage> {
       sl<PushNotificationService>().notifyUser(
         targetUserId: booking.creativeId,
         title: 'Application accepted',
-        body: 'Your application for ${_event?.title ?? 'Event'} has been accepted',
+        body:
+            'Your application for ${_event?.title ?? 'Event'} has been accepted',
         data: {
           'route': '/bookings',
           'bookingId': booking.id,
@@ -247,58 +248,58 @@ class _EventApplicantsPageState extends State<EventApplicantsPage> {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Leave a review',
-                    style: Theme.of(ctx).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (i) {
-                      final star = i + 1;
-                      return IconButton(
-                        onPressed: () => setModalState(() => rating = star),
-                        icon: Icon(
-                          star <= rating ? Icons.star : Icons.star_border,
-                          color: Theme.of(ctx).colorScheme.primary,
-                          size: 36,
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: controller,
-                    maxLines: 3,
-                    maxLength: 500,
-                    decoration: const InputDecoration(
-                      hintText: 'Write your review (optional)...',
-                      border: OutlineInputBorder(),
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Leave a review',
+                      style: Theme.of(ctx).textTheme.titleMedium,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancel'),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (i) {
+                        final star = i + 1;
+                        return IconButton(
+                          onPressed: () => setModalState(() => rating = star),
+                          icon: Icon(
+                            star <= rating ? Icons.star : Icons.star_border,
+                            color: Theme.of(ctx).colorScheme.primary,
+                            size: 36,
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controller,
+                      maxLines: 3,
+                      maxLength: 500,
+                      decoration: const InputDecoration(
+                        hintText: 'Write your review (optional)...',
+                        border: OutlineInputBorder(),
                       ),
-                      const SizedBox(width: 8),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Submit'),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Submit'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
         ),
       ),
     );
@@ -332,11 +333,11 @@ class _EventApplicantsPageState extends State<EventApplicantsPage> {
       return Scaffold(
         appBar: AppBar(title: const Text('Applications')),
         body: Center(
-        child: LoadingAnimationWidget.stretchedDots(
-          color: Theme.of(context).colorScheme.primary,
-          size: 48,
+          child: LoadingAnimationWidget.stretchedDots(
+            color: Theme.of(context).colorScheme.primary,
+            size: 48,
+          ),
         ),
-      ),
       );
     }
 
@@ -351,10 +352,7 @@ class _EventApplicantsPageState extends State<EventApplicantsPage> {
               children: [
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: _load,
-                  child: const Text('Retry'),
-                ),
+                FilledButton(onPressed: _load, child: const Text('Retry')),
               ],
             ),
           ),
@@ -365,19 +363,26 @@ class _EventApplicantsPageState extends State<EventApplicantsPage> {
     final eventTitle = _event?.title ?? 'Event';
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final eventDateInPast = _event?.date != null &&
-        DateTime(_event!.date!.year, _event!.date!.month, _event!.date!.day)
-            .isBefore(today);
-    final hasAcceptedNotCompleted = _applicants
-        .any((b) => b.status == BookingStatus.accepted);
+    final eventDateInPast =
+        _event?.date != null &&
+        DateTime(
+          _event!.date!.year,
+          _event!.date!.month,
+          _event!.date!.day,
+        ).isBefore(today);
+    final hasAcceptedNotCompleted = _applicants.any(
+      (b) => b.status == BookingStatus.accepted,
+    );
     final daysAgo = eventDateInPast && _event?.date != null
         ? today
-            .difference(DateTime(
-              _event!.date!.year,
-              _event!.date!.month,
-              _event!.date!.day,
-            ))
-            .inDays
+              .difference(
+                DateTime(
+                  _event!.date!.year,
+                  _event!.date!.month,
+                  _event!.date!.day,
+                ),
+              )
+              .inDays
         : 0;
     final showReminderBanner =
         eventDateInPast && hasAcceptedNotCompleted && daysAgo > 0;
@@ -430,11 +435,16 @@ class _EventApplicantsPageState extends State<EventApplicantsPage> {
                       margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.tertiaryContainer
-                            .withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(AppBorders.chipRadius),
+                        color: theme.colorScheme.tertiaryContainer.withValues(
+                          alpha: 0.6,
+                        ),
+                        borderRadius: BorderRadius.circular(
+                          AppBorders.chipRadius,
+                        ),
                         border: Border.all(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.4,
+                          ),
                         ),
                       ),
                       child: Row(
@@ -461,386 +471,459 @@ class _EventApplicantsPageState extends State<EventApplicantsPage> {
                   if (showReminderBanner) const SizedBox(height: 8),
                   Expanded(
                     child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                itemCount: _applicants.length,
-                itemBuilder: (context, index) {
-                  final booking = _applicants[index];
-                  final user = _creativeUsers[booking.creativeId];
-                  final name = user?.displayName ??
-                      user?.username ??
-                      user?.email ??
-                      'Creative';
-                  final photoUrl = user?.photoUrl;
-                  final isInvited = booking.status == BookingStatus.invited;
-                  final isPending = booking.status == BookingStatus.pending;
-                  final isCompleted = booking.status == BookingStatus.completed;
-                  final isAccepting = _acceptingBookingId == booking.id;
-                  final isRejecting = _rejectingBookingId == booking.id;
-                  final isCompleting = _completingBookingId == booking.id;
-                  final hasReviewed = _hasReviewedByBookingId[booking.id] ?? false;
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      borderRadius: AppBorders.borderRadius,
-                      border: Border.all(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.6),
-                        width: 1,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 16,
                       ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              ProfileAvatar(
-                                photoUrl: photoUrl,
-                                displayName: name,
-                                radius: 32,
+                      itemCount: _applicants.length,
+                      itemBuilder: (context, index) {
+                        final booking = _applicants[index];
+                        final user = _creativeUsers[booking.creativeId];
+                        final name =
+                            user?.displayName ??
+                            user?.username ??
+                            user?.email ??
+                            'Creative';
+                        final photoUrl = user?.photoUrl;
+                        final isInvited =
+                            booking.status == BookingStatus.invited;
+                        final isPending =
+                            booking.status == BookingStatus.pending;
+                        final isCompleted =
+                            booking.status == BookingStatus.completed;
+                        final isAccepting = _acceptingBookingId == booking.id;
+                        final isRejecting = _rejectingBookingId == booking.id;
+                        final isCompleting = _completingBookingId == booking.id;
+                        final hasReviewed =
+                            _hasReviewedByBookingId[booking.id] ?? false;
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            borderRadius: AppBorders.borderRadius,
+                            border: Border.all(
+                              color: theme.colorScheme.outline.withValues(
+                                alpha: 0.6,
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      name,
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isPending
-                                            ? theme.colorScheme.primaryContainer
-                                                .withValues(alpha: 0.6)
-                                            : isInvited
-                                                ? theme.colorScheme.tertiaryContainer
-                                                    .withValues(alpha: 0.7)
-                                                : isCompleted
-                                                    ? theme.colorScheme.secondaryContainer
-                                                        .withValues(alpha: 0.7)
-                                                    : theme.colorScheme.tertiaryContainer
-                                                        .withValues(alpha: 0.7),
-                                        borderRadius:
-                                            BorderRadius.circular(AppBorders.chipRadius),
-                                      ),
-                                      child: Text(
-                                        isPending
-                                            ? 'Pending application'
-                                            : isInvited
-                                                ? 'Invited'
-                                                : isCompleted
-                                                    ? 'Completed'
-                                                    : 'Accepted',
-                                        style: theme.textTheme.labelSmall
-                                            ?.copyWith(
-                                          color: isPending
-                                              ? theme.colorScheme
-                                                  .onPrimaryContainer
-                                              : isInvited
-                                                  ? theme.colorScheme
-                                                      .onTertiaryContainer
-                                                  : isCompleted
-                                                      ? theme.colorScheme
-                                                          .onSecondaryContainer
-                                                      : theme.colorScheme
-                                                          .onTertiaryContainer,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                    if (isCompleted &&
-                                        (booking.plannerConfirmedAt != null ||
-                                            booking.creativeConfirmedAt != null)) ...[
-                                      const SizedBox(height: 4),
-                                      Wrap(
-                                        spacing: 8,
-                                        runSpacing: 4,
-                                        children: [
-                                          if (booking.plannerConfirmedAt != null)
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.check_circle_outline,
-                                                  size: 14,
-                                                  color: theme.colorScheme
-                                                      .onSurfaceVariant,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  'Planner confirmed',
-                                                  style: theme.textTheme
-                                                      .labelSmall
-                                                      ?.copyWith(
-                                                    color: theme.colorScheme
-                                                        .onSurfaceVariant,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          if (booking.creativeConfirmedAt != null)
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.check_circle_outline,
-                                                  size: 14,
-                                                  color: theme.colorScheme
-                                                      .onSurfaceVariant,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  'Creative confirmed',
-                                                  style: theme.textTheme
-                                                      .labelSmall
-                                                      ?.copyWith(
-                                                    color: theme.colorScheme
-                                                        .onSurfaceVariant,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                        ],
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
+                              width: 1,
+                            ),
                           ),
-                              const SizedBox(height: 16),
-                              !isInvited && !isPending && !isCompleted
-                                  ? Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: [
-                                        OutlinedButton.icon(
-                                          onPressed: () => context.push(
-                                              AppRoutes.creativeProfileView(
-                                                  booking.creativeId)),
-                                          icon: const Icon(Icons.person_outline,
-                                              size: 16),
-                                          label: const Text('Profile'),
-                                          style: OutlinedButton.styleFrom(
-                                            padding: const EdgeInsets
-                                                .symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 10),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    ProfileAvatar(
+                                      photoUrl: photoUrl,
+                                      displayName: name,
+                                      radius: 32,
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            name,
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                ),
                                           ),
-                                        ),
-                                        OutlinedButton.icon(
-                                          onPressed: isCompleting
-                                              ? null
-                                              : () => _markComplete(booking),
-                                          icon: isCompleting
-                                              ? SizedBox(
-                                                  width: 16,
-                                                  height: 16,
-                                                  child: LoadingAnimationWidget
-                                                      .stretchedDots(
-                                                    color: theme
+                                          const SizedBox(height: 4),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isPending
+                                                  ? theme
                                                         .colorScheme
-                                                        .onSurface,
-                                                    size: 16,
+                                                        .primaryContainer
+                                                        .withValues(alpha: 0.6)
+                                                  : isInvited
+                                                  ? theme
+                                                        .colorScheme
+                                                        .tertiaryContainer
+                                                        .withValues(alpha: 0.7)
+                                                  : isCompleted
+                                                  ? theme
+                                                        .colorScheme
+                                                        .secondaryContainer
+                                                        .withValues(alpha: 0.7)
+                                                  : theme
+                                                        .colorScheme
+                                                        .tertiaryContainer
+                                                        .withValues(alpha: 0.7),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppBorders.chipRadius,
                                                   ),
-                                                )
-                                              : const Icon(
-                                                  Icons.check_circle_outline,
-                                                  size: 16),
-                                          label: Text(isCompleting
-                                              ? '...'
-                                              : 'Complete'),
-                                          style: OutlinedButton.styleFrom(
-                                            padding: const EdgeInsets
-                                                .symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 10),
-                                          ),
-                                        ),
-                                        FilledButton.icon(
-                                          onPressed: () => context.go(
-                                              AppRoutes.chatWithUser(
-                                                  booking.creativeId)),
-                                          icon: const Icon(
-                                              Icons.message_outlined,
-                                              size: 16),
-                                          label: const Text('Message'),
-                                          style: FilledButton.styleFrom(
-                                            padding: const EdgeInsets
-                                                .symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 10),
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  : Row(
-                                      children: [
-                                        Expanded(
-                                          child: OutlinedButton.icon(
-                                            onPressed: () => context.push(
-                                                AppRoutes.creativeProfileView(
-                                                    booking.creativeId)),
-                                            icon: const Icon(
-                                                Icons.person_outline,
-                                                size: 16),
-                                            label: const Text('Profile'),
-                                            style: OutlinedButton.styleFrom(
-                                              padding: const EdgeInsets
-                                                  .symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 10),
+                                            ),
+                                            child: Text(
+                                              isPending
+                                                  ? 'Pending application'
+                                                  : isInvited
+                                                  ? 'Invited'
+                                                  : isCompleted
+                                                  ? 'Completed'
+                                                  : 'Accepted',
+                                              style: theme.textTheme.labelSmall
+                                                  ?.copyWith(
+                                                    color: isPending
+                                                        ? theme
+                                                              .colorScheme
+                                                              .onPrimaryContainer
+                                                        : isInvited
+                                                        ? theme
+                                                              .colorScheme
+                                                              .onTertiaryContainer
+                                                        : isCompleted
+                                                        ? theme
+                                                              .colorScheme
+                                                              .onSecondaryContainer
+                                                        : theme
+                                                              .colorScheme
+                                                              .onTertiaryContainer,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
                                             ),
                                           ),
-                                        ),
-                                        if (isInvited) ...[
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: OutlinedButton.icon(
-                                              onPressed: () =>
-                                                  _reject(booking),
-                                              icon: const Icon(Icons.close,
-                                                  size: 16),
-                                              label: const Text(
-                                                  'Cancel invitation'),
-                                              style: OutlinedButton.styleFrom(
-                                                foregroundColor: theme
-                                                    .colorScheme.error,
-                                                padding: const EdgeInsets
-                                                    .symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 10),
-                                              ),
-                                            ),
-                                          ),
-                                        ] else if (isPending) ...[
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: OutlinedButton.icon(
-                                              onPressed: isRejecting
-                                                  ? null
-                                                  : () => _reject(booking),
-                                              icon: isRejecting
-                                                  ? SizedBox(
-                                                      width: 16,
-                                                      height: 16,
-                                                      child:
-                                                          LoadingAnimationWidget
-                                                              .stretchedDots(
+                                          if (isCompleted &&
+                                              (booking.plannerConfirmedAt !=
+                                                      null ||
+                                                  booking.creativeConfirmedAt !=
+                                                      null)) ...[
+                                            const SizedBox(height: 4),
+                                            Wrap(
+                                              spacing: 8,
+                                              runSpacing: 4,
+                                              children: [
+                                                if (booking
+                                                        .plannerConfirmedAt !=
+                                                    null)
+                                                  Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      Icon(
+                                                        Icons
+                                                            .check_circle_outline,
+                                                        size: 14,
                                                         color: theme
                                                             .colorScheme
-                                                            .onSurface,
-                                                        size: 16,
+                                                            .onSurfaceVariant,
                                                       ),
-                                                    )
-                                                  : const Icon(Icons.close,
-                                                      size: 16),
-                                              label: Text(isRejecting
-                                                  ? '...'
-                                                  : 'Reject'),
-                                              style: OutlinedButton.styleFrom(
-                                                foregroundColor: theme
-                                                    .colorScheme.error,
-                                                padding: const EdgeInsets
-                                                    .symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 10),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: FilledButton.icon(
-                                              onPressed: isAccepting
-                                                  ? null
-                                                  : () => _accept(booking),
-                                              icon: isAccepting
-                                                  ? SizedBox(
-                                                      width: 16,
-                                                      height: 16,
-                                                      child:
-                                                          LoadingAnimationWidget
-                                                              .stretchedDots(
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        'Planner confirmed',
+                                                        style: theme
+                                                            .textTheme
+                                                            .labelSmall
+                                                            ?.copyWith(
+                                                              color: theme
+                                                                  .colorScheme
+                                                                  .onSurfaceVariant,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                if (booking
+                                                        .creativeConfirmedAt !=
+                                                    null)
+                                                  Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      Icon(
+                                                        Icons
+                                                            .check_circle_outline,
+                                                        size: 14,
                                                         color: theme
                                                             .colorScheme
-                                                            .onPrimary,
-                                                        size: 16,
+                                                            .onSurfaceVariant,
                                                       ),
-                                                    )
-                                                  : const Icon(Icons.check,
-                                                      size: 16),
-                                              label: Text(isAccepting
-                                                  ? '...'
-                                                  : 'Accept'),
-                                              style: FilledButton.styleFrom(
-                                                padding: const EdgeInsets
-                                                    .symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 10),
-                                              ),
-                                            ),
-                                          ),
-                                        ] else if (isCompleted) ...[
-                                          if (!hasReviewed) ...[
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: FilledButton.icon(
-                                                onPressed: () =>
-                                                    _showLeaveReviewDialog(
-                                                        booking),
-                                                icon: const Icon(
-                                                    Icons
-                                                        .rate_review_outlined,
-                                                    size: 16),
-                                                label: const Text(
-                                                    'Leave review'),
-                                                style: FilledButton.styleFrom(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                          horizontal: 8,
-                                                          vertical: 10),
-                                                ),
-                                              ),
-                                            ),
-                                          ] else ...[
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: OutlinedButton.icon(
-                                                onPressed: null,
-                                                icon: const Icon(Icons.check,
-                                                    size: 16),
-                                                label: const Text('Reviewed'),
-                                                style: OutlinedButton
-                                                    .styleFrom(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                          horizontal: 8,
-                                                          vertical: 10),
-                                                ),
-                                              ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        'Creative confirmed',
+                                                        style: theme
+                                                            .textTheme
+                                                            .labelSmall
+                                                            ?.copyWith(
+                                                              color: theme
+                                                                  .colorScheme
+                                                                  .onSurfaceVariant,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                              ],
                                             ),
                                           ],
                                         ],
-                                      ],
+                                      ),
                                     ),
-                            ],
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                !isInvited && !isPending && !isCompleted
+                                    ? Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        children: [
+                                          OutlinedButton.icon(
+                                            onPressed: () => context.push(
+                                              AppRoutes.creativeProfileView(
+                                                booking.creativeId,
+                                              ),
+                                            ),
+                                            icon: const Icon(
+                                              Icons.person_outline,
+                                              size: 16,
+                                            ),
+                                            label: const Text('Profile'),
+                                            style: OutlinedButton.styleFrom(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 10,
+                                                  ),
+                                            ),
+                                          ),
+                                          OutlinedButton.icon(
+                                            onPressed: isCompleting
+                                                ? null
+                                                : () => _markComplete(booking),
+                                            icon: isCompleting
+                                                ? SizedBox(
+                                                    width: 16,
+                                                    height: 16,
+                                                    child:
+                                                        LoadingAnimationWidget.stretchedDots(
+                                                          color: theme
+                                                              .colorScheme
+                                                              .onSurface,
+                                                          size: 16,
+                                                        ),
+                                                  )
+                                                : const Icon(
+                                                    Icons.check_circle_outline,
+                                                    size: 16,
+                                                  ),
+                                            label: Text(
+                                              isCompleting ? '...' : 'Complete',
+                                            ),
+                                            style: OutlinedButton.styleFrom(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 10,
+                                                  ),
+                                            ),
+                                          ),
+                                          FilledButton.icon(
+                                            onPressed: () => context.go(
+                                              AppRoutes.chatWithUser(
+                                                booking.creativeId,
+                                              ),
+                                            ),
+                                            icon: const Icon(
+                                              Icons.message_outlined,
+                                              size: 16,
+                                            ),
+                                            label: const Text('Message'),
+                                            style: FilledButton.styleFrom(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 10,
+                                                  ),
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    : Row(
+                                        children: [
+                                          Expanded(
+                                            child: OutlinedButton.icon(
+                                              onPressed: () => context.push(
+                                                AppRoutes.creativeProfileView(
+                                                  booking.creativeId,
+                                                ),
+                                              ),
+                                              icon: const Icon(
+                                                Icons.person_outline,
+                                                size: 16,
+                                              ),
+                                              label: const Text('Profile'),
+                                              style: OutlinedButton.styleFrom(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 10,
+                                                    ),
+                                              ),
+                                            ),
+                                          ),
+                                          if (isInvited) ...[
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: OutlinedButton.icon(
+                                                onPressed: () =>
+                                                    _reject(booking),
+                                                icon: const Icon(
+                                                  Icons.close,
+                                                  size: 16,
+                                                ),
+                                                label: const Text(
+                                                  'Cancel invitation',
+                                                ),
+                                                style: OutlinedButton.styleFrom(
+                                                  foregroundColor:
+                                                      theme.colorScheme.error,
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 10,
+                                                      ),
+                                                ),
+                                              ),
+                                            ),
+                                          ] else if (isPending) ...[
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: OutlinedButton.icon(
+                                                onPressed: isRejecting
+                                                    ? null
+                                                    : () => _reject(booking),
+                                                icon: isRejecting
+                                                    ? SizedBox(
+                                                        width: 16,
+                                                        height: 16,
+                                                        child:
+                                                            LoadingAnimationWidget.stretchedDots(
+                                                              color: theme
+                                                                  .colorScheme
+                                                                  .onSurface,
+                                                              size: 16,
+                                                            ),
+                                                      )
+                                                    : const Icon(
+                                                        Icons.close,
+                                                        size: 16,
+                                                      ),
+                                                label: Text(
+                                                  isRejecting
+                                                      ? '...'
+                                                      : 'Reject',
+                                                ),
+                                                style: OutlinedButton.styleFrom(
+                                                  foregroundColor:
+                                                      theme.colorScheme.error,
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 10,
+                                                      ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: FilledButton.icon(
+                                                onPressed: isAccepting
+                                                    ? null
+                                                    : () => _accept(booking),
+                                                icon: isAccepting
+                                                    ? SizedBox(
+                                                        width: 16,
+                                                        height: 16,
+                                                        child:
+                                                            LoadingAnimationWidget.stretchedDots(
+                                                              color: theme
+                                                                  .colorScheme
+                                                                  .onPrimary,
+                                                              size: 16,
+                                                            ),
+                                                      )
+                                                    : const Icon(
+                                                        Icons.check,
+                                                        size: 16,
+                                                      ),
+                                                label: Text(
+                                                  isAccepting
+                                                      ? '...'
+                                                      : 'Accept',
+                                                ),
+                                                style: FilledButton.styleFrom(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 10,
+                                                      ),
+                                                ),
+                                              ),
+                                            ),
+                                          ] else if (isCompleted) ...[
+                                            if (!hasReviewed) ...[
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: FilledButton.icon(
+                                                  onPressed: () =>
+                                                      _showLeaveReviewDialog(
+                                                        booking,
+                                                      ),
+                                                  icon: const Icon(
+                                                    Icons.rate_review_outlined,
+                                                    size: 16,
+                                                  ),
+                                                  label: const Text(
+                                                    'Leave review',
+                                                  ),
+                                                  style: FilledButton.styleFrom(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 10,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ] else ...[
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: OutlinedButton.icon(
+                                                  onPressed: null,
+                                                  icon: const Icon(
+                                                    Icons.check,
+                                                    size: 16,
+                                                  ),
+                                                  label: const Text('Reviewed'),
+                                                  style: OutlinedButton.styleFrom(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 10,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ],
+                                      ),
+                              ],
+                            ),
                           ),
-                    ),
-                  );
-                },
+                        );
+                      },
                     ),
                   ),
                 ],

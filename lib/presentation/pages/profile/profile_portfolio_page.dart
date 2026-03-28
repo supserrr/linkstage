@@ -16,19 +16,17 @@ class ProfilePortfolioPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Portfolio'),
-      ),
+      appBar: AppBar(title: const Text('Portfolio')),
       body: FutureBuilder<ProfileEntity?>(
         future: sl<ProfileRepository>().getProfileByUserId(userId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
-            child: LoadingAnimationWidget.stretchedDots(
-              color: Theme.of(context).colorScheme.primary,
-              size: 48,
-            ),
-          );
+              child: LoadingAnimationWidget.stretchedDots(
+                color: Theme.of(context).colorScheme.primary,
+                size: 48,
+              ),
+            );
           }
           final profile = snapshot.data;
           if (profile == null) {
@@ -47,8 +45,8 @@ class ProfilePortfolioPage extends StatelessWidget {
               child: Text(
                 'No portfolio media yet',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             );
           }

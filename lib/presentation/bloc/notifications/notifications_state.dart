@@ -11,6 +11,7 @@ class NotificationsState {
 
   final List<NotificationEntity> notifications;
   final Set<String> readIds;
+
   /// True once we've received at least one emission from the stream.
   /// Skeleton shows until then; empty state only when hasLoaded and empty.
   final bool hasLoaded;

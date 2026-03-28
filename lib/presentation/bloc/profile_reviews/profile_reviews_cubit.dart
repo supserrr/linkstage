@@ -35,16 +35,20 @@ class ProfileReviewsCubit extends Cubit<ProfileReviewsState> {
       final reviewAuthorsById = reviewerIds.isEmpty
           ? <String, UserEntity>{}
           : await _userRepository.getUsersByIds(reviewerIds);
-      emit(state.copyWith(
-        reviews: reviews,
-        reviewAuthorsById: reviewAuthorsById,
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          reviews: reviews,
+          reviewAuthorsById: reviewAuthorsById,
+          isLoading: false,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceAll('Exception:', '').trim(),
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: e.toString().replaceAll('Exception:', '').trim(),
+        ),
+      );
     }
   }
 
@@ -53,9 +57,9 @@ class ProfileReviewsCubit extends Cubit<ProfileReviewsState> {
       await _reviewRepository.addReply(reviewId, text);
       await load();
     } catch (e) {
-      emit(state.copyWith(
-        error: e.toString().replaceAll('Exception:', '').trim(),
-      ));
+      emit(
+        state.copyWith(error: e.toString().replaceAll('Exception:', '').trim()),
+      );
     }
   }
 
@@ -64,9 +68,9 @@ class ProfileReviewsCubit extends Cubit<ProfileReviewsState> {
       await _reviewRepository.likeReview(reviewId, _currentViewerId);
       await load();
     } catch (e) {
-      emit(state.copyWith(
-        error: e.toString().replaceAll('Exception:', '').trim(),
-      ));
+      emit(
+        state.copyWith(error: e.toString().replaceAll('Exception:', '').trim()),
+      );
     }
   }
 
@@ -75,9 +79,9 @@ class ProfileReviewsCubit extends Cubit<ProfileReviewsState> {
       await _reviewRepository.flagReview(reviewId, _currentViewerId);
       await load();
     } catch (e) {
-      emit(state.copyWith(
-        error: e.toString().replaceAll('Exception:', '').trim(),
-      ));
+      emit(
+        state.copyWith(error: e.toString().replaceAll('Exception:', '').trim()),
+      );
     }
   }
 }

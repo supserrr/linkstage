@@ -37,19 +37,17 @@ class EventDetailCubit extends Cubit<EventDetailState> {
     try {
       final event = await _eventRepository.getEventById(_eventId);
       if (event == null) {
-        emit(state.copyWith(
-          isLoading: false,
-          error: 'Event not found',
-        ));
+        emit(state.copyWith(isLoading: false, error: 'Event not found'));
         return;
       }
 
-      final applicationCount =
-          await _bookingRepository.getPendingBookingsCountByEventId(_eventId);
-      final pendingBookings =
-          await _bookingRepository.getPendingBookingsByEventId(_eventId);
-      final applicantPhotoUrls =
-          await _fetchApplicantPhotoUrls(pendingBookings);
+      final applicationCount = await _bookingRepository
+          .getPendingBookingsCountByEventId(_eventId);
+      final pendingBookings = await _bookingRepository
+          .getPendingBookingsByEventId(_eventId);
+      final applicantPhotoUrls = await _fetchApplicantPhotoUrls(
+        pendingBookings,
+      );
       UserEntity? planner;
       try {
         planner = await _userRepository.getUser(event.plannerId);
@@ -57,7 +55,9 @@ class EventDetailCubit extends Cubit<EventDetailState> {
         planner = null;
       }
 
-      final plannerProfile = await _plannerProfileRepository.getPlannerProfile(event.plannerId);
+      final plannerProfile = await _plannerProfileRepository.getPlannerProfile(
+        event.plannerId,
+      );
 
       bool hasApplied = false;
       bool hasAcceptedBooking = false;
@@ -66,28 +66,33 @@ class EventDetailCubit extends Cubit<EventDetailState> {
           _eventId,
           _currentUserId,
         );
-        final acceptedForEvent =
-            await _bookingRepository.getAcceptedBookingsByEventId(_eventId);
-        hasAcceptedBooking = acceptedForEvent
-            .any((b) => b.creativeId == _currentUserId);
+        final acceptedForEvent = await _bookingRepository
+            .getAcceptedBookingsByEventId(_eventId);
+        hasAcceptedBooking = acceptedForEvent.any(
+          (b) => b.creativeId == _currentUserId,
+        );
       }
 
-      emit(state.copyWith(
-        event: event,
-        planner: planner,
-        plannerProfile: plannerProfile,
-        applicationCount: applicationCount,
-        applicantPhotoUrls: applicantPhotoUrls,
-        hasApplied: hasApplied,
-        hasAcceptedBooking: hasAcceptedBooking,
-        isLoading: false,
-        error: null,
-      ));
+      emit(
+        state.copyWith(
+          event: event,
+          planner: planner,
+          plannerProfile: plannerProfile,
+          applicationCount: applicationCount,
+          applicantPhotoUrls: applicantPhotoUrls,
+          hasApplied: hasApplied,
+          hasAcceptedBooking: hasAcceptedBooking,
+          isLoading: false,
+          error: null,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceAll('Exception:', '').trim(),
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: e.toString().replaceAll('Exception:', '').trim(),
+        ),
+      );
     }
   }
 
@@ -102,19 +107,22 @@ class EventDetailCubit extends Cubit<EventDetailState> {
         creativeId: _currentUserId,
         plannerId: event.plannerId,
       );
-      final newCount =
-          await _bookingRepository.getPendingBookingsCountByEventId(_eventId);
-      final pendingBookings =
-          await _bookingRepository.getPendingBookingsByEventId(_eventId);
-      final applicantPhotoUrls =
-          await _fetchApplicantPhotoUrls(pendingBookings);
-      emit(state.copyWith(
-        hasApplied: true,
-        applicationCount: newCount,
-        applicantPhotoUrls: applicantPhotoUrls,
-        isApplying: false,
-        error: null,
-      ));
+      final newCount = await _bookingRepository
+          .getPendingBookingsCountByEventId(_eventId);
+      final pendingBookings = await _bookingRepository
+          .getPendingBookingsByEventId(_eventId);
+      final applicantPhotoUrls = await _fetchApplicantPhotoUrls(
+        pendingBookings,
+      );
+      emit(
+        state.copyWith(
+          hasApplied: true,
+          applicationCount: newCount,
+          applicantPhotoUrls: applicantPhotoUrls,
+          isApplying: false,
+          error: null,
+        ),
+      );
 
       final creative = await _userRepository.getUser(_currentUserId);
       final creativeName = _displayName(creative, _currentUserId);
@@ -130,10 +138,12 @@ class EventDetailCubit extends Cubit<EventDetailState> {
         },
       );
     } catch (e) {
-      emit(state.copyWith(
-        isApplying: false,
-        error: e.toString().replaceAll('Exception:', '').trim(),
-      ));
+      emit(
+        state.copyWith(
+          isApplying: false,
+          error: e.toString().replaceAll('Exception:', '').trim(),
+        ),
+      );
     }
   }
 
@@ -143,8 +153,9 @@ class EventDetailCubit extends Cubit<EventDetailState> {
     final urls = <String?>[];
     for (var i = 0; i < pendingBookings.length && i < 5; i++) {
       try {
-        final user =
-            await _userRepository.getUser(pendingBookings[i].creativeId);
+        final user = await _userRepository.getUser(
+          pendingBookings[i].creativeId,
+        );
         urls.add(user?.photoUrl);
       } catch (_) {
         urls.add(null);
@@ -158,7 +169,7 @@ class EventDetailCubit extends Cubit<EventDetailState> {
     return user.displayName?.trim().isNotEmpty == true
         ? user.displayName!
         : (user.username?.trim().isNotEmpty == true
-            ? '@${user.username}'
-            : user.email.split('@').firstOrNull ?? 'Someone');
+              ? '@${user.username}'
+              : user.email.split('@').firstOrNull ?? 'Someone');
   }
 }

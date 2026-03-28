@@ -25,8 +25,10 @@ class CreateEventState {
   final String title;
   final DateTime? date;
   final String location;
+
   /// Latitude from place picker (for opening in maps).
   final double? locationLat;
+
   /// Longitude from place picker (for opening in maps).
   final double? locationLng;
   final String description;

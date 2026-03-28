@@ -40,7 +40,10 @@ class AppTextField extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
           isDense: true,
           floatingLabelBehavior: FloatingLabelBehavior.never,
         ),

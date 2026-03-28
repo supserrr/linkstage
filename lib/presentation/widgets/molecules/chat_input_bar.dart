@@ -69,59 +69,69 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     focusNode: _focusNode,
                     maxLength: 2000,
                     decoration: InputDecoration(
-                      hintText: widget.enabled ? widget.hint : (widget.disabledHint ?? widget.hint),
+                      hintText: widget.enabled
+                          ? widget.hint
+                          : (widget.disabledHint ?? widget.hint),
                       counterText: '',
-                    filled: true,
-                    fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
-                    border: OutlineInputBorder(
-                      borderRadius: AppBorders.borderRadius,
-                      borderSide: BorderSide(
-                        color: colorScheme.outlineVariant,
-                        width: 1,
+                      filled: true,
+                      fillColor: colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.6,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: AppBorders.borderRadius,
+                        borderSide: BorderSide(
+                          color: colorScheme.outlineVariant,
+                          width: 1,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: AppBorders.borderRadius,
+                        borderSide: BorderSide(
+                          color: colorScheme.outlineVariant,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: AppBorders.borderRadius,
+                        borderSide: BorderSide(
+                          color: colorScheme.primary,
+                          width: 1.5,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
                       ),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: AppBorders.borderRadius,
-                      borderSide: BorderSide(
-                        color: colorScheme.outlineVariant,
-                        width: 1,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: AppBorders.borderRadius,
-                      borderSide: BorderSide(
-                        color: colorScheme.primary,
-                        width: 1.5,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 12,
-                    ),
-                  ),
-                  maxLines: 4,
-                  minLines: 1,
-                  textInputAction: TextInputAction.send,
+                    maxLines: 4,
+                    minLines: 1,
+                    textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _submit(),
                   ),
                 ),
               ),
               const SizedBox(width: 10),
               Tooltip(
-                message: !widget.enabled ? (widget.disabledHint ?? 'Connecting...') : '',
+                message: !widget.enabled
+                    ? (widget.disabledHint ?? 'Connecting...')
+                    : '',
                 child: Material(
-                  color: widget.enabled ? colorScheme.primary : colorScheme.surfaceContainerHighest,
+                  color: widget.enabled
+                      ? colorScheme.primary
+                      : colorScheme.surfaceContainerHighest,
                   borderRadius: AppBorders.borderRadius,
                   elevation: 0,
                   child: InkWell(
                     onTap: _submit,
-                  borderRadius: AppBorders.borderRadius,
+                    borderRadius: AppBorders.borderRadius,
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Icon(
                         Icons.send_rounded,
                         size: 24,
-                        color: widget.enabled ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+                        color: widget.enabled
+                            ? colorScheme.onPrimary
+                            : colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),

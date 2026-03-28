@@ -22,19 +22,19 @@ class ProfileSetupState extends Equatable {
   });
 
   const ProfileSetupState.initial()
-      : username = null,
-        photoFile = null,
-        photoUrl = null,
-        isUploadingPhoto = false,
-        photoUploadError = null,
-        displayName = '',
-        bio = '',
-        location = '',
-        category = null,
-        priceRange = '',
-        isLoading = true,
-        error = null,
-        success = false;
+    : username = null,
+      photoFile = null,
+      photoUrl = null,
+      isUploadingPhoto = false,
+      photoUploadError = null,
+      displayName = '',
+      bio = '',
+      location = '',
+      category = null,
+      priceRange = '',
+      isLoading = true,
+      error = null,
+      success = false;
 
   final String? username;
   final XFile? photoFile;
@@ -73,7 +73,9 @@ class ProfileSetupState extends Equatable {
       photoFile: clearPhotoFile ? null : (photoFile ?? this.photoFile),
       photoUrl: clearPhotoUrl ? null : (photoUrl ?? this.photoUrl),
       isUploadingPhoto: isUploadingPhoto ?? this.isUploadingPhoto,
-      photoUploadError: clearPhotoUploadError ? null : (photoUploadError ?? this.photoUploadError),
+      photoUploadError: clearPhotoUploadError
+          ? null
+          : (photoUploadError ?? this.photoUploadError),
       displayName: displayName ?? this.displayName,
       bio: bio ?? this.bio,
       location: location ?? this.location,
@@ -87,18 +89,18 @@ class ProfileSetupState extends Equatable {
 
   @override
   List<Object?> get props => [
-        username,
-        photoFile,
-        photoUrl,
-        isUploadingPhoto,
-        photoUploadError,
-        displayName,
-        bio,
-        location,
-        category,
-        priceRange,
-        isLoading,
-        error,
-        success,
-      ];
+    username,
+    photoFile,
+    photoUrl,
+    isUploadingPhoto,
+    photoUploadError,
+    displayName,
+    bio,
+    location,
+    category,
+    priceRange,
+    isLoading,
+    error,
+    success,
+  ];
 }

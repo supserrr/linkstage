@@ -61,10 +61,7 @@ class _DisplayNameStepState extends State<DisplayNameStep> {
             children: [
               Expanded(
                 child: Center(
-                  child: SvgPicture.asset(
-                    asset,
-                    fit: BoxFit.contain,
-                  ),
+                  child: SvgPicture.asset(asset, fit: BoxFit.contain),
                 ),
               ),
               Padding(
@@ -104,8 +101,9 @@ class _DisplayNameStepState extends State<DisplayNameStep> {
                       const SizedBox(height: 24),
                       AppButton(
                         label: 'Next',
-                        onPressed:
-                            (hasName && !state.isLoading) ? _submit : null,
+                        onPressed: (hasName && !state.isLoading)
+                            ? _submit
+                            : null,
                         isLoading: state.isLoading,
                       ),
                       const SizedBox(height: 8),

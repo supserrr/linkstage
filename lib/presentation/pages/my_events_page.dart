@@ -39,11 +39,11 @@ class MyEventsPage extends StatelessWidget {
     if (user == null) {
       return Scaffold(
         body: Center(
-        child: LoadingAnimationWidget.stretchedDots(
-          color: Theme.of(context).colorScheme.primary,
-          size: 48,
+          child: LoadingAnimationWidget.stretchedDots(
+            color: Theme.of(context).colorScheme.primary,
+            size: 48,
+          ),
         ),
-      ),
       );
     }
     return BlocProvider(
@@ -117,33 +117,31 @@ class _MyEventsView extends StatelessWidget {
                       context.push<bool?>(AppRoutes.createEvent),
                 );
               }
-              final upcoming = state.events
-                  .where(EventDateUtils.isUpcomingEvent)
-                  .toList()
-                ..sort((a, b) {
-                  final da = a.date ?? DateTime(0);
-                  final db = b.date ?? DateTime(0);
-                  return da.compareTo(db);
-                });
-              final past = state.events
-                  .where(EventDateUtils.isPastEvent)
-                  .toList()
-                ..sort((a, b) {
-                  final da = a.date ?? DateTime(0);
-                  final db = b.date ?? DateTime(0);
-                  return db.compareTo(da);
-                });
+              final upcoming =
+                  state.events.where(EventDateUtils.isUpcomingEvent).toList()
+                    ..sort((a, b) {
+                      final da = a.date ?? DateTime(0);
+                      final db = b.date ?? DateTime(0);
+                      return da.compareTo(db);
+                    });
+              final past =
+                  state.events.where(EventDateUtils.isPastEvent).toList()
+                    ..sort((a, b) {
+                      final da = a.date ?? DateTime(0);
+                      final db = b.date ?? DateTime(0);
+                      return db.compareTo(da);
+                    });
               final body = state.events.isEmpty
                   ? GridView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                       physics: const AlwaysScrollableScrollPhysics(),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: 0.9,
-                      ),
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 10,
+                            crossAxisSpacing: 10,
+                            childAspectRatio: 0.9,
+                          ),
                       itemCount: 6,
                       itemBuilder: (context, index) =>
                           const EventCardSkeleton(),
@@ -191,9 +189,9 @@ Widget _buildEventsSections(
           child: Text(
             'Upcoming',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
         ),
       ),
@@ -203,18 +201,15 @@ Widget _buildEventsSections(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         sliver: SliverGrid(
           gridDelegate: gridDelegate,
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final event = upcoming[index];
-              return _EventCard(
-                event: event,
-                applicantCount: pendingCountByEventId[event.id] ?? 0,
-                onTap: () => context.push(AppRoutes.eventDetail(event.id)),
-                onDelete: () => _confirmDeleteEvent(context, event.id),
-              );
-            },
-            childCount: upcoming.length,
-          ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final event = upcoming[index];
+            return _EventCard(
+              event: event,
+              applicantCount: pendingCountByEventId[event.id] ?? 0,
+              onTap: () => context.push(AppRoutes.eventDetail(event.id)),
+              onDelete: () => _confirmDeleteEvent(context, event.id),
+            );
+          }, childCount: upcoming.length),
         ),
       ),
     );
@@ -228,9 +223,9 @@ Widget _buildEventsSections(
           child: Text(
             'Past',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
         ),
       ),
@@ -240,18 +235,15 @@ Widget _buildEventsSections(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         sliver: SliverGrid(
           gridDelegate: gridDelegate,
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final event = past[index];
-              return _EventCard(
-                event: event,
-                applicantCount: pendingCountByEventId[event.id] ?? 0,
-                onTap: () => context.push(AppRoutes.eventDetail(event.id)),
-                onDelete: () => _confirmDeleteEvent(context, event.id),
-              );
-            },
-            childCount: past.length,
-          ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final event = past[index];
+            return _EventCard(
+              event: event,
+              applicantCount: pendingCountByEventId[event.id] ?? 0,
+              onTap: () => context.push(AppRoutes.eventDetail(event.id)),
+              onDelete: () => _confirmDeleteEvent(context, event.id),
+            );
+          }, childCount: past.length),
         ),
       ),
     );
@@ -341,45 +333,42 @@ class _PlannerCollaborationsTabState extends State<_PlannerCollaborationsTab> {
             child: Text(
               'Active',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
         ),
       );
       slivers.add(
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final c = active[index];
-              final targetName = _targetNames[c.targetUserId] ?? 'Creative';
-              final targetPhotoUrl = _targetPhotoUrls[c.targetUserId];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _SentCollaborationTile(
-                  collaboration: c,
-                  targetName: targetName,
-                  targetPhotoUrl: targetPhotoUrl,
-                  onMessage: c.status == CollaborationStatus.accepted
-                      ? () => context.go(AppRoutes.chatWithUser(c.targetUserId))
-                      : null,
-                  onViewMore: () => context.push(
-                    AppRoutes.collaborationDetail,
-                    extra: {
-                      'collaboration': c,
-                      'otherPersonName': targetName,
-                      'otherPersonId': c.targetUserId,
-                      'otherPersonRole': UserRole.creativeProfessional,
-                      'viewerIsCreative': false,
-                      'otherPersonPhotoUrl': targetPhotoUrl,
-                    },
-                  ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final c = active[index];
+            final targetName = _targetNames[c.targetUserId] ?? 'Creative';
+            final targetPhotoUrl = _targetPhotoUrls[c.targetUserId];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _SentCollaborationTile(
+                collaboration: c,
+                targetName: targetName,
+                targetPhotoUrl: targetPhotoUrl,
+                onMessage: c.status == CollaborationStatus.accepted
+                    ? () => context.go(AppRoutes.chatWithUser(c.targetUserId))
+                    : null,
+                onViewMore: () => context.push(
+                  AppRoutes.collaborationDetail,
+                  extra: {
+                    'collaboration': c,
+                    'otherPersonName': targetName,
+                    'otherPersonId': c.targetUserId,
+                    'otherPersonRole': UserRole.creativeProfessional,
+                    'viewerIsCreative': false,
+                    'otherPersonPhotoUrl': targetPhotoUrl,
+                  },
                 ),
-              );
-            },
-            childCount: active.length,
-          ),
+              ),
+            );
+          }, childCount: active.length),
         ),
       );
       slivers.add(const SliverToBoxAdapter(child: SizedBox(height: 24)));
@@ -392,43 +381,40 @@ class _PlannerCollaborationsTabState extends State<_PlannerCollaborationsTab> {
             child: Text(
               'Past',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
         ),
       );
       slivers.add(
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final c = past[index];
-              final targetName = _targetNames[c.targetUserId] ?? 'Creative';
-              final targetPhotoUrl = _targetPhotoUrls[c.targetUserId];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _SentCollaborationTile(
-                  collaboration: c,
-                  targetName: targetName,
-                  targetPhotoUrl: targetPhotoUrl,
-                  onMessage: null,
-                  onViewMore: () => context.push(
-                    AppRoutes.collaborationDetail,
-                    extra: {
-                      'collaboration': c,
-                      'otherPersonName': targetName,
-                      'otherPersonId': c.targetUserId,
-                      'otherPersonRole': UserRole.creativeProfessional,
-                      'viewerIsCreative': false,
-                      'otherPersonPhotoUrl': targetPhotoUrl,
-                    },
-                  ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final c = past[index];
+            final targetName = _targetNames[c.targetUserId] ?? 'Creative';
+            final targetPhotoUrl = _targetPhotoUrls[c.targetUserId];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _SentCollaborationTile(
+                collaboration: c,
+                targetName: targetName,
+                targetPhotoUrl: targetPhotoUrl,
+                onMessage: null,
+                onViewMore: () => context.push(
+                  AppRoutes.collaborationDetail,
+                  extra: {
+                    'collaboration': c,
+                    'otherPersonName': targetName,
+                    'otherPersonId': c.targetUserId,
+                    'otherPersonRole': UserRole.creativeProfessional,
+                    'viewerIsCreative': false,
+                    'otherPersonPhotoUrl': targetPhotoUrl,
+                  },
                 ),
-              );
-            },
-            childCount: past.length,
-          ),
+              ),
+            );
+          }, childCount: past.length),
         ),
       );
     }
@@ -443,16 +429,14 @@ class _PlannerCollaborationsTabState extends State<_PlannerCollaborationsTab> {
   }
 
   static Widget _skeletonList() => ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: 5,
-        itemBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: CollaborationProposalTileSkeleton(
-            margin: EdgeInsets.zero,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+    physics: const AlwaysScrollableScrollPhysics(),
+    itemCount: 5,
+    itemBuilder: (context, index) => Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: CollaborationProposalTileSkeleton(margin: EdgeInsets.zero),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -460,18 +444,21 @@ class _PlannerCollaborationsTabState extends State<_PlannerCollaborationsTab> {
       return _skeletonList();
     }
     final active = _collaborations
-        .where((c) =>
-            c.status == CollaborationStatus.pending ||
-            c.status == CollaborationStatus.accepted)
+        .where(
+          (c) =>
+              c.status == CollaborationStatus.pending ||
+              c.status == CollaborationStatus.accepted,
+        )
         .toList();
-    final past = _collaborations
-        .where((c) => c.status == CollaborationStatus.completed)
-        .toList()
-      ..sort((a, b) {
-        final da = a.createdAt ?? DateTime(0);
-        final db = b.createdAt ?? DateTime(0);
-        return db.compareTo(da);
-      });
+    final past =
+        _collaborations
+            .where((c) => c.status == CollaborationStatus.completed)
+            .toList()
+          ..sort((a, b) {
+            final da = a.createdAt ?? DateTime(0);
+            final db = b.createdAt ?? DateTime(0);
+            return db.compareTo(da);
+          });
     final hasAny = active.isNotEmpty || past.isNotEmpty;
     if (!hasAny && _error == null) {
       return EmptyStateIllustrated(
@@ -533,8 +520,18 @@ class _SentCollaborationTile extends StatelessWidget {
   static String _shortDate(DateTime? d) {
     if (d == null) return '';
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${d.day} ${months[d.month - 1]}';
   }
@@ -553,8 +550,8 @@ class _SentCollaborationTile extends StatelessWidget {
   }
 
   String? _contextLine() {
-    final hasType = collaboration.eventType != null &&
-        collaboration.eventType!.isNotEmpty;
+    final hasType =
+        collaboration.eventType != null && collaboration.eventType!.isNotEmpty;
     final hasDate = collaboration.date != null;
     if (hasType && hasDate) {
       return '${collaboration.eventType} · ${_shortDate(collaboration.date)}';
@@ -584,115 +581,115 @@ class _SentCollaborationTile extends StatelessWidget {
         onTap: onViewMore,
         borderRadius: AppBorders.borderRadius,
         child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  ProfileAvatar(
-                    photoUrl: targetPhotoUrl,
-                    displayName: targetName,
-                    radius: 22,
-                  ),
-                  const SizedBox(width: gap),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                ProfileAvatar(
+                  photoUrl: targetPhotoUrl,
+                  displayName: targetName,
+                  radius: 22,
+                ),
+                const SizedBox(width: gap),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        targetName,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (contextLine != null) ...[
+                        const SizedBox(height: 4),
                         Text(
-                          targetName,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
+                          contextLine,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (contextLine != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            contextLine,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
                       ],
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: gap),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isAccepted
-                          ? colorScheme.primaryContainer
-                          : isPending
-                              ? colorScheme.tertiaryContainer
-                              : colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(AppBorders.chipRadius),
-                    ),
-                    child: Text(
-                      _statusLabel(status),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: isAccepted
-                            ? colorScheme.onPrimaryContainer
-                            : isPending
-                                ? colorScheme.onTertiaryContainer
-                                : colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: gap),
-              Text(
-                sentStr,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
                 ),
-              ),
-              const SizedBox(height: gap),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: colorScheme.outline.withValues(alpha: 0.6),
-              ),
-              const SizedBox(height: gap),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  TextButton(
-                    onPressed: onViewMore,
-                    child: const Text('View details'),
+                const SizedBox(width: gap),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
-                  if (onMessage != null)
-                    FilledButton.tonal(
-                      onPressed: onMessage,
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(48, 48),
-                      ),
-                      child: const Text('Message'),
-                    )
-                  else if (isPending)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        'Awaiting response',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          fontStyle: FontStyle.italic,
-                          fontSize: 12,
-                        ),
+                  decoration: BoxDecoration(
+                    color: isAccepted
+                        ? colorScheme.primaryContainer
+                        : isPending
+                        ? colorScheme.tertiaryContainer
+                        : colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(AppBorders.chipRadius),
+                  ),
+                  child: Text(
+                    _statusLabel(status),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isAccepted
+                          ? colorScheme.onPrimaryContainer
+                          : isPending
+                          ? colorScheme.onTertiaryContainer
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: gap),
+            Text(
+              sentStr,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: gap),
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: colorScheme.outline.withValues(alpha: 0.6),
+            ),
+            const SizedBox(height: gap),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: onViewMore,
+                  child: const Text('View details'),
+                ),
+                if (onMessage != null)
+                  FilledButton.tonal(
+                    onPressed: onMessage,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(48, 48),
+                    ),
+                    child: const Text('Message'),
+                  )
+                else if (isPending)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      'Awaiting response',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontStyle: FontStyle.italic,
+                        fontSize: 12,
                       ),
                     ),
-                ],
-              ),
-            ],
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -715,7 +712,9 @@ Future<void> _confirmDeleteEvent(BuildContext context, String eventId) async {
         ),
         FilledButton(
           onPressed: () => Navigator.pop(ctx, true),
-          style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error),
+          style: FilledButton.styleFrom(
+            backgroundColor: theme.colorScheme.error,
+          ),
           child: const Text('Delete'),
         ),
       ],
@@ -786,182 +785,189 @@ class _EventCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            clipBehavior: Clip.antiAlias,
-            children: [
-              Container(
-                height: 110,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(AppBorders.radius),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.antiAlias,
+              children: [
+                Container(
+                  height: 110,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(AppBorders.radius),
+                    ),
+                  ),
+                  child: event.imageUrls.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(AppBorders.radius),
+                          ),
+                          child: CachedNetworkImage(
+                            imageUrl: event.imageUrls.first,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
+                        )
+                      : Icon(
+                          Icons.event,
+                          size: 40,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                ),
+                Positioned(
+                  top: 4,
+                  left: 6,
+                  right: 6,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.95,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AppBorders.radius,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                margin: const EdgeInsets.only(right: 6),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: _isPublished(event.status)
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              Text(
+                                _statusLabel(event.status),
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (onDelete != null)
+                        IconButton(
+                          icon: Icon(
+                            Icons.delete_outline,
+                            size: 20,
+                            color: theme.colorScheme.error,
+                          ),
+                          onPressed: onDelete,
+                          tooltip: 'Delete event',
+                          style: IconButton.styleFrom(
+                            padding: const EdgeInsets.all(6),
+                            minimumSize: const Size(32, 32),
+                            backgroundColor: Colors.transparent,
+                            surfaceTintColor: Colors.transparent,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                child: event.imageUrls.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(AppBorders.radius),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    event.title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 12,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          daysLeft,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        child: CachedNetworkImage(
-                          imageUrl: event.imageUrls.first,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                        ),
-                      )
-                    : Icon(
-                        Icons.event,
-                        size: 40,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 1),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 12,
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
-              ),
-              Positioned(
-                top: 4,
-                left: 6,
-                right: 6,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 12),
-                      child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface.withValues(alpha: 0.95),
-                        borderRadius: BorderRadius.circular(AppBorders.radius),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            margin: const EdgeInsets.only(right: 6),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: _isPublished(event.status)
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          '$dateStr \u2022 $location',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontSize: 11,
                           ),
-                          Text(
-                            _statusLabel(event.status),
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ),
-                    if (onDelete != null)
-                      IconButton(
-                        icon: Icon(
-                          Icons.delete_outline,
-                          size: 20,
-                          color: theme.colorScheme.error,
-                        ),
-                        onPressed: onDelete,
-                        tooltip: 'Delete event',
-                        style: IconButton.styleFrom(
-                          padding: const EdgeInsets.all(6),
-                          minimumSize: const Size(32, 32),
-                          backgroundColor: Colors.transparent,
-                          surfaceTintColor: Colors.transparent,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  event.title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    ],
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.calendar_today_outlined,
-                      size: 12,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 3),
-                    Expanded(
-                      child: Text(
-                        daysLeft,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  const SizedBox(height: 1),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.people_outline,
+                        size: 12,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 1),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 12,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 3),
-                    Expanded(
-                      child: Text(
-                        '$dateStr \u2022 $location',
+                      const SizedBox(width: 3),
+                      Text(
+                        applicantCount == 1
+                            ? '1 applicant'
+                            : '${NumberFormatter.formatInteger(applicantCount)} applicants',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                           fontSize: 11,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 1),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.people_outline,
-                      size: 12,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      applicantCount == 1
-                          ? '1 applicant'
-                          : '${NumberFormatter.formatInteger(applicantCount)} applicants',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );

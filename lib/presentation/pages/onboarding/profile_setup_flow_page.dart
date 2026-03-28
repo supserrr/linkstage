@@ -22,10 +22,7 @@ import '../onboarding/widgets/username_step.dart';
 
 /// Post-auth profile setup flow (step-by-step).
 class ProfileSetupFlowPage extends StatefulWidget {
-  const ProfileSetupFlowPage({
-    super.key,
-    required this.user,
-  });
+  const ProfileSetupFlowPage({super.key, required this.user});
 
   final UserEntity user;
 
@@ -149,13 +146,13 @@ class _ProfileSetupFlowPageState extends State<ProfileSetupFlowPage> {
             body: SafeArea(
               child: Column(
                 children: [
-                Expanded(
-                  child: PageView(
+                  Expanded(
+                    child: PageView(
                       controller: _pageController,
                       physics: const NeverScrollableScrollPhysics(),
-                    children: _buildStepWidgets(context),
+                      children: _buildStepWidgets(context),
+                    ),
                   ),
-                ),
                 ],
               ),
             ),
@@ -172,10 +169,7 @@ class _ProfileSetupFlowPageState extends State<ProfileSetupFlowPage> {
     return [
       UsernameStep(onNext: onNext),
       ProfilePhotoStep(onNext: onNext),
-      DisplayNameStep(
-        initialValue: cubit.state.displayName,
-        onNext: onNext,
-      ),
+      DisplayNameStep(initialValue: cubit.state.displayName, onNext: onNext),
     ];
   }
 }

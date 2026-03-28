@@ -24,7 +24,9 @@ class EventCardSkeleton extends StatelessWidget {
             SkeletonBox(
               height: 110,
               width: double.infinity,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppBorders.radius)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppBorders.radius),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -35,7 +37,11 @@ class EventCardSkeleton extends StatelessWidget {
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      SkeletonBox(width: 12, height: 12, borderRadius: BorderRadius.circular(2)),
+                      SkeletonBox(
+                        width: 12,
+                        height: 12,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                       const SizedBox(width: 3),
                       Expanded(child: SkeletonBox(height: 12, width: 70)),
                     ],
@@ -43,7 +49,11 @@ class EventCardSkeleton extends StatelessWidget {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      SkeletonBox(width: 12, height: 12, borderRadius: BorderRadius.circular(2)),
+                      SkeletonBox(
+                        width: 12,
+                        height: 12,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                       const SizedBox(width: 3),
                       Expanded(child: SkeletonBox(height: 11, width: 100)),
                     ],
@@ -51,7 +61,11 @@ class EventCardSkeleton extends StatelessWidget {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      SkeletonBox(width: 12, height: 12, borderRadius: BorderRadius.circular(2)),
+                      SkeletonBox(
+                        width: 12,
+                        height: 12,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                       const SizedBox(width: 3),
                       SkeletonBox(height: 11, width: 85),
                     ],
@@ -101,7 +115,11 @@ class FollowingPlannerCardSkeleton extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    SkeletonBox(width: 14, height: 14, borderRadius: BorderRadius.circular(4)),
+                    SkeletonBox(
+                      width: 14,
+                      height: 14,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                     const SizedBox(width: 4),
                     Expanded(child: SkeletonBox(height: 14, width: 80)),
                   ],
@@ -110,7 +128,11 @@ class FollowingPlannerCardSkeleton extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          SkeletonBox(height: 36, width: 85, borderRadius: BorderRadius.circular(8)),
+          SkeletonBox(
+            height: 36,
+            width: 85,
+            borderRadius: BorderRadius.circular(8),
+          ),
         ],
       ),
     );
@@ -149,7 +171,11 @@ class PlannerProfileCardSkeleton extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    SkeletonBox(width: 16, height: 16, borderRadius: BorderRadius.circular(4)),
+                    SkeletonBox(
+                      width: 16,
+                      height: 16,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                     const SizedBox(width: 6),
                     Expanded(child: SkeletonBox(height: 14, width: 120)),
                   ],
@@ -157,7 +183,11 @@ class PlannerProfileCardSkeleton extends StatelessWidget {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    SkeletonBox(width: 14, height: 14, borderRadius: BorderRadius.circular(4)),
+                    SkeletonBox(
+                      width: 14,
+                      height: 14,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                     const SizedBox(width: 4),
                     Expanded(child: SkeletonBox(height: 14, width: 100)),
                   ],
@@ -203,7 +233,11 @@ class VendorCardSkeleton extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      SkeletonBox(width: 16, height: 16, borderRadius: BorderRadius.circular(4)),
+                      SkeletonBox(
+                        width: 16,
+                        height: 16,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                       const SizedBox(width: 6),
                       SkeletonBox(height: 16, width: 28),
                       const SizedBox(width: 6),
@@ -213,7 +247,11 @@ class VendorCardSkeleton extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      SkeletonBox(width: 14, height: 14, borderRadius: BorderRadius.circular(4)),
+                      SkeletonBox(
+                        width: 14,
+                        height: 14,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                       const SizedBox(width: 4),
                       Expanded(child: SkeletonBox(height: 14, width: 100)),
                     ],
@@ -244,7 +282,9 @@ class ExploreEventCardSkeleton extends StatelessWidget {
           SkeletonBox(
             height: 140,
             width: double.infinity,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(AppBorders.radius)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppBorders.radius),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(14),
@@ -257,7 +297,11 @@ class ExploreEventCardSkeleton extends StatelessWidget {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    SkeletonBox(width: 16, height: 16, borderRadius: BorderRadius.circular(4)),
+                    SkeletonBox(
+                      width: 16,
+                      height: 16,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                     const SizedBox(width: 4),
                     Expanded(child: SkeletonBox(height: 14, width: 120)),
                   ],
@@ -305,7 +349,11 @@ class BookingEventTileSkeleton extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     SkeletonBox(height: 14, width: 70),
-                    SkeletonBox(height: 28, width: 100, borderRadius: BorderRadius.circular(20)),
+                    SkeletonBox(
+                      height: 28,
+                      width: 100,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ],
                 ),
               ],
@@ -321,10 +369,7 @@ class BookingEventTileSkeleton extends StatelessWidget {
 /// Use for Collaborations tab in bookings - avatar, name, status chip, description, chips, divider, buttons.
 /// For my_events (sent proposals), use margin: EdgeInsets.only(bottom: 12).
 class CollaborationProposalTileSkeleton extends StatelessWidget {
-  const CollaborationProposalTileSkeleton({
-    super.key,
-    this.margin,
-  });
+  const CollaborationProposalTileSkeleton({super.key, this.margin});
 
   final EdgeInsetsGeometry? margin;
 
@@ -358,7 +403,9 @@ class CollaborationProposalTileSkeleton extends StatelessWidget {
                         SkeletonBox(
                           height: 24,
                           width: 72,
-                          borderRadius: BorderRadius.circular(AppBorders.chipRadius),
+                          borderRadius: BorderRadius.circular(
+                            AppBorders.chipRadius,
+                          ),
                         ),
                       ],
                     ),
@@ -437,38 +484,38 @@ class NotificationItemSkeleton extends StatelessWidget {
       child: Row(
         children: [
           const SkeletonBox(
-              width: 48,
-              height: 48,
-              borderRadius: BorderRadius.all(Radius.circular(24)),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SkeletonBox(height: 16, width: double.infinity),
-                  const SizedBox(height: 4),
-                  SkeletonBox(height: 14, width: 200),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            width: 48,
+            height: 48,
+            borderRadius: BorderRadius.all(Radius.circular(24)),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                SkeletonBox(height: 11, width: 32),
+                SkeletonBox(height: 16, width: double.infinity),
                 const SizedBox(height: 4),
-                SkeletonBox(
-                  width: 20,
-                  height: 20,
-                  borderRadius: BorderRadius.circular(4),
-                ),
+                SkeletonBox(height: 14, width: 200),
               ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SkeletonBox(height: 11, width: 32),
+              const SizedBox(height: 4),
+              SkeletonBox(
+                width: 20,
+                height: 20,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -501,10 +548,7 @@ class NotificationListSkeleton extends StatelessWidget {
 
 /// Skeleton for conversation list item (matches ConversationListItem layout).
 class ConversationItemSkeleton extends StatelessWidget {
-  const ConversationItemSkeleton({
-    super.key,
-    this.showDivider = true,
-  });
+  const ConversationItemSkeleton({super.key, this.showDivider = true});
 
   final bool showDivider;
 
@@ -587,7 +631,9 @@ class PlannerDashboardSkeleton extends StatelessWidget {
               const SkeletonBox(
                 width: 44,
                 height: 44,
-                borderRadius: BorderRadius.all(Radius.circular(AppBorders.radius)),
+                borderRadius: BorderRadius.all(
+                  Radius.circular(AppBorders.radius),
+                ),
               ),
             ],
           ),
@@ -643,7 +689,11 @@ class _PostAGigCardSkeleton extends StatelessWidget {
               ],
             ),
           ),
-          SkeletonBox(width: 48, height: 48, borderRadius: BorderRadius.circular(24)),
+          SkeletonBox(
+            width: 48,
+            height: 48,
+            borderRadius: BorderRadius.circular(24),
+          ),
         ],
       ),
     );
@@ -768,7 +818,9 @@ class CreativeDashboardSkeleton extends StatelessWidget {
               const SkeletonBox(
                 width: 44,
                 height: 44,
-                borderRadius: BorderRadius.all(Radius.circular(AppBorders.radius)),
+                borderRadius: BorderRadius.all(
+                  Radius.circular(AppBorders.radius),
+                ),
               ),
             ],
           ),
@@ -789,7 +841,11 @@ class CreativeDashboardSkeleton extends StatelessWidget {
                     ],
                   ),
                 ),
-                SkeletonBox(width: 48, height: 48, borderRadius: BorderRadius.circular(24)),
+                SkeletonBox(
+                  width: 48,
+                  height: 48,
+                  borderRadius: BorderRadius.circular(24),
+                ),
               ],
             ),
           ),
@@ -892,8 +948,9 @@ class ChatMessagesSkeleton extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
         child: Column(
-          crossAxisAlignment:
-              alignment == Alignment.centerRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: alignment == Alignment.centerRight
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             SkeletonBox(
@@ -902,8 +959,12 @@ class ChatMessagesSkeleton extends StatelessWidget {
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(18),
                 topRight: const Radius.circular(18),
-                bottomLeft: Radius.circular(alignment == Alignment.centerRight ? 18 : 5),
-                bottomRight: Radius.circular(alignment == Alignment.centerRight ? 5 : 18),
+                bottomLeft: Radius.circular(
+                  alignment == Alignment.centerRight ? 18 : 5,
+                ),
+                bottomRight: Radius.circular(
+                  alignment == Alignment.centerRight ? 5 : 18,
+                ),
               ),
             ),
             const SizedBox(height: 3),
@@ -930,7 +991,9 @@ class PastWorkCardSkeleton extends StatelessWidget {
           const SkeletonBox(
             width: 48,
             height: 48,
-            borderRadius: BorderRadius.all(Radius.circular(AppBorders.chipRadius)),
+            borderRadius: BorderRadius.all(
+              Radius.circular(AppBorders.chipRadius),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -968,10 +1031,7 @@ class EventDetailSkeleton extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SkeletonBox(
-                height: 280,
-                borderRadius: BorderRadius.zero,
-              ),
+              const SkeletonBox(height: 280, borderRadius: BorderRadius.zero),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                 child: Column(
@@ -984,7 +1044,11 @@ class EventDetailSkeleton extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        SkeletonBox(width: 20, height: 20, borderRadius: BorderRadius.circular(4)),
+                        SkeletonBox(
+                          width: 20,
+                          height: 20,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
@@ -1002,7 +1066,11 @@ class EventDetailSkeleton extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        SkeletonBox(width: 20, height: 20, borderRadius: BorderRadius.circular(4)),
+                        SkeletonBox(
+                          width: 20,
+                          height: 20,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
@@ -1014,7 +1082,11 @@ class EventDetailSkeleton extends StatelessWidget {
                             ],
                           ),
                         ),
-                        SkeletonBox(width: 22, height: 22, borderRadius: BorderRadius.circular(4)),
+                        SkeletonBox(
+                          width: 22,
+                          height: 22,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -1038,7 +1110,13 @@ class EventDetailSkeleton extends StatelessWidget {
                             ],
                           ),
                         ),
-                        SkeletonBox(height: 36, width: 90, borderRadius: BorderRadius.circular(AppBorders.chipRadius)),
+                        SkeletonBox(
+                          height: 36,
+                          width: 90,
+                          borderRadius: BorderRadius.circular(
+                            AppBorders.chipRadius,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 24),

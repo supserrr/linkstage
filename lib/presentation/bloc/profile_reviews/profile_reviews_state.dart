@@ -13,6 +13,7 @@ class ProfileReviewsState {
 
   final List<ReviewEntity> reviews;
   final Map<String, UserEntity> reviewAuthorsById;
+
   /// User whose profile these reviews belong to (reviewee).
   final String revieweeUserId;
   final bool isLoading;
@@ -24,12 +25,11 @@ class ProfileReviewsState {
     String? revieweeUserId,
     bool? isLoading,
     String? error,
-  }) =>
-      ProfileReviewsState(
-        reviews: reviews ?? this.reviews,
-        reviewAuthorsById: reviewAuthorsById ?? this.reviewAuthorsById,
-        revieweeUserId: revieweeUserId ?? this.revieweeUserId,
-        isLoading: isLoading ?? this.isLoading,
-        error: error,
-      );
+  }) => ProfileReviewsState(
+    reviews: reviews ?? this.reviews,
+    reviewAuthorsById: reviewAuthorsById ?? this.reviewAuthorsById,
+    revieweeUserId: revieweeUserId ?? this.revieweeUserId,
+    isLoading: isLoading ?? this.isLoading,
+    error: error,
+  );
 }

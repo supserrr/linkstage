@@ -25,9 +25,7 @@ class ConversationListItem extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final title = conversation.otherUserDisplayName?.isNotEmpty == true
         ? conversation.otherUserDisplayName!
-        : (conversation.otherUserId.isNotEmpty
-            ? 'User'
-            : 'Unknown');
+        : (conversation.otherUserId.isNotEmpty ? 'User' : 'Unknown');
     final hasLastMessage = conversation.lastMessageText?.isNotEmpty == true;
     final subtitle = hasLastMessage
         ? conversation.lastMessageText!
@@ -40,37 +38,38 @@ class ConversationListItem extends StatelessWidget {
       child: Row(
         children: [
           Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.shadow.withValues(alpha: 0.06),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.shadow.withValues(alpha: 0.06),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-                child: ClipOval(
-                  child: SizedBox(
+              ],
+            ),
+            child: ClipOval(
+              child: SizedBox(
                 width: _avatarSize,
                 height: _avatarSize,
-                    child: conversation.otherUserPhotoUrl != null &&
+                child:
+                    conversation.otherUserPhotoUrl != null &&
                         conversation.otherUserPhotoUrl!.isNotEmpty
-                        ? CachedNetworkImage(
+                    ? CachedNetworkImage(
                         imageUrl: conversation.otherUserPhotoUrl!,
-                            fit: BoxFit.cover,
-                          )
-                        : ColoredBox(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: Icon(
-                              AppIcons.person,
-                              size: 28,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
+                        fit: BoxFit.cover,
+                      )
+                    : ColoredBox(
+                        color: colorScheme.surfaceContainerHighest,
+                        child: Icon(
+                          AppIcons.person,
+                          size: 28,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
               ),
             ),
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -82,8 +81,9 @@ class ConversationListItem extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight:
-                        conversation.unreadCount > 0 ? FontWeight.w700 : FontWeight.w600,
+                    fontWeight: conversation.unreadCount > 0
+                        ? FontWeight.w700
+                        : FontWeight.w600,
                     letterSpacing: -0.2,
                     color: conversation.unreadCount > 0
                         ? colorScheme.onSurface
@@ -101,7 +101,9 @@ class ConversationListItem extends StatelessWidget {
                         : colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                     fontWeight: conversation.unreadCount > 0
                         ? FontWeight.w600
-                        : (hasLastMessage ? FontWeight.normal : FontWeight.w400),
+                        : (hasLastMessage
+                              ? FontWeight.normal
+                              : FontWeight.w400),
                   ),
                 ),
               ],
@@ -130,14 +132,19 @@ class ConversationListItem extends StatelessWidget {
                       horizontal: conversation.unreadCount > 99 ? 4 : 6,
                       vertical: 2,
                     ),
-                    constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+                    constraints: const BoxConstraints(
+                      minWidth: 22,
+                      minHeight: 22,
+                    ),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: colorScheme.primary,
                       shape: BoxShape.circle,
                     ),
                     child: Text(
-                      conversation.unreadCount > 99 ? '99+' : '${conversation.unreadCount}',
+                      conversation.unreadCount > 99
+                          ? '99+'
+                          : '${conversation.unreadCount}',
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: colorScheme.onPrimary,
                         fontWeight: FontWeight.w600,
@@ -158,10 +165,7 @@ class ConversationListItem extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          InkWell(
-            onTap: onTap,
-            child: content,
-          ),
+          InkWell(onTap: onTap, child: content),
           if (showDivider)
             Divider(
               height: 1,

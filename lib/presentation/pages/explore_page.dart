@@ -123,8 +123,8 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
     _debounce = Timer(const Duration(milliseconds: 300), () {
       if (mounted) {
         context.read<ProfilesBloc>().add(
-              ProfilesSearchQueryChanged(_searchController.text),
-            );
+          ProfilesSearchQueryChanged(_searchController.text),
+        );
       }
     });
   }
@@ -159,7 +159,9 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
 
   void _showFilterSheet(BuildContext context) {
     var tempCategory = _selectedCategory;
-    final locationController = TextEditingController(text: _selectedLocation ?? '');
+    final locationController = TextEditingController(
+      text: _selectedLocation ?? '',
+    );
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
@@ -169,101 +171,102 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
           child: StatefulBuilder(
             builder: (ctx2, setModalState) {
               return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(ctx).viewInsets.bottom,
-              ),
-              child: SafeArea(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Filters',
-                        style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Category',
-                        style: Theme.of(ctx).textTheme.labelLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _categoryOptions.map((opt) {
-                          final isSelected = tempCategory == opt.$1;
-                          return ChoiceChip(
-                            label: Text(opt.$2),
-                            selected: isSelected,
-                            onSelected: (_) {
-                              setModalState(() => tempCategory = opt.$1);
-                            },
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Location',
-                        style: Theme.of(ctx).textTheme.labelLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: locationController,
-                        decoration: const InputDecoration(
-                          hintText: 'e.g. Kigali, Rwanda',
-                          border: OutlineInputBorder(),
-                          isDense: true,
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(ctx).viewInsets.bottom,
+                ),
+                child: SafeArea(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Filters',
+                          style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        onChanged: (_) => setModalState(() {}),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                tempCategory = null;
-                                locationController.clear();
-                                setModalState(() {});
+                        const SizedBox(height: 16),
+                        Text(
+                          'Category',
+                          style: Theme.of(ctx).textTheme.labelLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _categoryOptions.map((opt) {
+                            final isSelected = tempCategory == opt.$1;
+                            return ChoiceChip(
+                              label: Text(opt.$2),
+                              selected: isSelected,
+                              onSelected: (_) {
+                                setModalState(() => tempCategory = opt.$1);
                               },
-                              child: const Text('Clear'),
-                            ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Location',
+                          style: Theme.of(ctx).textTheme.labelLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: locationController,
+                          decoration: const InputDecoration(
+                            hintText: 'e.g. Kigali, Rwanda',
+                            border: OutlineInputBorder(),
+                            isDense: true,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: () {
-                                setState(() {
-                                  _selectedCategory = tempCategory;
-                                  _selectedLocation = locationController.text.trim();
-                                  if (_selectedLocation?.isEmpty == true) {
-                                    _selectedLocation = null;
-                                  }
-                                });
-                                context.read<ProfilesBloc>().add(
-                                      ProfilesLoadRequested(
-                                        category: _selectedCategory,
-                                        location: _selectedLocation,
-                                      ),
-                                    );
-                                Navigator.pop(ctx);
-                              },
-                              child: const Text('Apply'),
+                          onChanged: (_) => setModalState(() {}),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  tempCategory = null;
+                                  locationController.clear();
+                                  setModalState(() {});
+                                },
+                                child: const Text('Clear'),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: FilledButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedCategory = tempCategory;
+                                    _selectedLocation = locationController.text
+                                        .trim();
+                                    if (_selectedLocation?.isEmpty == true) {
+                                      _selectedLocation = null;
+                                    }
+                                  });
+                                  context.read<ProfilesBloc>().add(
+                                    ProfilesLoadRequested(
+                                      category: _selectedCategory,
+                                      location: _selectedLocation,
+                                    ),
+                                  );
+                                  Navigator.pop(ctx);
+                                },
+                                child: const Text('Apply'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          ),
         );
       },
     ).whenComplete(() => locationController.dispose());
@@ -291,13 +294,13 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
-          child: Padding(
+            child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Row(
                 children: [
                   Expanded(
-            child: TextField(
-              controller: _searchController,
+                    child: TextField(
+                      controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'DJs, bands, photographers...',
                         prefixIcon: Icon(
@@ -308,7 +311,7 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
                           borderRadius: AppBorders.borderRadius,
                         ),
                         filled: true,
-                isDense: true,
+                        isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 12,
@@ -382,8 +385,8 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
                         onTap: () {
                           setState(() => _selectedCategory = e.$1);
                           context.read<ProfilesBloc>().add(
-                                ProfilesFilterChanged(category: e.$1),
-                              );
+                            ProfilesFilterChanged(category: e.$1),
+                          );
                         },
                       ),
                     );
@@ -470,7 +473,9 @@ class _EventPlannersList extends StatelessWidget {
         child: ConnectionErrorOverlay(
           hasError: true,
           error: error,
-          onRefresh: () async { onRefresh(); },
+          onRefresh: () async {
+            onRefresh();
+          },
           onBack: () => context.go(AppRoutes.home),
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -500,31 +505,24 @@ class _EventPlannersList extends StatelessWidget {
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final planner = planners[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _PlannerProfileCard(
-                planner: planner,
-                onTap: () => context.push(
-                  AppRoutes.plannerProfileView(planner.userId),
-                ),
-              ),
-            );
-          },
-          childCount: planners.length,
-        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final planner = planners[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _PlannerProfileCard(
+              planner: planner,
+              onTap: () =>
+                  context.push(AppRoutes.plannerProfileView(planner.userId)),
+            ),
+          );
+        }, childCount: planners.length),
       ),
     );
   }
 }
 
 class _PlannerProfileCard extends StatelessWidget {
-  const _PlannerProfileCard({
-    required this.planner,
-    required this.onTap,
-  });
+  const _PlannerProfileCard({required this.planner, required this.onTap});
 
   final PlannerProfileEntity planner;
   final VoidCallback onTap;
@@ -549,92 +547,69 @@ class _PlannerProfileCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: AppBorders.borderRadius,
         child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(imageRadius),
-                child: SizedBox(
-                  width: imageSize,
-                  height: imageSize,
-                  child: planner.photoUrl != null &&
-                          planner.photoUrl!.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: planner.photoUrl!,
-                          fit: BoxFit.cover,
-                        )
-                      : ColoredBox(
-                          color: colorScheme.surfaceContainerHighest,
-                          child: Icon(
-                            AppIcons.person,
-                            size: 44,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(imageRadius),
+              child: SizedBox(
+                width: imageSize,
+                height: imageSize,
+                child: planner.photoUrl != null && planner.photoUrl!.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: planner.photoUrl!,
+                        fit: BoxFit.cover,
+                      )
+                    : ColoredBox(
+                        color: colorScheme.surfaceContainerHighest,
+                        child: Icon(
+                          AppIcons.person,
+                          size: 44,
+                          color: colorScheme.onSurfaceVariant,
                         ),
-                ),
+                      ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      name,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    name,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.2,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      role,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    role,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
                     ),
-                    if (eventTypesStr != null) ...[
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(
-                            AppIcons.event,
-                            size: 16,
-                            color: colorScheme.primary,
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              eventTypesStr,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurface,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    const SizedBox(height: 6),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (eventTypesStr != null) ...[
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Icon(
-                          AppIcons.location,
-                          size: 14,
-                          color: colorScheme.onSurfaceVariant,
+                          AppIcons.event,
+                          size: 16,
+                          color: colorScheme.primary,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            location,
+                            eventTypesStr,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
+                              color: colorScheme.onSurface,
+                              fontWeight: FontWeight.w500,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -642,22 +617,44 @@ class _PlannerProfileCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    if (eventTypesStr != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        eventTypesStr,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w700,
+                  ],
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(
+                        AppIcons.location,
+                        size: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          location,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
+                  ),
+                  if (eventTypesStr != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      eventTypesStr,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
-                ),
+                ],
               ),
-            ],
+            ),
+          ],
         ),
       ),
     );
@@ -668,9 +665,8 @@ class _PlannerCreativesList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ProfilesBloc, ProfilesState>(
-        builder: (context, state) {
-          if (state.status == ProfilesStatus.loading &&
-              state.profiles.isEmpty) {
+      builder: (context, state) {
+        if (state.status == ProfilesStatus.loading && state.profiles.isEmpty) {
           return SliverFillRemaining(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
@@ -681,15 +677,14 @@ class _PlannerCreativesList extends StatelessWidget {
               ),
             ),
           );
-          }
-          if (state.status == ProfilesStatus.error && state.profiles.isEmpty) {
+        }
+        if (state.status == ProfilesStatus.error && state.profiles.isEmpty) {
           return SliverFillRemaining(
             child: ConnectionErrorOverlay(
               hasError: true,
               error: state.error,
-              onRefresh: () async => context
-                  .read<ProfilesBloc>()
-                  .add(ProfilesLoadRequested()),
+              onRefresh: () async =>
+                  context.read<ProfilesBloc>().add(ProfilesLoadRequested()),
               onBack: () => context.go(AppRoutes.home),
               child: ListView.builder(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -702,30 +697,29 @@ class _PlannerCreativesList extends StatelessWidget {
               ),
             ),
           );
-          }
+        }
 
-          final list = state.filteredProfiles;
-          if (list.isEmpty) {
-            return SliverFillRemaining(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: EmptyStateDotted(
-                    icon: AppIcons.person,
-                    headline: state.searchQuery.trim().isEmpty
-                        ? 'No creatives found'
-                        : 'No matches for "${state.searchQuery.trim()}"',
-                  ),
+        final list = state.filteredProfiles;
+        if (list.isEmpty) {
+          return SliverFillRemaining(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: EmptyStateDotted(
+                  icon: AppIcons.person,
+                  headline: state.searchQuery.trim().isEmpty
+                      ? 'No creatives found'
+                      : 'No matches for "${state.searchQuery.trim()}"',
                 ),
               ),
-            );
-          }
+            ),
+          );
+        }
 
         return SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
           sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
+            delegate: SliverChildBuilderDelegate((context, index) {
               final profile = list[index];
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -736,9 +730,7 @@ class _PlannerCreativesList extends StatelessWidget {
                   ),
                 ),
               );
-            },
-              childCount: list.length,
-            ),
+            }, childCount: list.length),
           ),
         );
       },
@@ -776,8 +768,8 @@ class _ExploreViewState extends State<_ExploreView> {
     _debounce = Timer(const Duration(milliseconds: 300), () {
       if (mounted) {
         context.read<ProfilesBloc>().add(
-              ProfilesSearchQueryChanged(_searchController.text),
-            );
+          ProfilesSearchQueryChanged(_searchController.text),
+        );
       }
     });
   }
@@ -802,8 +794,11 @@ class _ExploreViewState extends State<_ExploreView> {
           ? bookingRepo.getAcceptedBookingsByCreativeId(currentUserId)
           : Future<List<BookingEntity>>.value([]);
 
-      final results =
-          await Future.wait([profileFuture, eventsFuture, acceptedFuture]);
+      final results = await Future.wait([
+        profileFuture,
+        eventsFuture,
+        acceptedFuture,
+      ]);
       final profile = results[0] as ProfileEntity?;
       var list = (results[1] as List<EventEntity>)
           .where(EventDateUtils.isUpcomingEvent)
@@ -819,8 +814,7 @@ class _ExploreViewState extends State<_ExploreView> {
       });
 
       final acceptedBookings = results[2] as List<BookingEntity>;
-      final acceptedIds =
-          acceptedBookings.map((b) => b.eventId).toSet();
+      final acceptedIds = acceptedBookings.map((b) => b.eventId).toSet();
 
       if (mounted) {
         setState(() {
@@ -884,93 +878,96 @@ class _ExploreViewState extends State<_ExploreView> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'Find events, gigs, mixers...',
-                  prefixIcon: Icon(AppIcons.search, color: colorScheme.onSurfaceVariant),
-                  border: OutlineInputBorder(
-                    borderRadius: AppBorders.borderRadius,
-                  ),
-                  filled: true,
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Find events, gigs, mixers...',
+                    prefixIcon: Icon(
+                      AppIcons.search,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: AppBorders.borderRadius,
+                    ),
+                    filled: true,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child:               SegmentedButton<ExploreTab>(
-                segments: const [
-                  ButtonSegment<ExploreTab>(
-                    value: ExploreTab.events,
-                    label: Text('Events'),
-                  ),
-                  ButtonSegment<ExploreTab>(
-                    value: ExploreTab.creatives,
-                    label: Text('Creatives'),
-                  ),
-                ],
-                selected: {_tab},
-                onSelectionChanged: (Set<ExploreTab> s) {
-                  if (s.isNotEmpty) setState(() => _tab = s.first);
-                },
-              ),
-            ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-          if (_tab == ExploreTab.creatives) ...[
-            SliverToBoxAdapter(
-              child: _CategoryChips(
-                selected: _selectedCategory,
-                onSelected: (c) {
-                  setState(() => _selectedCategory = c);
-                  context.read<ProfilesBloc>().add(
-                        ProfilesFilterChanged(category: c),
-                      );
-                },
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
-            _CreativesList(),
-          ] else ...[
-            SliverToBoxAdapter(
-              child: _EventTypeChips(
-                selected: _selectedEventType,
-                onSelected: (s) => setState(() => _selectedEventType = s),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'Upcoming',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: SegmentedButton<ExploreTab>(
+                  segments: const [
+                    ButtonSegment<ExploreTab>(
+                      value: ExploreTab.events,
+                      label: Text('Events'),
+                    ),
+                    ButtonSegment<ExploreTab>(
+                      value: ExploreTab.creatives,
+                      label: Text('Creatives'),
+                    ),
+                  ],
+                  selected: {_tab},
+                  onSelectionChanged: (Set<ExploreTab> s) {
+                    if (s.isNotEmpty) setState(() => _tab = s.first);
+                  },
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-            _EventsList(
-              events: _filteredEvents,
-              acceptedEventIds: _acceptedEventIds,
-              loading: _eventsLoading,
-              error: _eventsError,
-              onRefresh: _loadEvents,
-            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            if (_tab == ExploreTab.creatives) ...[
+              SliverToBoxAdapter(
+                child: _CategoryChips(
+                  selected: _selectedCategory,
+                  onSelected: (c) {
+                    setState(() => _selectedCategory = c);
+                    context.read<ProfilesBloc>().add(
+                      ProfilesFilterChanged(category: c),
+                    );
+                  },
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
+              _CreativesList(),
+            ] else ...[
+              SliverToBoxAdapter(
+                child: _EventTypeChips(
+                  selected: _selectedEventType,
+                  onSelected: (s) => setState(() => _selectedEventType = s),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'Upcoming',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              _EventsList(
+                events: _filteredEvents,
+                acceptedEventIds: _acceptedEventIds,
+                loading: _eventsLoading,
+                error: _eventsError,
+                onRefresh: _loadEvents,
+              ),
+            ],
+            const SliverPadding(padding: EdgeInsets.only(bottom: 96)),
           ],
-          const SliverPadding(padding: EdgeInsets.only(bottom: 96)),
-        ],
         ),
       ),
     );
@@ -978,10 +975,7 @@ class _ExploreViewState extends State<_ExploreView> {
 }
 
 class _CategoryChips extends StatelessWidget {
-  const _CategoryChips({
-    required this.selected,
-    required this.onSelected,
-  });
+  const _CategoryChips({required this.selected, required this.onSelected});
 
   final ProfileCategory? selected;
   final ValueChanged<ProfileCategory?> onSelected;
@@ -1019,10 +1013,7 @@ class _CategoryChips extends StatelessWidget {
 }
 
 class _EventTypeChips extends StatelessWidget {
-  const _EventTypeChips({
-    required this.selected,
-    required this.onSelected,
-  });
+  const _EventTypeChips({required this.selected, required this.onSelected});
 
   final String selected;
   final ValueChanged<String> onSelected;
@@ -1058,8 +1049,7 @@ class _CreativesList extends StatelessWidget {
     final currentUserId = sl<AuthRepository>().currentUser?.id;
     return BlocBuilder<ProfilesBloc, ProfilesState>(
       builder: (context, state) {
-        if (state.status == ProfilesStatus.loading &&
-            state.profiles.isEmpty) {
+        if (state.status == ProfilesStatus.loading && state.profiles.isEmpty) {
           return SliverFillRemaining(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
@@ -1076,9 +1066,8 @@ class _CreativesList extends StatelessWidget {
             child: ConnectionErrorOverlay(
               hasError: true,
               error: state.error,
-              onRefresh: () async => context
-                  .read<ProfilesBloc>()
-                  .add(ProfilesLoadRequested()),
+              onRefresh: () async =>
+                  context.read<ProfilesBloc>().add(ProfilesLoadRequested()),
               onBack: () => context.go(AppRoutes.home),
               child: ListView.builder(
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -1114,21 +1103,18 @@ class _CreativesList extends StatelessWidget {
         return SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final profile = list[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: VendorCard(
-                    profile: profile,
-                    onTap: () => context.push(
-                      AppRoutes.creativeProfileView(profile.userId),
-                    ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final profile = list[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: VendorCard(
+                  profile: profile,
+                  onTap: () => context.push(
+                    AppRoutes.creativeProfileView(profile.userId),
                   ),
-                );
-              },
-              childCount: list.length,
-            ),
+                ),
+              );
+            }, childCount: list.length),
           ),
         );
       },
@@ -1171,7 +1157,9 @@ class _EventsList extends StatelessWidget {
         child: ConnectionErrorOverlay(
           hasError: true,
           error: error,
-          onRefresh: () async { onRefresh(); },
+          onRefresh: () async {
+            onRefresh();
+          },
           onBack: () => context.go(AppRoutes.home),
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -1202,20 +1190,17 @@ class _EventsList extends StatelessWidget {
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final event = events[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-                  child: _ExploreEventCard(
-                event: event,
-                hasAcceptedBooking: acceptedEventIds.contains(event.id),
-                onTap: () => context.push(AppRoutes.eventDetail(event.id)),
-              ),
-            );
-          },
-          childCount: events.length,
-        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final event = events[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: _ExploreEventCard(
+              event: event,
+              hasAcceptedBooking: acceptedEventIds.contains(event.id),
+              onTap: () => context.push(AppRoutes.eventDetail(event.id)),
+            ),
+          );
+        }, childCount: events.length),
       ),
     );
   }
@@ -1242,7 +1227,10 @@ class _ExploreEventCard extends StatelessWidget {
 
   static String _formatTime(String stored) {
     if (stored.isEmpty) return '';
-    final parts = stored.split(RegExp(r'[:\s]')).where((e) => e.isNotEmpty).toList();
+    final parts = stored
+        .split(RegExp(r'[:\s]'))
+        .where((e) => e.isNotEmpty)
+        .toList();
     if (parts.length >= 2) {
       final h = int.tryParse(parts[0]);
       final m = int.tryParse(parts[1]);
@@ -1270,8 +1258,8 @@ class _ExploreEventCard extends StatelessWidget {
     final hasType = typeRaw.isNotEmpty;
     final typeLabel = hasType
         ? (typeRaw.length == 1
-            ? typeRaw.toUpperCase()
-            : '${typeRaw[0].toUpperCase()}${typeRaw.substring(1)}')
+              ? typeRaw.toUpperCase()
+              : '${typeRaw[0].toUpperCase()}${typeRaw.substring(1)}')
         : '';
 
     return GlassCard(
@@ -1386,11 +1374,7 @@ class _ExploreEventCard extends StatelessWidget {
 
 /// Full-page list of creatives, reached from "See All" on the explore page.
 class ExploreCreativesAllPage extends StatelessWidget {
-  const ExploreCreativesAllPage({
-    super.key,
-    this.category,
-    this.location,
-  });
+  const ExploreCreativesAllPage({super.key, this.category, this.location});
 
   final ProfileCategory? category;
   final String? location;
@@ -1452,7 +1436,9 @@ class ExploreCreativesAllPage extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: EmptyStateDotted(
                         icon: AppIcons.person,
-                        headline: AppLocalizations.of(context)!.noCreativesFound,
+                        headline: AppLocalizations.of(
+                          context,
+                        )!.noCreativesFound,
                       ),
                     ),
                   );

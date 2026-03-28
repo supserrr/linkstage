@@ -75,9 +75,13 @@ class _CreativePastWorkViewState extends State<_CreativePastWorkView> {
     final isViewingOwn = widget.isViewingOwn;
     return BlocBuilder<CreativePastWorkCubit, CreativePastWorkState>(
       builder: (context, state) {
-        if (state.isLoading && state.pastEvents.isEmpty && state.pastCollaborations.isEmpty) {
+        if (state.isLoading &&
+            state.pastEvents.isEmpty &&
+            state.pastCollaborations.isEmpty) {
           return Scaffold(
-            appBar: AppBar(title: Text(isViewingOwn ? 'Your Past Work' : 'Past Work')),
+            appBar: AppBar(
+              title: Text(isViewingOwn ? 'Your Past Work' : 'Past Work'),
+            ),
             body: _buildRefreshIndicator(
               context: context,
               onRefresh: () => context.read<CreativePastWorkCubit>().load(),
@@ -91,7 +95,11 @@ class _CreativePastWorkViewState extends State<_CreativePastWorkView> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Row(
                         children: [
-                          SkeletonBox(width: 20, height: 20, borderRadius: BorderRadius.circular(4)),
+                          SkeletonBox(
+                            width: 20,
+                            height: 20,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                           const SizedBox(width: 8),
                           SkeletonBox(height: 16, width: 110),
                         ],
@@ -115,7 +123,11 @@ class _CreativePastWorkViewState extends State<_CreativePastWorkView> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Row(
                         children: [
-                          SkeletonBox(width: 20, height: 20, borderRadius: BorderRadius.circular(4)),
+                          SkeletonBox(
+                            width: 20,
+                            height: 20,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                           const SizedBox(width: 8),
                           SkeletonBox(height: 16, width: 150),
                         ],
@@ -161,17 +173,20 @@ class _CreativePastWorkViewState extends State<_CreativePastWorkView> {
                       child: _PastEventCard(
                         item: item,
                         isViewingOwnPastWork: isViewingOwn,
-                        showOnProfile: !state.hiddenIds.contains(item.bookingId),
-                        showVisibilityToggle: isViewingOwn && _isConfigMode,
-                        onVisibilityChanged: (show) => cubit.setItemVisibility(
+                        showOnProfile: !state.hiddenIds.contains(
                           item.bookingId,
-                          show,
                         ),
+                        showVisibilityToggle: isViewingOwn && _isConfigMode,
+                        onVisibilityChanged: (show) =>
+                            cubit.setItemVisibility(item.bookingId, show),
                       ),
                     ),
                   ),
                 const SizedBox(height: 20),
-                SectionHeader(title: 'Past Collaborations', icon: Icons.handshake),
+                SectionHeader(
+                  title: 'Past Collaborations',
+                  icon: Icons.handshake,
+                ),
                 const SizedBox(height: 12),
                 if (state.pastCollaborations.isEmpty)
                   EmptyStateDotted(
@@ -185,8 +200,9 @@ class _CreativePastWorkViewState extends State<_CreativePastWorkView> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: _PastCollaborationCard(
                         item: item,
-                        showOnProfile:
-                            !state.hiddenIds.contains(item.collaboration.id),
+                        showOnProfile: !state.hiddenIds.contains(
+                          item.collaboration.id,
+                        ),
                         showVisibilityToggle: isViewingOwn && _isConfigMode,
                         onVisibilityChanged: (show) => cubit.setItemVisibility(
                           item.collaboration.id,
@@ -207,10 +223,13 @@ class _CreativePastWorkViewState extends State<_CreativePastWorkView> {
                   : (isViewingOwn ? 'Your Past Work' : 'Past Work'),
             ),
             actions: [
-              if (isViewingOwn && (state.pastEvents.isNotEmpty || state.pastCollaborations.isNotEmpty))
+              if (isViewingOwn &&
+                  (state.pastEvents.isNotEmpty ||
+                      state.pastCollaborations.isNotEmpty))
                 IconButton(
                   icon: Icon(_isConfigMode ? Icons.check : Icons.edit),
-                  onPressed: () => setState(() => _isConfigMode = !_isConfigMode),
+                  onPressed: () =>
+                      setState(() => _isConfigMode = !_isConfigMode),
                   tooltip: _isConfigMode ? 'Done' : 'Configure visibility',
                 ),
             ],
@@ -239,10 +258,7 @@ class _CreativePastWorkViewState extends State<_CreativePastWorkView> {
       useMaterialContainer: false,
       indicatorBuilder: (context, controller) => Padding(
         padding: const EdgeInsets.all(8.0),
-        child: LoadingAnimationWidget.threeRotatingDots(
-          color: color,
-          size: 40,
-        ),
+        child: LoadingAnimationWidget.threeRotatingDots(color: color, size: 40),
       ),
       child: child,
     );
@@ -274,8 +290,7 @@ class _PastEventCard extends StatelessWidget {
     final event = item.event;
     final colorScheme = Theme.of(context).colorScheme;
     final viewerId = sl<AuthRedirectNotifier>().user?.id ?? '';
-    final isPlanner =
-        viewerId.isNotEmpty && viewerId == event.plannerId;
+    final isPlanner = viewerId.isNotEmpty && viewerId == event.plannerId;
     final locationLine = getEventLocationDisplayLine(
       event,
       isPlanner: isPlanner,
@@ -290,35 +305,37 @@ class _PastEventCard extends StatelessWidget {
           onTap: () => context.push(AppRoutes.eventDetail(event.id)),
           borderRadius: AppBorders.borderRadius,
           child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                event.imageUrls.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(AppBorders.chipRadius),
-                        child: SizedBox(
-                          width: 48,
-                          height: 48,
-                          child: CachedNetworkImage(
-                            imageUrl: event.imageUrls.first,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      )
-                    : Icon(
-                        Icons.event,
-                        size: 48,
-                        color: colorScheme.onSurfaceVariant,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              event.imageUrls.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                        AppBorders.chipRadius,
                       ),
-                const SizedBox(width: 12),
-                Expanded(
+                      child: SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: CachedNetworkImage(
+                          imageUrl: event.imageUrls.first,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    )
+                  : Icon(
+                      Icons.event,
+                      size: 48,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+              const SizedBox(width: 12),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       event.title,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -326,116 +343,8 @@ class _PastEventCard extends StatelessWidget {
                     Text(
                       metadata.isEmpty ? '—' : metadata,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-                if (showVisibilityToggle) ...[
-                  const SizedBox(width: 8),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Show on profile',
-                        style: Theme.of(context).textTheme.labelSmall,
+                        color: colorScheme.onSurfaceVariant,
                       ),
-                      Switch(
-                        value: showOnProfile,
-                        onChanged: onVisibilityChanged,
-                      ),
-                    ],
-                  ),
-                ] else ...[
-                  const SizedBox(width: 8),
-                  ProfileAvatar(
-                    photoUrl: item.plannerPhotoUrl,
-                    displayName: item.plannerName,
-                    radius: 12,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-    );
-  }
-}
-
-class _PastCollaborationCard extends StatelessWidget {
-  const _PastCollaborationCard({
-    required this.item,
-    this.showOnProfile = true,
-    this.showVisibilityToggle = false,
-    this.onVisibilityChanged,
-  });
-
-  final PastCollaborationItem item;
-  final bool showOnProfile;
-  final bool showVisibilityToggle;
-  final void Function(bool)? onVisibilityChanged;
-
-  static String _dateStr(DateTime? d) {
-    if (d == null) return '—';
-    return '${d.day}/${d.month}/${d.year}';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = item.collaboration;
-    final event = item.event;
-    final colorScheme = Theme.of(context).colorScheme;
-    final title = c.displayTitle;
-    final metadataParts = <String>[];
-    if (c.location != null && c.location!.isNotEmpty) metadataParts.add(c.location!);
-    if (event?.date != null) {
-      metadataParts.add(_dateStr(event!.date));
-    } else if (c.date != null) {
-      metadataParts.add(_dateStr(c.date));
-    }
-    final metadata = metadataParts.isEmpty ? '—' : metadataParts.join(' · ');
-    return GlassCard(
-      padding: const EdgeInsets.all(16),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => context.push(
-            AppRoutes.collaborationDetail,
-            extra: {
-              'collaboration': c,
-              'otherPersonName': item.plannerName,
-              'otherPersonId': item.plannerId,
-              'otherPersonPhotoUrl': item.plannerPhotoUrl,
-              'otherPersonRole': UserRole.eventPlanner,
-              'viewerIsCreative': true,
-            },
-          ),
-          borderRadius: AppBorders.borderRadius,
-          child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-              _buildLeading(context, event, colorScheme),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      metadata,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
                     ),
                   ],
                 ),
@@ -465,13 +374,127 @@ class _PastCollaborationCard extends StatelessWidget {
                 ),
               ],
             ],
-            ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _PastCollaborationCard extends StatelessWidget {
+  const _PastCollaborationCard({
+    required this.item,
+    this.showOnProfile = true,
+    this.showVisibilityToggle = false,
+    this.onVisibilityChanged,
+  });
+
+  final PastCollaborationItem item;
+  final bool showOnProfile;
+  final bool showVisibilityToggle;
+  final void Function(bool)? onVisibilityChanged;
+
+  static String _dateStr(DateTime? d) {
+    if (d == null) return '—';
+    return '${d.day}/${d.month}/${d.year}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = item.collaboration;
+    final event = item.event;
+    final colorScheme = Theme.of(context).colorScheme;
+    final title = c.displayTitle;
+    final metadataParts = <String>[];
+    if (c.location != null && c.location!.isNotEmpty) {
+      metadataParts.add(c.location!);
+    }
+    if (event?.date != null) {
+      metadataParts.add(_dateStr(event!.date));
+    } else if (c.date != null) {
+      metadataParts.add(_dateStr(c.date));
+    }
+    final metadata = metadataParts.isEmpty ? '—' : metadataParts.join(' · ');
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.push(
+            AppRoutes.collaborationDetail,
+            extra: {
+              'collaboration': c,
+              'otherPersonName': item.plannerName,
+              'otherPersonId': item.plannerId,
+              'otherPersonPhotoUrl': item.plannerPhotoUrl,
+              'otherPersonRole': UserRole.eventPlanner,
+              'viewerIsCreative': true,
+            },
+          ),
+          borderRadius: AppBorders.borderRadius,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _buildLeading(context, event, colorScheme),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      metadata,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (showVisibilityToggle) ...[
+                const SizedBox(width: 8),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Show on profile',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                    Switch(
+                      value: showOnProfile,
+                      onChanged: onVisibilityChanged,
+                    ),
+                  ],
+                ),
+              ] else ...[
+                const SizedBox(width: 8),
+                ProfileAvatar(
+                  photoUrl: item.plannerPhotoUrl,
+                  displayName: item.plannerName,
+                  radius: 12,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildLeading(BuildContext context, EventEntity? event, ColorScheme colorScheme) {
+  Widget _buildLeading(
+    BuildContext context,
+    EventEntity? event,
+    ColorScheme colorScheme,
+  ) {
     if (event != null && event.imageUrls.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(AppBorders.chipRadius),
@@ -493,7 +516,8 @@ class _PastCollaborationCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppBorders.chipRadius),
       ),
       child: Icon(
-        item.collaboration.eventType != null && item.collaboration.eventType!.isNotEmpty
+        item.collaboration.eventType != null &&
+                item.collaboration.eventType!.isNotEmpty
             ? Icons.event_outlined
             : Icons.handshake_outlined,
         size: 28,

@@ -16,8 +16,12 @@ class CreateEventCubit extends Cubit<CreateEventState> {
     this._plannerId, {
     EventEntity? initialEvent,
     this.invitedCreativeId = '',
-  })  : _editingEvent = initialEvent,
-        super(initialEvent != null ? _stateFromEvent(initialEvent) : const CreateEventState());
+  }) : _editingEvent = initialEvent,
+       super(
+         initialEvent != null
+             ? _stateFromEvent(initialEvent)
+             : const CreateEventState(),
+       );
 
   static CreateEventState _stateFromEvent(EventEntity e) {
     return CreateEventState(
@@ -42,9 +46,11 @@ class CreateEventCubit extends Cubit<CreateEventState> {
   final EventEntity? _editingEvent;
   final String invitedCreativeId;
 
-  void setTitle(String value) => emit(state.copyWith(title: value, error: null));
+  void setTitle(String value) =>
+      emit(state.copyWith(title: value, error: null));
 
-  void setDate(DateTime? value) => emit(state.copyWith(date: value, error: null));
+  void setDate(DateTime? value) =>
+      emit(state.copyWith(date: value, error: null));
 
   void setLocation(String value) =>
       emit(state.copyWith(location: value, error: null));
@@ -54,29 +60,32 @@ class CreateEventCubit extends Cubit<CreateEventState> {
     required String address,
     required double lat,
     required double lng,
-  }) =>
-      emit(state.copyWith(
-        location: address,
-        locationLat: lat,
-        locationLng: lng,
-        error: null,
-      ));
+  }) => emit(
+    state.copyWith(
+      location: address,
+      locationLat: lat,
+      locationLng: lng,
+      error: null,
+    ),
+  );
 
   void setDescription(String value) =>
       emit(state.copyWith(description: value, error: null));
 
-  void addImageUrl(String url) =>
-      emit(state.copyWith(
-        imageUrls: [...state.imageUrls, url],
-        isUploadingImage: false,
-        error: null,
-      ));
+  void addImageUrl(String url) => emit(
+    state.copyWith(
+      imageUrls: [...state.imageUrls, url],
+      isUploadingImage: false,
+      error: null,
+    ),
+  );
 
-  void removeImageUrl(String url) =>
-      emit(state.copyWith(
-        imageUrls: state.imageUrls.where((u) => u != url).toList(),
-        error: null,
-      ));
+  void removeImageUrl(String url) => emit(
+    state.copyWith(
+      imageUrls: state.imageUrls.where((u) => u != url).toList(),
+      error: null,
+    ),
+  );
 
   void setUploadingImage(bool value) =>
       emit(state.copyWith(isUploadingImage: value, error: null));
@@ -138,7 +147,10 @@ class CreateEventCubit extends Cubit<CreateEventState> {
             _editingEvent.status != EventStatus.open) {
           final planner = await sl<UserRepository>().getUser(_plannerId);
           final plannerName =
-              planner?.displayName ?? planner?.username ?? planner?.email ?? 'Someone';
+              planner?.displayName ??
+              planner?.username ??
+              planner?.email ??
+              'Someone';
           sl<PushNotificationService>().notifyFollowersOfPlannerEvent(
             eventId: _editingEvent.id,
             plannerId: _plannerId,
@@ -167,7 +179,10 @@ class CreateEventCubit extends Cubit<CreateEventState> {
         if (state.status == EventStatus.open) {
           final planner = await sl<UserRepository>().getUser(_plannerId);
           final plannerName =
-              planner?.displayName ?? planner?.username ?? planner?.email ?? 'Someone';
+              planner?.displayName ??
+              planner?.username ??
+              planner?.email ??
+              'Someone';
           sl<PushNotificationService>().notifyFollowersOfPlannerEvent(
             eventId: event.id,
             plannerId: _plannerId,
@@ -183,7 +198,10 @@ class CreateEventCubit extends Cubit<CreateEventState> {
           );
           final planner = await sl<UserRepository>().getUser(_plannerId);
           final plannerName =
-              planner?.displayName ?? planner?.username ?? planner?.email ?? 'Someone';
+              planner?.displayName ??
+              planner?.username ??
+              planner?.email ??
+              'Someone';
           sl<PushNotificationService>().notifyUser(
             targetUserId: invitedCreativeId,
             title: 'Invitation to ${event.title}',
@@ -199,10 +217,12 @@ class CreateEventCubit extends Cubit<CreateEventState> {
         return event.id; // Create: return new event ID for navigation
       }
     } catch (e) {
-      emit(state.copyWith(
-        isSaving: false,
-        error: e.toString().replaceAll('Exception:', '').trim(),
-      ));
+      emit(
+        state.copyWith(
+          isSaving: false,
+          error: e.toString().replaceAll('Exception:', '').trim(),
+        ),
+      );
       return null;
     }
   }

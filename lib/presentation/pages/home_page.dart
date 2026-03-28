@@ -62,7 +62,8 @@ class _HomeContent extends StatelessWidget {
 
     final isPlanner = user?.role == UserRole.eventPlanner;
     final isCreative = user?.role == UserRole.creativeProfessional;
-    final displayName = user?.displayName ??
+    final displayName =
+        user?.displayName ??
         user?.username ??
         user?.email.split('@').first ??
         '';

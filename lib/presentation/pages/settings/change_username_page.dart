@@ -22,14 +22,13 @@ class ChangeUsernamePage extends StatelessWidget {
     if (user == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Change username')),
-        body: const Center(child: Text('Please sign in to change your username')),
+        body: const Center(
+          child: Text('Please sign in to change your username'),
+        ),
       );
     }
     return BlocProvider(
-      create: (_) => ChangeUsernameCubit(
-        sl<ChangeUsernameUseCase>(),
-        user,
-      ),
+      create: (_) => ChangeUsernameCubit(sl<ChangeUsernameUseCase>(), user),
       child: const _ChangeUsernameView(),
     );
   }
@@ -111,8 +110,8 @@ class _ChangeUsernameViewState extends State<_ChangeUsernameView> {
                   Text(
                     cooldownMessage,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -143,7 +142,8 @@ class _ChangeUsernameViewState extends State<_ChangeUsernameView> {
                 ),
                 const SizedBox(height: 24),
                 FilledButton(
-                  onPressed: canChange &&
+                  onPressed:
+                      canChange &&
                           !state.isSubmitting &&
                           state.isAvailable == true &&
                           _controller.text.trim().length >= 3

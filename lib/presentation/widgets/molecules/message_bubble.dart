@@ -20,8 +20,9 @@ class MessageBubble extends StatelessWidget {
     final bubbleColor = isSentByMe
         ? colorScheme.primary
         : colorScheme.surfaceContainerHigh;
-    final textColor =
-        isSentByMe ? colorScheme.onPrimary : colorScheme.onSurface;
+    final textColor = isSentByMe
+        ? colorScheme.onPrimary
+        : colorScheme.onSurface;
     final timeStr = _formatTime(message.createdAt);
 
     return Align(
@@ -29,8 +30,9 @@ class MessageBubble extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
         child: Column(
-          crossAxisAlignment:
-              isSentByMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isSentByMe
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(

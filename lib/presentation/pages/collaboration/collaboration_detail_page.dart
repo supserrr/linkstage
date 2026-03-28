@@ -38,7 +38,8 @@ class CollaborationDetailPage extends StatefulWidget {
   final bool viewerIsCreative;
 
   @override
-  State<CollaborationDetailPage> createState() => _CollaborationDetailPageState();
+  State<CollaborationDetailPage> createState() =>
+      _CollaborationDetailPageState();
 }
 
 class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
@@ -107,58 +108,58 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Leave a review',
-                    style: Theme.of(ctx).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (i) {
-                      final star = i + 1;
-                      return IconButton(
-                        onPressed: () => setModalState(() => rating = star),
-                        icon: Icon(
-                          star <= rating ? Icons.star : Icons.star_border,
-                          color: Theme.of(ctx).colorScheme.primary,
-                          size: 36,
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: controller,
-                    maxLines: 3,
-                    maxLength: 500,
-                    decoration: const InputDecoration(
-                      hintText: 'Write your review (optional)...',
-                      border: OutlineInputBorder(),
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Leave a review',
+                      style: Theme.of(ctx).textTheme.titleMedium,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancel'),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (i) {
+                        final star = i + 1;
+                        return IconButton(
+                          onPressed: () => setModalState(() => rating = star),
+                          icon: Icon(
+                            star <= rating ? Icons.star : Icons.star_border,
+                            color: Theme.of(ctx).colorScheme.primary,
+                            size: 36,
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: controller,
+                      maxLines: 3,
+                      maxLength: 500,
+                      decoration: const InputDecoration(
+                        hintText: 'Write your review (optional)...',
+                        border: OutlineInputBorder(),
                       ),
-                      const SizedBox(width: 8),
-                      FilledButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Submit'),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Submit'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
         ),
       ),
     ).whenComplete(() => controller.dispose());
@@ -221,8 +222,9 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
     if (_isConfirmingCompletion) return;
     setState(() => _isConfirmingCompletion = true);
     try {
-      await sl<CollaborationRepository>()
-          .confirmCompletionByCreative(widget.collaboration.id);
+      await sl<CollaborationRepository>().confirmCompletionByCreative(
+        widget.collaboration.id,
+      );
       if (mounted) {
         setState(() {
           _isConfirmingCompletion = false;
@@ -271,7 +273,8 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
     final isAccepted = status == CollaborationStatus.accepted;
     final isCompleted = status == CollaborationStatus.completed;
     final canReview = isAccepted || isCompleted;
-    final hasPlannerDetails = widget.collaboration.eventType != null ||
+    final hasPlannerDetails =
+        widget.collaboration.eventType != null ||
         widget.collaboration.date != null ||
         widget.collaboration.budget != null ||
         (widget.collaboration.location != null &&
@@ -286,7 +289,8 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final collabDateInPast = widget.collaboration.date != null &&
+    final collabDateInPast =
+        widget.collaboration.date != null &&
         DateTime(
           widget.collaboration.date!.year,
           widget.collaboration.date!.month,
@@ -294,20 +298,19 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
         ).isBefore(today);
     final daysAgo = collabDateInPast && widget.collaboration.date != null
         ? today
-            .difference(DateTime(
-              widget.collaboration.date!.year,
-              widget.collaboration.date!.month,
-              widget.collaboration.date!.day,
-            ))
-            .inDays
+              .difference(
+                DateTime(
+                  widget.collaboration.date!.year,
+                  widget.collaboration.date!.month,
+                  widget.collaboration.date!.day,
+                ),
+              )
+              .inDays
         : 0;
-    final showReminderBanner =
-        isAccepted && collabDateInPast && daysAgo > 0;
+    final showReminderBanner = isAccepted && collabDateInPast && daysAgo > 0;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Collaboration Details'),
-      ),
+      appBar: AppBar(title: const Text('Collaboration Details')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(pagePadding),
         child: Column(
@@ -369,9 +372,14 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
                             Expanded(
                               child: InkWell(
                                 onTap: () => _openProfile(context),
-                                borderRadius: BorderRadius.circular(AppBorders.chipRadius),
+                                borderRadius: BorderRadius.circular(
+                                  AppBorders.chipRadius,
+                                ),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4,
+                                    horizontal: 4,
+                                  ),
                                   child: Text(
                                     widget.otherPersonName,
                                     style: theme.textTheme.titleLarge?.copyWith(
@@ -394,11 +402,13 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
                                 color: isCompleted
                                     ? colorScheme.surfaceContainerHighest
                                     : isAccepted
-                                        ? colorScheme.primaryContainer
-                                        : isPending
-                                            ? colorScheme.tertiaryContainer
-                                            : colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(AppBorders.chipRadius),
+                                    ? colorScheme.primaryContainer
+                                    : isPending
+                                    ? colorScheme.tertiaryContainer
+                                    : colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(
+                                  AppBorders.chipRadius,
+                                ),
                               ),
                               child: Text(
                                 _statusLabel(status),
@@ -407,10 +417,10 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
                                   color: isCompleted
                                       ? colorScheme.onSurfaceVariant
                                       : isAccepted
-                                          ? colorScheme.onPrimaryContainer
-                                          : isPending
-                                              ? colorScheme.onTertiaryContainer
-                                              : colorScheme.onSurfaceVariant,
+                                      ? colorScheme.onPrimaryContainer
+                                      : isPending
+                                      ? colorScheme.onTertiaryContainer
+                                      : colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ),
@@ -432,16 +442,19 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
                                     const SizedBox(width: 6),
                                     Text(
                                       'Reviewed',
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
                                     ),
                                   ],
                                 )
                               else
                                 InkWell(
                                   onTap: () => _showLeaveReviewDialog(),
-                                  borderRadius: BorderRadius.circular(AppBorders.chipRadius),
+                                  borderRadius: BorderRadius.circular(
+                                    AppBorders.chipRadius,
+                                  ),
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 4,
@@ -458,10 +471,11 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
                                         const SizedBox(width: 6),
                                         Text(
                                           'Leave review',
-                                          style: theme.textTheme.bodyMedium?.copyWith(
-                                            color: colorScheme.primary,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                color: colorScheme.primary,
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                         ),
                                       ],
                                     ),
@@ -557,7 +571,8 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
                       widget.collaboration.startTime!.isNotEmpty)
                     AppDetailChip(
                       icon: Icons.schedule_outlined,
-                      label: widget.collaboration.endTime != null &&
+                      label:
+                          widget.collaboration.endTime != null &&
                               widget.collaboration.endTime!.isNotEmpty
                           ? '${_formatTime(widget.collaboration.startTime)} – ${_formatTime(widget.collaboration.endTime)}'
                           : _formatTime(widget.collaboration.startTime),
@@ -595,11 +610,13 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: () {
-                        context.go(AppRoutes.chatWithUser(
-                          widget.viewerIsCreative
-                              ? widget.collaboration.requesterId
-                              : widget.collaboration.targetUserId,
-                        ));
+                        context.go(
+                          AppRoutes.chatWithUser(
+                            widget.viewerIsCreative
+                                ? widget.collaboration.requesterId
+                                : widget.collaboration.targetUserId,
+                          ),
+                        );
                       },
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -607,7 +624,9 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
                       ),
                       icon: const Icon(Icons.chat_bubble_outline, size: 20),
                       label: Text(
-                        isCompleted ? 'View conversation' : 'Start conversation',
+                        isCompleted
+                            ? 'View conversation'
+                            : 'Start conversation',
                       ),
                     ),
                   ),
@@ -661,7 +680,6 @@ class _CollaborationDetailPageState extends State<CollaborationDetailPage> {
     );
   }
 }
-
 
 class _AcceptDeclineButtons extends StatefulWidget {
   const _AcceptDeclineButtons({required this.collaboration});
@@ -746,9 +764,7 @@ class _AcceptDeclineButtonsState extends State<_AcceptDeclineButtons> {
         Expanded(
           child: OutlinedButton(
             onPressed: _isBusy ? null : _decline,
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(0, 48),
-            ),
+            style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
             child: const Text('Decline'),
           ),
         ),
@@ -756,9 +772,7 @@ class _AcceptDeclineButtonsState extends State<_AcceptDeclineButtons> {
         Expanded(
           child: FilledButton(
             onPressed: _isBusy ? null : _accept,
-            style: FilledButton.styleFrom(
-              minimumSize: const Size(0, 48),
-            ),
+            style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
             child: _isBusy
                 ? SizedBox(
                     width: 24,

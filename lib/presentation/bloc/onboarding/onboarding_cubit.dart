@@ -9,12 +9,12 @@ const _keyProfileComplete = 'onboarding_profile_complete';
 /// Manages onboarding state (intro seen, profile setup complete).
 class OnboardingCubit extends Cubit<OnboardingState> {
   OnboardingCubit(this._prefs)
-      : super(
-          OnboardingState(
-            introComplete: _prefs.getBool(_keyIntroComplete) ?? false,
-            profileComplete: _prefs.getBool(_keyProfileComplete) ?? false,
-          ),
-        );
+    : super(
+        OnboardingState(
+          introComplete: _prefs.getBool(_keyIntroComplete) ?? false,
+          profileComplete: _prefs.getBool(_keyProfileComplete) ?? false,
+        ),
+      );
 
   final SharedPreferences _prefs;
 

@@ -31,11 +31,27 @@ import '../bloc/event_detail/event_detail_cubit.dart';
 import '../bloc/event_detail/event_detail_state.dart';
 
 const List<String> _weekdays = [
-  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
 ];
 const List<String> _months = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
 
 String _formatEventDate(DateTime d) =>
@@ -43,7 +59,10 @@ String _formatEventDate(DateTime d) =>
 
 String _formatTimeForDisplay(String stored) {
   if (stored.isEmpty) return stored;
-  final parts = stored.split(RegExp(r'[:\s]')).where((e) => e.isNotEmpty).toList();
+  final parts = stored
+      .split(RegExp(r'[:\s]'))
+      .where((e) => e.isNotEmpty)
+      .toList();
   if (parts.length >= 2) {
     final h = int.tryParse(parts[0]);
     final m = int.tryParse(parts[1]);
@@ -103,9 +122,7 @@ class _EventDetailView extends StatelessWidget {
       listener: (context, state) {},
       builder: (context, state) {
         if (state.isLoading && state.event == null && state.error == null) {
-          return Scaffold(
-            body: EventDetailSkeleton(),
-          );
+          return Scaffold(body: EventDetailSkeleton());
         }
         if (state.event == null) {
           final cubit = context.read<EventDetailCubit>();
@@ -135,16 +152,16 @@ class _EventDetailView extends StatelessWidget {
                     children: [
                       Text(
                         event.title,
-                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.displaySmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         event.budget != null
                             ? 'Budget: RWF ${NumberFormatter.formatMoney(event.budget!)}'
                             : 'Budget not specified',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.w600,
                             ),
@@ -168,25 +185,23 @@ class _EventDetailView extends StatelessWidget {
                       if (event.description.isNotEmpty) ...[
                         Text(
                           'About Event',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
                         Text(
                           event.description,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                height: 1.5,
-                              ),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyLarge?.copyWith(height: 1.5),
                         ),
                       ],
                       if (event.imageUrls.isNotEmpty) ...[
                         const SizedBox(height: 24),
                         Text(
                           'Gallery',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 20),
                         _EventGallery(imageUrls: event.imageUrls),
@@ -198,17 +213,19 @@ class _EventDetailView extends StatelessWidget {
               ),
             ],
           ),
-          bottomNavigationBar: _buildBottomBar(context, state, event, isCreator, user),
+          bottomNavigationBar: _buildBottomBar(
+            context,
+            state,
+            event,
+            isCreator,
+            user,
+          ),
         );
       },
     );
   }
 
-  Widget _buildHero(
-    BuildContext context,
-    EventEntity event,
-    bool isCreator,
-  ) {
+  Widget _buildHero(BuildContext context, EventEntity event, bool isCreator) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -314,7 +331,10 @@ class _EventDetailView extends StatelessWidget {
                 left: 16,
                 bottom: 16,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: colorScheme.primary,
                     borderRadius: BorderRadius.circular(AppBorders.chipRadius),
@@ -558,20 +578,20 @@ class _LocationRow extends StatelessWidget {
   final bool hasAcceptedBooking;
 
   String get _placeName => getEventVenueDisplay(
-        event,
-        isPlanner: isPlanner,
-        hasAcceptedBooking: hasAcceptedBooking,
-      );
+    event,
+    isPlanner: isPlanner,
+    hasAcceptedBooking: hasAcceptedBooking,
+  );
   String get _address => getEventAddressDisplay(
-        event,
-        isPlanner: isPlanner,
-        hasAcceptedBooking: hasAcceptedBooking,
-      );
+    event,
+    isPlanner: isPlanner,
+    hasAcceptedBooking: hasAcceptedBooking,
+  );
   String? get _mapsDestination => eventMapsDestinationIfVisible(
-        event,
-        isPlanner: isPlanner,
-        hasAcceptedBooking: hasAcceptedBooking,
-      );
+    event,
+    isPlanner: isPlanner,
+    hasAcceptedBooking: hasAcceptedBooking,
+  );
 
   Future<void> _openInGoogleMaps(BuildContext context) async {
     final dest = _mapsDestination;
@@ -592,7 +612,8 @@ class _LocationRow extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     final iconSize = (theme.textTheme.titleMedium?.fontSize ?? 16) + 4;
-    final canOpenMaps = _mapsDestination != null && _mapsDestination!.isNotEmpty;
+    final canOpenMaps =
+        _mapsDestination != null && _mapsDestination!.isNotEmpty;
 
     return InkWell(
       onTap: canOpenMaps ? () => _openInGoogleMaps(context) : null,
@@ -677,10 +698,10 @@ class _HostedBySectionState extends State<_HostedBySection> {
     _subscription = sl<FollowedPlannersRepository>()
         .watchFollowedPlannerIds(currentUserId)
         .listen((ids) {
-      if (mounted && ids.contains(plannerId) != _isFollowing) {
-        setState(() => _isFollowing = ids.contains(plannerId));
-      }
-    });
+          if (mounted && ids.contains(plannerId) != _isFollowing) {
+            setState(() => _isFollowing = ids.contains(plannerId));
+          }
+        });
   }
 
   @override
@@ -692,8 +713,13 @@ class _HostedBySectionState extends State<_HostedBySection> {
   Future<void> _onFollowTap() async {
     final plannerId = widget.planner?.id ?? widget.plannerId;
     final currentUserId = widget.currentUserId;
-    if (plannerId.isEmpty || currentUserId == null || currentUserId.isEmpty) return;
-    await sl<FollowedPlannersRepository>().toggleFollow(currentUserId, plannerId);
+    if (plannerId.isEmpty || currentUserId == null || currentUserId.isEmpty) {
+      return;
+    }
+    await sl<FollowedPlannersRepository>().toggleFollow(
+      currentUserId,
+      plannerId,
+    );
     if (mounted) {
       showToast(context, 'You are now following this host');
     }
@@ -702,8 +728,13 @@ class _HostedBySectionState extends State<_HostedBySection> {
   Future<void> _onUnfollowTap() async {
     final plannerId = widget.planner?.id ?? widget.plannerId;
     final currentUserId = widget.currentUserId;
-    if (plannerId.isEmpty || currentUserId == null || currentUserId.isEmpty) return;
-    await sl<FollowedPlannersRepository>().toggleFollow(currentUserId, plannerId);
+    if (plannerId.isEmpty || currentUserId == null || currentUserId.isEmpty) {
+      return;
+    }
+    await sl<FollowedPlannersRepository>().toggleFollow(
+      currentUserId,
+      plannerId,
+    );
     if (mounted) {
       showToast(context, 'Unfollowed');
     }
@@ -713,7 +744,8 @@ class _HostedBySectionState extends State<_HostedBySection> {
     final planner = widget.planner;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final name = planner?.displayName ??
+    final name =
+        planner?.displayName ??
         planner?.username ??
         planner?.email.split('@').first ??
         'Host';
@@ -761,11 +793,13 @@ class _HostedBySectionState extends State<_HostedBySection> {
     final planner = widget.planner;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final name = planner?.displayName ??
+    final name =
+        planner?.displayName ??
         planner?.username ??
         planner?.email.split('@').first ??
         'Host';
-    final isSelf = planner?.id != null &&
+    final isSelf =
+        planner?.id != null &&
         widget.currentUserId != null &&
         planner!.id == widget.currentUserId;
     final canFollow = !isSelf && !_isFollowing;
@@ -835,8 +869,8 @@ class _HostedBySectionState extends State<_HostedBySection> {
               onPressed: canFollow
                   ? _onFollowTap
                   : canUnfollow
-                      ? _onUnfollowTap
-                      : null,
+                  ? _onUnfollowTap
+                  : null,
               style: OutlinedButton.styleFrom(
                 foregroundColor: isSelf && !_isFollowing
                     ? colorScheme.onSurfaceVariant
@@ -876,10 +910,7 @@ class _EventGallery extends StatelessWidget {
           onTap: () => _showFullImage(context, url),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppBorders.chipRadius),
-            child: CachedNetworkImage(
-              imageUrl: url,
-              fit: BoxFit.cover,
-            ),
+            child: CachedNetworkImage(imageUrl: url, fit: BoxFit.cover),
           ),
         );
       },
@@ -897,10 +928,7 @@ class _EventGallery extends StatelessWidget {
           insetPadding: const EdgeInsets.symmetric(horizontal: 24),
           child: ClipRRect(
             borderRadius: AppBorders.borderRadius,
-            child: CachedNetworkImage(
-              imageUrl: url,
-              fit: BoxFit.contain,
-            ),
+            child: CachedNetworkImage(imageUrl: url, fit: BoxFit.contain),
           ),
         ),
       ),

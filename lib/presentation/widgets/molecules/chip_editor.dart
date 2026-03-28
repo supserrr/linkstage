@@ -29,9 +29,7 @@ class _ChipEditorState extends State<ChipEditor> {
   }
 
   void _remove(String v) {
-    widget.onChanged(
-      widget.values.where((x) => x != v).toList(),
-    );
+    widget.onChanged(widget.values.where((x) => x != v).toList());
   }
 
   @override
@@ -50,10 +48,7 @@ class _ChipEditorState extends State<ChipEditor> {
           runSpacing: 8,
           children: [
             ...widget.values.map(
-              (v) => Chip(
-                label: Text(v),
-                onDeleted: () => _remove(v),
-              ),
+              (v) => Chip(label: Text(v), onDeleted: () => _remove(v)),
             ),
           ],
         ),
@@ -71,10 +66,7 @@ class _ChipEditorState extends State<ChipEditor> {
               ),
             ),
             const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: _add,
-            ),
+            IconButton(icon: const Icon(Icons.add), onPressed: _add),
           ],
         ),
       ],

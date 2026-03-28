@@ -32,8 +32,7 @@ class VendorCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final name = profile.displayName ?? 'Creative Professional';
     final role = _roleLabel(profile);
-    final location =
-        profile.location.isNotEmpty ? profile.location : '—';
+    final location = profile.location.isNotEmpty ? profile.location : '—';
 
     return GlassCard(
       child: InkWell(
@@ -177,7 +176,9 @@ class VendorCard extends StatelessWidget {
                         child: IconButton(
                           onPressed: onSaveTap,
                           icon: Icon(
-                            isSaved ? AppIcons.savedFilled : AppIcons.savedOutline,
+                            isSaved
+                                ? AppIcons.savedFilled
+                                : AppIcons.savedOutline,
                             size: 22,
                             color: isSaved
                                 ? colorScheme.primary
@@ -187,7 +188,9 @@ class VendorCard extends StatelessWidget {
                             padding: EdgeInsets.zero,
                             minimumSize: const Size(36, 36),
                           ),
-                          tooltip: isSaved ? 'Remove from saved' : 'Save creative',
+                          tooltip: isSaved
+                              ? 'Remove from saved'
+                              : 'Save creative',
                         ),
                       ),
                     ],
