@@ -129,7 +129,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
               children: [
                 TileLayer(
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.flutter_application_1',
+                  userAgentPackageName: 'com.linkstage.app',
                 ),
                 if (_selectedPoint != null)
                   MarkerLayer(

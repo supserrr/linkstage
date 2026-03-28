@@ -24,6 +24,8 @@ Place your icon files in `assets/icon/`:
 
 Android does not support different launcher icons for light/dark mode at the OS level. The same `icon.png` is used. Use a design that works well in both themes (e.g. logo with neutral background).
 
+**Adaptive icons (API 26+):** `pubspec.yaml` sets `adaptive_icon_background` to `#E1EEF3` (the border color of `icon.png`) and `adaptive_icon_foreground` to the same asset. That way the launcher does not show a default white circle behind a legacy mipmap. Regenerate after changing the icon so `mipmap-anydpi-v26/` and `drawable-*dpi/ic_launcher_foreground.png` stay in sync.
+
 ## Regenerating Icons
 
 ```bash

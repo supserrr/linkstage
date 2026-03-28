@@ -144,10 +144,12 @@ flutter:
 
 # Flutter Launcher Icons - run: dart run flutter_launcher_icons
 # iOS 18+: light, dark, and tinted mode icons
-# Android: single icon (OS does not support light/dark launcher icons)
+# Android: adaptive icon (background matches icon.png border; avoids white circle mask)
 flutter_launcher_icons:
   image_path: assets/icon/icon.png
   android: true
+  adaptive_icon_background: "#E1EEF3"
+  adaptive_icon_foreground: assets/icon/icon.png
   ios: true
   # iOS 18+ dark mode - use transparent icon (Apple recommendation)
   image_path_ios_dark_transparent: assets/icon/icon_dark.png

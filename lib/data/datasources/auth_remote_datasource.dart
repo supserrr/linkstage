@@ -42,7 +42,7 @@ class AuthRemoteDataSource {
       url: 'https://$_linkDomain/finishSignIn',
       handleCodeInApp: true,
       iOSBundleId: 'com.example.flutterApplication1',
-      androidPackageName: 'com.example.flutter_application_1',
+      androidPackageName: 'com.linkstage.app',
       androidInstallApp: true,
     );
     await _auth.sendSignInLinkToEmail(

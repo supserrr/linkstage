@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 
 import 'app.dart';
 import 'core/di/injection.dart';
+import 'core/theme/app_theme.dart';
 import 'core/services/fcm_service.dart';
 import 'domain/repositories/auth_repository.dart';
 import 'firebase_options.dart';
@@ -23,6 +24,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await AppTheme.preloadFonts();
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint('Font preload failed: $e');
+    }
+  }
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,

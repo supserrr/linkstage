@@ -28,7 +28,8 @@ class AppTheme {
         surface: _surfaceLight,
         surfaceContainerLowest: _surfaceLight,
       ),
-      textTheme: _textTheme,
+      textTheme: _textThemeFor(Brightness.light),
+      primaryTextTheme: _textThemeFor(Brightness.light),
       appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -117,7 +118,8 @@ class AppTheme {
         onSurface: const Color(0xFFE8E8E8),
         onSurfaceVariant: const Color(0xFFB0B0B0),
       ),
-      textTheme: _textTheme,
+      textTheme: _textThemeFor(Brightness.dark),
+      primaryTextTheme: _textThemeFor(Brightness.dark),
       appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -186,19 +188,51 @@ class AppTheme {
     );
   }
 
-  static TextTheme get _textTheme {
-    const base = TextTheme(
-      displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-      displayMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-      displaySmall: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-      headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-      titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-      bodyLarge: TextStyle(fontSize: 16),
-      bodyMedium: TextStyle(fontSize: 14),
-      bodySmall: TextStyle(fontSize: 12),
-      labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+  /// Resolves Google Font futures so the first frame does not use system fallback.
+  static Future<void> preloadFonts() async {
+    _textThemeFor(Brightness.light);
+    _textThemeFor(Brightness.dark);
+    await GoogleFonts.pendingFonts();
+  }
+
+  static TextTheme _textThemeFor(Brightness brightness) {
+    final material = ThemeData(
+      useMaterial3: true,
+      brightness: brightness,
+    ).textTheme;
+    final tuned = material.copyWith(
+      displayLarge: material.displayLarge?.copyWith(
+        fontSize: 32,
+        fontWeight: FontWeight.bold,
+      ),
+      displayMedium: material.displayMedium?.copyWith(
+        fontSize: 28,
+        fontWeight: FontWeight.bold,
+      ),
+      displaySmall: material.displaySmall?.copyWith(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+      ),
+      headlineMedium: material.headlineMedium?.copyWith(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+      ),
+      titleLarge: material.titleLarge?.copyWith(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+      ),
+      titleMedium: material.titleMedium?.copyWith(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+      ),
+      bodyLarge: material.bodyLarge?.copyWith(fontSize: 16),
+      bodyMedium: material.bodyMedium?.copyWith(fontSize: 14),
+      bodySmall: material.bodySmall?.copyWith(fontSize: 12),
+      labelLarge: material.labelLarge?.copyWith(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
     );
-    return GoogleFonts.spaceGroteskTextTheme(base);
+    return GoogleFonts.spaceGroteskTextTheme(tuned);
   }
 }

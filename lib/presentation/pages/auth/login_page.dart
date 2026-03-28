@@ -131,7 +131,11 @@ class _LoginViewState extends State<_LoginView> {
                                   onPressed: loading ? null : _signInWithGoogle,
                                   isLoading: loading && !_showEmailForm,
                                 ),
-                                SizedBox(height: betweenInputs),
+                                SizedBox(
+                                  height: _showEmailForm
+                                      ? betweenInputs
+                                      : beforeButton,
+                                ),
                                 if (_showEmailForm) ...[
                                   AppTextField(
                                     controller: _emailController,
@@ -140,7 +144,7 @@ class _LoginViewState extends State<_LoginView> {
                                     textInputAction: TextInputAction.done,
                                     validator: Validators.email,
                                   ),
-                                  SizedBox(height: betweenInputs),
+                                  SizedBox(height: beforeButton),
                                   AppButton(
                                     label: 'Send sign-in link',
                                     onPressed: loading ? null : _sendEmailLink,
