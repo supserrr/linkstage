@@ -10,8 +10,8 @@ import '../../firebase_options.dart';
 /// Remote data source for authentication (Firebase Auth).
 class AuthRemoteDataSource {
   AuthRemoteDataSource({FirebaseAuth? firebaseAuth, GoogleSignIn? googleSignIn})
-      : _auth = firebaseAuth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? _defaultGoogleSignIn();
+    : _auth = firebaseAuth ?? FirebaseAuth.instance,
+      _googleSignIn = googleSignIn ?? _defaultGoogleSignIn();
 
   final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;
@@ -25,8 +25,8 @@ class AuthRemoteDataSource {
       scopes: const ['email', 'profile', 'openid'],
       serverClientId: DefaultFirebaseOptions.googleSignInServerClientId,
       clientId: switch (defaultTargetPlatform) {
-        TargetPlatform.iOS || TargetPlatform.macOS =>
-          DefaultFirebaseOptions.googleSignInIosClientId,
+        TargetPlatform.iOS ||
+        TargetPlatform.macOS => DefaultFirebaseOptions.googleSignInIosClientId,
         _ => null,
       },
     );
@@ -110,7 +110,9 @@ class AuthRemoteDataSource {
         );
       }
       if (kDebugMode) {
-        debugPrint('[GoogleSignIn] PlatformException: ${e.code} - ${e.message}');
+        debugPrint(
+          '[GoogleSignIn] PlatformException: ${e.code} - ${e.message}',
+        );
       }
       throw FirebaseAuthException(
         code: e.code,
@@ -133,8 +135,7 @@ class AuthRemoteDataSource {
       );
     }
     final providerData = user.providerData;
-    final isGoogleUser =
-        providerData.any((p) => p.providerId == 'google.com');
+    final isGoogleUser = providerData.any((p) => p.providerId == 'google.com');
     if (isGoogleUser) {
       final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {

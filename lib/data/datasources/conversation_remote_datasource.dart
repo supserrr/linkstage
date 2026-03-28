@@ -19,7 +19,7 @@ class _Paths {
 /// Remote data source for conversations and messages.
 class ConversationRemoteDataSource {
   ConversationRemoteDataSource({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
   final _random = Random();
@@ -39,19 +39,26 @@ class ConversationRemoteDataSource {
         final otherUserId = (data['user_id'] ?? '').toString();
         final lastMessageText = data['last_message_text'] as String?;
         final lastMessageAt = (data['last_message_at'] as Timestamp?)?.toDate();
-        final lastMessageSenderId = (data['last_message_sender_id'] ?? '').toString();
+        final lastMessageSenderId = (data['last_message_sender_id'] ?? '')
+            .toString();
         final lastReadAt = (data['last_read_at'] as Timestamp?)?.toDate();
         final createdAt = (data['created_at'] as Timestamp?)?.toDate();
         // When sender is known: unread if last message is from the other user and not yet read.
         // When sender is unknown (legacy): treat as unread if never read, to show indicators.
-        final hasUnread = lastMessageAt != null &&
+        final hasUnread =
+            lastMessageAt != null &&
             (lastReadAt == null || lastMessageAt.isAfter(lastReadAt)) &&
             (lastMessageSenderId.isEmpty
                 ? true
                 : lastMessageSenderId != userId);
         // Compute actual unread count from messages (source of truth).
         final unreadCount = hasUnread
-            ? await _countUnreadMessages(chatId, userId, otherUserId, lastReadAt)
+            ? await _countUnreadMessages(
+                chatId,
+                userId,
+                otherUserId,
+                lastReadAt,
+              )
             : 0;
         String? displayName;
         String? photoUrl;
@@ -81,17 +88,19 @@ class ConversationRemoteDataSource {
             photoUrl = chatUserPhoto;
           }
         }
-        list.add(ConversationEntity(
-          id: chatId,
-          otherUserId: otherUserId,
-          otherUserDisplayName: displayName,
-          otherUserPhotoUrl: photoUrl,
-          lastMessageText: lastMessageText,
-          lastMessageAt: lastMessageAt,
-          createdAt: createdAt,
-          hasUnread: hasUnread,
-          unreadCount: unreadCount,
-        ));
+        list.add(
+          ConversationEntity(
+            id: chatId,
+            otherUserId: otherUserId,
+            otherUserDisplayName: displayName,
+            otherUserPhotoUrl: photoUrl,
+            lastMessageText: lastMessageText,
+            lastMessageAt: lastMessageAt,
+            createdAt: createdAt,
+            hasUnread: hasUnread,
+            unreadCount: unreadCount,
+          ),
+        );
       }
       list.sort((a, b) {
         final aAt = a.lastMessageAt ?? a.createdAt ?? DateTime(0);
@@ -104,7 +113,9 @@ class ConversationRemoteDataSource {
 
   /// Gets existing 1:1 chat id or creates one; returns chatId.
   Future<String> getOrCreateOneToOneChat(
-      String currentUserId, String otherUserId) async {
+    String currentUserId,
+    String otherUserId,
+  ) async {
     if (currentUserId.isEmpty || otherUserId.isEmpty) {
       throw ArgumentError('Both user ids required');
     }
@@ -121,10 +132,9 @@ class ConversationRemoteDataSource {
     }
     final chatId = _generateChatId();
     final chatRef = _firestore.collection(_Paths.chats).doc(chatId);
-    await chatRef.set(
-      <String, dynamic>{'chat_room_type': 'oneToOne'},
-      SetOptions(merge: true),
-    );
+    await chatRef.set(<String, dynamic>{
+      'chat_room_type': 'oneToOne',
+    }, SetOptions(merge: true));
     final participantsRef = chatRef.collection(_Paths.users);
     final now = FieldValue.serverTimestamp();
     final base = <String, dynamic>{
@@ -137,14 +147,14 @@ class ConversationRemoteDataSource {
       'pin_status_timestamp': now,
       'mute_status': 'unmuted',
     };
-    await participantsRef.doc(currentUserId).set(
-      <String, dynamic>{...base, 'user_id': currentUserId},
-      SetOptions(merge: true),
-    );
-    await participantsRef.doc(otherUserId).set(
-      <String, dynamic>{...base, 'user_id': otherUserId},
-      SetOptions(merge: true),
-    );
+    await participantsRef.doc(currentUserId).set(<String, dynamic>{
+      ...base,
+      'user_id': currentUserId,
+    }, SetOptions(merge: true));
+    await participantsRef.doc(otherUserId).set(<String, dynamic>{
+      ...base,
+      'user_id': otherUserId,
+    }, SetOptions(merge: true));
     await ref.doc(chatId).set(<String, dynamic>{
       'user_id': otherUserId,
       'created_at': now,
@@ -155,9 +165,9 @@ class ConversationRemoteDataSource {
         .collection(_Paths.chatsSub)
         .doc(chatId)
         .set(<String, dynamic>{
-      'user_id': currentUserId,
-      'created_at': now,
-    }, SetOptions(merge: true));
+          'user_id': currentUserId,
+          'created_at': now,
+        }, SetOptions(merge: true));
     return chatId;
   }
 
@@ -166,7 +176,10 @@ class ConversationRemoteDataSource {
     final now = DateTime.now();
     final prefix =
         '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}-${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}-';
-    final suffix = List.generate(8, (_) => chars[_random.nextInt(chars.length)]).join();
+    final suffix = List.generate(
+      8,
+      (_) => chars[_random.nextInt(chars.length)],
+    ).join();
     return '$prefix$suffix-${List.generate(4, (_) => chars[_random.nextInt(chars.length)]).join()}-${List.generate(12, (_) => chars[_random.nextInt(chars.length)]).join()}';
   }
 
@@ -180,9 +193,11 @@ class ConversationRemoteDataSource {
         .orderBy('createdAt', descending: false)
         .limit(100)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((d) => MessageModel.fromFirestore(d, chatId).toEntity())
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((d) => MessageModel.fromFirestore(d, chatId).toEntity())
+              .toList(),
+        );
   }
 
   /// Max length for chat message text (enforced in UI and Firestore rules).
@@ -244,7 +259,8 @@ class ConversationRemoteDataSource {
         .doc(otherUserId)
         .get();
     final userData = userDoc.data();
-    final displayName = (userData?['displayName'] ?? userData?['id'] ?? otherUserId).toString();
+    final displayName =
+        (userData?['displayName'] ?? userData?['id'] ?? otherUserId).toString();
     return (otherUserId: otherUserId, displayName: displayName);
   }
 
@@ -266,7 +282,8 @@ class ConversationRemoteDataSource {
       }
       final snap = await q.limit(500).get();
       return snap.docs.where((d) {
-        final sentBy = (d.data()['sentBy'] ?? d.data()['senderId'] ?? '').toString();
+        final sentBy = (d.data()['sentBy'] ?? d.data()['senderId'] ?? '')
+            .toString();
         return sentBy == otherUserId;
       }).length;
     } catch (_) {

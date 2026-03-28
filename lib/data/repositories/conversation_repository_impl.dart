@@ -19,12 +19,12 @@ class ConversationRepositoryImpl implements ConversationRepository {
     String currentUserId,
     String otherUserId,
   ) async {
-    final canMessage =
-        await _userRepository.canSendMessageTo(currentUserId, otherUserId);
+    final canMessage = await _userRepository.canSendMessageTo(
+      currentUserId,
+      otherUserId,
+    );
     if (!canMessage) {
-      throw Exception(
-        'This user has restricted who can message them',
-      );
+      throw Exception('This user has restricted who can message them');
     }
     return _dataSource.getOrCreateOneToOneChat(currentUserId, otherUserId);
   }
@@ -41,8 +41,7 @@ class ConversationRepositoryImpl implements ConversationRepository {
   Future<({String otherUserId, String displayName})?> getOtherParticipant(
     String chatId,
     String currentUserId,
-  ) =>
-      _dataSource.getOtherParticipant(chatId, currentUserId);
+  ) => _dataSource.getOtherParticipant(chatId, currentUserId);
 
   @override
   Future<void> markChatAsRead(String chatId, String userId) =>

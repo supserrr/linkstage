@@ -3,14 +3,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// Firestore data source for creative past work visibility preferences.
 class CreativePastWorkPreferencesRemoteDataSource {
   CreativePastWorkPreferencesRemoteDataSource({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
   static const String _collection = 'creative_past_work_preferences';
 
   Future<List<String>> getHiddenIds(String creativeUserId) async {
-    final doc = await _firestore.collection(_collection).doc(creativeUserId).get();
+    final doc = await _firestore
+        .collection(_collection)
+        .doc(creativeUserId)
+        .get();
     final data = doc.data();
     if (data == null) return [];
     final list = data['hiddenIds'] as List<dynamic>?;
@@ -18,7 +21,10 @@ class CreativePastWorkPreferencesRemoteDataSource {
     return list.map((e) => e.toString()).toList();
   }
 
-  Future<void> setHiddenIds(String creativeUserId, List<String> hiddenIds) async {
+  Future<void> setHiddenIds(
+    String creativeUserId,
+    List<String> hiddenIds,
+  ) async {
     await _firestore.collection(_collection).doc(creativeUserId).set({
       'userId': creativeUserId,
       'hiddenIds': hiddenIds,

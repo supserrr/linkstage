@@ -33,8 +33,9 @@ class UserRemoteDataSource {
     const chunkSize = 30;
     for (var i = 0; i < uniqueIds.length; i += chunkSize) {
       final chunkIds = uniqueIds.skip(i).take(chunkSize).toList();
-      final refs =
-          chunkIds.map((id) => _firestore.collection(_usersCollection).doc(id));
+      final refs = chunkIds.map(
+        (id) => _firestore.collection(_usersCollection).doc(id),
+      );
       final docs = await Future.wait(refs.map((ref) => ref.get()));
       for (var j = 0; j < docs.length; j++) {
         final doc = docs[j];
@@ -65,7 +66,10 @@ class UserRemoteDataSource {
         .set(model.toFirestore(), SetOptions(merge: true));
   }
 
-  Future<bool> checkUsernameAvailable(String username, {String? excludeUserId}) async {
+  Future<bool> checkUsernameAvailable(
+    String username, {
+    String? excludeUserId,
+  }) async {
     final doc = await _firestore
         .collection(_profilesCollection)
         .doc(username.toLowerCase())
@@ -121,8 +125,9 @@ class UserRemoteDataSource {
       profileVisibility: newProfileData.profileVisibility,
     );
     await _firestore.runTransaction((transaction) async {
-      final newProfileRef =
-          _firestore.collection(_profilesCollection).doc(normalized);
+      final newProfileRef = _firestore
+          .collection(_profilesCollection)
+          .doc(normalized);
       final newDoc = await transaction.get(newProfileRef);
       if (newDoc.exists) {
         final data = newDoc.data();
@@ -131,10 +136,15 @@ class UserRemoteDataSource {
           throw StateError('Username $normalized is already taken');
         }
       }
-      transaction.set(newProfileRef, model.toFirestore(), SetOptions(merge: true));
+      transaction.set(
+        newProfileRef,
+        model.toFirestore(),
+        SetOptions(merge: true),
+      );
       if (oldNormalized != null && oldNormalized.isNotEmpty) {
-        final oldProfileRef =
-            _firestore.collection(_profilesCollection).doc(oldNormalized);
+        final oldProfileRef = _firestore
+            .collection(_profilesCollection)
+            .doc(oldNormalized);
         transaction.delete(oldProfileRef);
       }
       final userRef = _firestore.collection(_usersCollection).doc(userId);
@@ -159,12 +169,12 @@ class UserRemoteDataSource {
   }) async {
     final updates = <String, dynamic>{};
     if (profileVisibility != null) {
-      updates['profileVisibility'] =
-          UserEntity.profileVisibilityToKey(profileVisibility);
+      updates['profileVisibility'] = UserEntity.profileVisibilityToKey(
+        profileVisibility,
+      );
     }
     if (whoCanMessage != null) {
-      updates['whoCanMessage'] =
-          UserEntity.whoCanMessageToKey(whoCanMessage);
+      updates['whoCanMessage'] = UserEntity.whoCanMessageToKey(whoCanMessage);
     }
     if (showOnlineStatus != null) {
       updates['showOnlineStatus'] = showOnlineStatus;
@@ -180,11 +190,9 @@ class UserRemoteDataSource {
   }
 
   Stream<UserEntity?> watchUser(String userId) {
-    return _firestore
-        .collection(_usersCollection)
-        .doc(userId)
-        .snapshots()
-        .map((doc) {
+    return _firestore.collection(_usersCollection).doc(userId).snapshots().map((
+      doc,
+    ) {
       if (doc.exists && doc.data() != null) {
         return UserModel.fromFirestore(doc).toEntity();
       }
@@ -195,7 +203,10 @@ class UserRemoteDataSource {
   static const String _notificationReadsSubcollection = 'notification_reads';
 
   /// Mark a single notification as read.
-  Future<void> markNotificationAsRead(String userId, String notificationId) async {
+  Future<void> markNotificationAsRead(
+    String userId,
+    String notificationId,
+  ) async {
     await _firestore
         .collection(_usersCollection)
         .doc(userId)
@@ -244,9 +255,9 @@ class UserRemoteDataSource {
         .collection(_plannerNewEventNotificationsSub)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => {'id': d.id, ...d.data()})
-            .toList());
+        .map(
+          (snap) => snap.docs.map((d) => {'id': d.id, ...d.data()}).toList(),
+        );
   }
 
   static const String _deviceTokensSubcollection = 'device_tokens';
@@ -259,10 +270,7 @@ class UserRemoteDataSource {
         .doc(userId)
         .collection(_deviceTokensSubcollection)
         .doc(docId)
-        .set({
-      'token': token,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+        .set({'token': token, 'updatedAt': FieldValue.serverTimestamp()});
   }
 
   /// Remove FCM token for the user.

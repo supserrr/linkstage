@@ -31,19 +31,31 @@ class UserRepositoryImpl implements UserRepository {
     if (completedByCreative2.any((b) => b.plannerId == userId1)) return true;
 
     final collabsTarget1 = await _collaborationRepository
-        .getCollaborationsByTargetUserId(userId1, status: CollaborationStatus.completed);
+        .getCollaborationsByTargetUserId(
+          userId1,
+          status: CollaborationStatus.completed,
+        );
     if (collabsTarget1.any((c) => c.requesterId == userId2)) return true;
 
     final collabsTarget2 = await _collaborationRepository
-        .getCollaborationsByTargetUserId(userId2, status: CollaborationStatus.completed);
+        .getCollaborationsByTargetUserId(
+          userId2,
+          status: CollaborationStatus.completed,
+        );
     if (collabsTarget2.any((c) => c.requesterId == userId1)) return true;
 
     final collabsRequester1 = await _collaborationRepository
-        .getCollaborationsByRequesterId(userId1, status: CollaborationStatus.completed);
+        .getCollaborationsByRequesterId(
+          userId1,
+          status: CollaborationStatus.completed,
+        );
     if (collabsRequester1.any((c) => c.targetUserId == userId2)) return true;
 
     final collabsRequester2 = await _collaborationRepository
-        .getCollaborationsByRequesterId(userId2, status: CollaborationStatus.completed);
+        .getCollaborationsByRequesterId(
+          userId2,
+          status: CollaborationStatus.completed,
+        );
     if (collabsRequester2.any((c) => c.targetUserId == userId1)) return true;
 
     return false;
@@ -70,17 +82,15 @@ class UserRepositoryImpl implements UserRepository {
     ProfileVisibility? profileVisibility,
     WhoCanMessage? whoCanMessage,
     bool? showOnlineStatus,
-  }) =>
-      _remote.updatePrivacySettings(
-        userId,
-        profileVisibility: profileVisibility,
-        whoCanMessage: whoCanMessage,
-        showOnlineStatus: showOnlineStatus,
-      );
+  }) => _remote.updatePrivacySettings(
+    userId,
+    profileVisibility: profileVisibility,
+    whoCanMessage: whoCanMessage,
+    showOnlineStatus: showOnlineStatus,
+  );
 
   @override
-  Future<void> updateLastSeen(String userId) =>
-      _remote.updateLastSeen(userId);
+  Future<void> updateLastSeen(String userId) => _remote.updateLastSeen(userId);
 
   @override
   Future<UserEntity?> getUser(String userId) => _remote.getUser(userId);
@@ -97,16 +107,17 @@ class UserRepositoryImpl implements UserRepository {
       _remote.updateRole(userId, role);
 
   @override
-  Future<bool> checkUsernameAvailable(String username, {String? excludeUserId}) =>
-      _remote.checkUsernameAvailable(username, excludeUserId: excludeUserId);
+  Future<bool> checkUsernameAvailable(
+    String username, {
+    String? excludeUserId,
+  }) => _remote.checkUsernameAvailable(username, excludeUserId: excludeUserId);
 
   @override
   Future<void> updateUsername(
     String userId,
     String newUsername,
     DateTime lastUsernameChangeAt,
-  ) =>
-      _remote.updateUsername(userId, newUsername, lastUsernameChangeAt);
+  ) => _remote.updateUsername(userId, newUsername, lastUsernameChangeAt);
 
   @override
   Future<void> changeUsernameAtomic(
@@ -115,14 +126,13 @@ class UserRepositoryImpl implements UserRepository {
     String? oldUsername,
     ProfileEntity newProfileData,
     DateTime lastUsernameChangeAt,
-  ) =>
-      _remote.changeUsernameAtomic(
-        userId,
-        newUsername,
-        oldUsername,
-        newProfileData,
-        lastUsernameChangeAt,
-      );
+  ) => _remote.changeUsernameAtomic(
+    userId,
+    newUsername,
+    oldUsername,
+    newProfileData,
+    lastUsernameChangeAt,
+  );
 
   @override
   Stream<UserEntity?> watchUser(String userId) => _remote.watchUser(userId);

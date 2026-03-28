@@ -6,7 +6,7 @@ import '../models/collaboration_model.dart';
 /// Remote data source for collaborations in Firestore.
 class CollaborationRemoteDataSource {
   CollaborationRemoteDataSource({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -176,14 +176,18 @@ class CollaborationRemoteDataSource {
     bool? confirmingIsPlanner,
   }) async {
     final updates = <String, dynamic>{'status': _statusToKey(status)};
-    if (status == CollaborationStatus.completed && confirmingIsPlanner != null) {
+    if (status == CollaborationStatus.completed &&
+        confirmingIsPlanner != null) {
       if (confirmingIsPlanner) {
         updates['plannerConfirmedAt'] = FieldValue.serverTimestamp();
       } else {
         updates['creativeConfirmedAt'] = FieldValue.serverTimestamp();
       }
     }
-    await _firestore.collection(_collection).doc(collaborationId).update(updates);
+    await _firestore
+        .collection(_collection)
+        .doc(collaborationId)
+        .update(updates);
   }
 
   /// Creative confirms they completed the work (sets creativeConfirmedAt).
@@ -195,12 +199,18 @@ class CollaborationRemoteDataSource {
 
   /// Returns true if there is an active collaboration (pending or accepted).
   /// When declined or completed, a new proposal can be sent.
-  Future<bool> hasExistingCollaboration(String requesterId, String targetUserId) async {
+  Future<bool> hasExistingCollaboration(
+    String requesterId,
+    String targetUserId,
+  ) async {
     return _hasActiveBetween(requesterId, targetUserId);
   }
 
   /// Returns true if there is any active collaboration between the two users (either direction).
-  Future<bool> hasActiveCollaborationBetween(String userId1, String userId2) async {
+  Future<bool> hasActiveCollaborationBetween(
+    String userId1,
+    String userId2,
+  ) async {
     return _hasActiveBetween(userId1, userId2);
   }
 
@@ -215,7 +225,8 @@ class CollaborationRemoteDataSource {
         .where('requesterId', isEqualTo: userId2)
         .where('targetUserId', isEqualTo: userId1)
         .get();
-    return snapshot1.docs.any(_isActiveStatus) || snapshot2.docs.any(_isActiveStatus);
+    return snapshot1.docs.any(_isActiveStatus) ||
+        snapshot2.docs.any(_isActiveStatus);
   }
 
   bool _isActiveStatus(QueryDocumentSnapshot<Map<String, dynamic>> doc) {

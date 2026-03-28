@@ -47,22 +47,21 @@ class EventRepositoryImpl implements EventRepository {
     String endTime = '',
     String venueName = '',
     LocationVisibility locationVisibility = LocationVisibility.public,
-  }) =>
-      _remote.createEvent(
-        plannerId: plannerId,
-        title: title,
-        date: date,
-        location: location,
-        description: description,
-        status: status,
-        imageUrls: imageUrls,
-        eventType: eventType,
-        budget: budget,
-        startTime: startTime,
-        endTime: endTime,
-        venueName: venueName,
-        locationVisibility: locationVisibility,
-      );
+  }) => _remote.createEvent(
+    plannerId: plannerId,
+    title: title,
+    date: date,
+    location: location,
+    description: description,
+    status: status,
+    imageUrls: imageUrls,
+    eventType: eventType,
+    budget: budget,
+    startTime: startTime,
+    endTime: endTime,
+    venueName: venueName,
+    locationVisibility: locationVisibility,
+  );
 
   @override
   Future<EventEntity> updateEvent(EventEntity event) =>

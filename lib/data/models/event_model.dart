@@ -22,17 +22,15 @@ class EventModel {
     this.locationVisibility = LocationVisibility.public,
   });
 
-  factory EventModel.fromFirestore(
-    DocumentSnapshot<Map<String, dynamic>> doc,
-  ) {
+  factory EventModel.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? {};
     final ts = data['date'] as Timestamp?;
     final imageUrlsRaw = data['imageUrls'];
     final imageUrls = imageUrlsRaw is List
         ? (imageUrlsRaw)
-            .map((e) => e is String ? e : e.toString())
-            .where((s) => s.isNotEmpty)
-            .toList()
+              .map((e) => e is String ? e : e.toString())
+              .where((s) => s.isNotEmpty)
+              .toList()
         : <String>[];
 
     final budgetRaw = data['budget'];
@@ -46,7 +44,7 @@ class EventModel {
     final locationVisibilityRaw = data['locationVisibility'] as String?;
     final locationVisibility =
         EventEntity.locationVisibilityFromKey(locationVisibilityRaw) ??
-            LocationVisibility.public;
+        LocationVisibility.public;
 
     return EventModel(
       id: doc.id,
@@ -55,7 +53,8 @@ class EventModel {
       date: ts?.toDate(),
       location: data['location'] as String? ?? '',
       description: data['description'] as String? ?? '',
-      status: EventEntity.statusFromKey(data['status'] as String?) ??
+      status:
+          EventEntity.statusFromKey(data['status'] as String?) ??
           EventStatus.draft,
       imageUrls: imageUrls,
       eventType: data['eventType'] as String? ?? '',

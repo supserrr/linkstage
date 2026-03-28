@@ -11,38 +11,31 @@ class BookingRepositoryImpl implements BookingRepository {
   @override
   Future<List<BookingEntity>> getCompletedBookingsByCreativeId(
     String creativeId,
-  ) =>
-      _remote.getCompletedBookingsByCreativeId(creativeId);
+  ) => _remote.getCompletedBookingsByCreativeId(creativeId);
 
   @override
   Future<List<BookingEntity>> getCompletedBookingsByPlannerId(
     String plannerId,
-  ) =>
-      _remote.getCompletedBookingsByPlannerId(plannerId);
+  ) => _remote.getCompletedBookingsByPlannerId(plannerId);
 
   @override
   Future<List<BookingEntity>> getAcceptedOrCompletedBookingsByPlannerId(
     String plannerId,
-  ) =>
-      _remote.getAcceptedOrCompletedBookingsByPlannerId(plannerId);
+  ) => _remote.getAcceptedOrCompletedBookingsByPlannerId(plannerId);
 
   @override
-  Future<List<BookingEntity>> getPendingBookingsByPlannerId(
-    String plannerId,
-  ) =>
+  Future<List<BookingEntity>> getPendingBookingsByPlannerId(String plannerId) =>
       _remote.getPendingBookingsByPlannerId(plannerId);
 
   @override
   Future<List<BookingEntity>> getPendingBookingsByCreativeId(
     String creativeId,
-  ) =>
-      _remote.getPendingBookingsByCreativeId(creativeId);
+  ) => _remote.getPendingBookingsByCreativeId(creativeId);
 
   @override
   Future<List<BookingEntity>> getAcceptedBookingsByCreativeId(
     String creativeId,
-  ) =>
-      _remote.getAcceptedBookingsByCreativeId(creativeId);
+  ) => _remote.getAcceptedBookingsByCreativeId(creativeId);
 
   @override
   Future<int> getPendingBookingsCountByEventId(String eventId) =>
@@ -51,8 +44,7 @@ class BookingRepositoryImpl implements BookingRepository {
   @override
   Future<Map<String, int>> getPendingBookingsCountByEventIds(
     List<String> eventIds,
-  ) =>
-      _remote.getPendingBookingsCountByEventIds(eventIds);
+  ) => _remote.getPendingBookingsCountByEventIds(eventIds);
 
   @override
   Future<List<BookingEntity>> getPendingBookingsByEventId(String eventId) =>
@@ -71,32 +63,32 @@ class BookingRepositoryImpl implements BookingRepository {
     required String eventId,
     required String creativeId,
     required String plannerId,
-  }) =>
-      _remote.createBooking(
-        eventId: eventId,
-        creativeId: creativeId,
-        plannerId: plannerId,
-      );
+  }) => _remote.createBooking(
+    eventId: eventId,
+    creativeId: creativeId,
+    plannerId: plannerId,
+  );
 
   @override
   Future<BookingEntity> createInvitation({
     required String eventId,
     required String creativeId,
     required String plannerId,
-  }) =>
-      _remote.createInvitation(
-        eventId: eventId,
-        creativeId: creativeId,
-        plannerId: plannerId,
-      );
+  }) => _remote.createInvitation(
+    eventId: eventId,
+    creativeId: creativeId,
+    plannerId: plannerId,
+  );
 
   @override
-  Future<List<BookingEntity>> getInvitedBookingsByCreativeId(String creativeId) =>
-      _remote.getInvitedBookingsByCreativeId(creativeId);
+  Future<List<BookingEntity>> getInvitedBookingsByCreativeId(
+    String creativeId,
+  ) => _remote.getInvitedBookingsByCreativeId(creativeId);
 
   @override
-  Future<List<BookingEntity>> getDeclinedBookingsByCreativeId(String creativeId) =>
-      _remote.getDeclinedBookingsByCreativeId(creativeId);
+  Future<List<BookingEntity>> getDeclinedBookingsByCreativeId(
+    String creativeId,
+  ) => _remote.getDeclinedBookingsByCreativeId(creativeId);
 
   @override
   Future<List<BookingEntity>> getInvitedBookingsByEventId(String eventId) =>
@@ -125,42 +117,35 @@ class BookingRepositoryImpl implements BookingRepository {
   @override
   Stream<List<BookingEntity>> watchPendingBookingsByPlannerId(
     String plannerId,
-  ) =>
-      _remote.watchPendingBookingsByPlannerId(plannerId);
+  ) => _remote.watchPendingBookingsByPlannerId(plannerId);
 
   @override
   Stream<List<BookingEntity>> watchCompletedBookingsByCreativeId(
     String creativeId,
-  ) =>
-      _remote.watchCompletedBookingsByCreativeId(creativeId);
+  ) => _remote.watchCompletedBookingsByCreativeId(creativeId);
 
   @override
   Stream<List<BookingEntity>> watchInvitedBookingsByCreativeId(
     String creativeId,
-  ) =>
-      _remote.watchInvitedBookingsByCreativeId(creativeId);
+  ) => _remote.watchInvitedBookingsByCreativeId(creativeId);
 
   @override
   Stream<List<BookingEntity>> watchAcceptedBookingsByCreativeId(
     String creativeId,
-  ) =>
-      _remote.watchAcceptedBookingsByCreativeId(creativeId);
+  ) => _remote.watchAcceptedBookingsByCreativeId(creativeId);
 
   @override
   Stream<List<BookingEntity>> watchDeclinedBookingsByCreativeId(
     String creativeId,
-  ) =>
-      _remote.watchDeclinedBookingsByCreativeId(creativeId);
+  ) => _remote.watchDeclinedBookingsByCreativeId(creativeId);
 
   @override
   Stream<List<BookingEntity>> watchAcceptedInvitationBookingsByPlannerId(
     String plannerId,
-  ) =>
-      _remote.watchAcceptedInvitationBookingsByPlannerId(plannerId);
+  ) => _remote.watchAcceptedInvitationBookingsByPlannerId(plannerId);
 
   @override
   Stream<List<BookingEntity>> watchDeclinedInvitationBookingsByPlannerId(
     String plannerId,
-  ) =>
-      _remote.watchDeclinedInvitationBookingsByPlannerId(plannerId);
+  ) => _remote.watchDeclinedInvitationBookingsByPlannerId(plannerId);
 }

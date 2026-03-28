@@ -219,21 +219,27 @@ class BookingRemoteDataSource {
 
   /// Update booking status (e.g. accept, decline, invite, complete).
   /// When marking completed, also sets plannerConfirmedAt.
-  Future<void> updateBookingStatus(String bookingId, BookingStatus status) async {
+  Future<void> updateBookingStatus(
+    String bookingId,
+    BookingStatus status,
+  ) async {
     final key = status == BookingStatus.pending
         ? _statusPending
         : status == BookingStatus.invited
-            ? 'invited'
-            : status == BookingStatus.accepted
-                ? 'accepted'
-                : status == BookingStatus.declined
-                    ? 'declined'
-                    : _statusCompleted;
+        ? 'invited'
+        : status == BookingStatus.accepted
+        ? 'accepted'
+        : status == BookingStatus.declined
+        ? 'declined'
+        : _statusCompleted;
     final updates = <String, dynamic>{'status': key};
     if (status == BookingStatus.completed) {
       updates['plannerConfirmedAt'] = FieldValue.serverTimestamp();
     }
-    await _firestore.collection(_bookingsCollection).doc(bookingId).update(updates);
+    await _firestore
+        .collection(_bookingsCollection)
+        .doc(bookingId)
+        .update(updates);
   }
 
   /// Creative confirms they completed the work (sets creativeConfirmedAt).
@@ -244,7 +250,10 @@ class BookingRemoteDataSource {
   }
 
   /// Check if creative has already applied to this event (any status).
-  Future<bool> hasPendingBookingForEvent(String eventId, String creativeId) async {
+  Future<bool> hasPendingBookingForEvent(
+    String eventId,
+    String creativeId,
+  ) async {
     final snapshot = await _firestore
         .collection(_bookingsCollection)
         .where('eventId', isEqualTo: eventId)
@@ -255,7 +264,9 @@ class BookingRemoteDataSource {
   }
 
   /// Fetch pending bookings (applicants) for an event.
-  Future<List<BookingEntity>> getPendingBookingsByEventId(String eventId) async {
+  Future<List<BookingEntity>> getPendingBookingsByEventId(
+    String eventId,
+  ) async {
     final snapshot = await _firestore
         .collection(_bookingsCollection)
         .where('eventId', isEqualTo: eventId)
@@ -268,7 +279,9 @@ class BookingRemoteDataSource {
   }
 
   /// Fetch accepted bookings for an event.
-  Future<List<BookingEntity>> getAcceptedBookingsByEventId(String eventId) async {
+  Future<List<BookingEntity>> getAcceptedBookingsByEventId(
+    String eventId,
+  ) async {
     final snapshot = await _firestore
         .collection(_bookingsCollection)
         .where('eventId', isEqualTo: eventId)

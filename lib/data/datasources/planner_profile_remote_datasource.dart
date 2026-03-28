@@ -6,7 +6,7 @@ import '../models/planner_profile_model.dart';
 /// Remote data source for planner profiles in Firestore.
 class PlannerProfileRemoteDataSource {
   PlannerProfileRemoteDataSource({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 

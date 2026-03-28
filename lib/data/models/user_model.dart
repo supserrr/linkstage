@@ -33,10 +33,12 @@ class UserModel {
       role: UserEntity.roleFromKey(data['role'] as String?),
       createdAt: data['createdAt'] as Timestamp?,
       lastUsernameChangeAt: ts,
-      profileVisibility:
-          UserEntity.profileVisibilityFromKey(data['profileVisibility'] as String?),
-      whoCanMessage:
-          UserEntity.whoCanMessageFromKey(data['whoCanMessage'] as String?),
+      profileVisibility: UserEntity.profileVisibilityFromKey(
+        data['profileVisibility'] as String?,
+      ),
+      whoCanMessage: UserEntity.whoCanMessageFromKey(
+        data['whoCanMessage'] as String?,
+      ),
       showOnlineStatus: data['showOnlineStatus'] as bool? ?? true,
       lastSeen: lastSeenTs,
     );
@@ -63,14 +65,12 @@ class UserModel {
       'photoUrl': photoUrl,
       'role': role?.roleKey,
       'lastUsernameChangeAt': lastUsernameChangeAt,
-      'profileVisibility':
-          profileVisibility != null
-              ? UserEntity.profileVisibilityToKey(profileVisibility!)
-              : null,
-      'whoCanMessage':
-          whoCanMessage != null
-              ? UserEntity.whoCanMessageToKey(whoCanMessage!)
-              : null,
+      'profileVisibility': profileVisibility != null
+          ? UserEntity.profileVisibilityToKey(profileVisibility!)
+          : null,
+      'whoCanMessage': whoCanMessage != null
+          ? UserEntity.whoCanMessageToKey(whoCanMessage!)
+          : null,
       'showOnlineStatus': showOnlineStatus,
       'lastSeen': lastSeen,
       if (createdAt == null) 'createdAt': FieldValue.serverTimestamp(),

@@ -6,8 +6,10 @@ import '../../domain/repositories/saved_creatives_repository.dart';
 
 /// Firestore implementation using users/{userId}/saved_creatives subcollection.
 class SavedCreativesRepositoryImpl implements SavedCreativesRepository {
-  SavedCreativesRepositoryImpl(this._profileRepository, {FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  SavedCreativesRepositoryImpl(
+    this._profileRepository, {
+    FirebaseFirestore? firestore,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
   final ProfileRepository _profileRepository;

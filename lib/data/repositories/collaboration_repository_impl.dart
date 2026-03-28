@@ -21,53 +21,48 @@ class CollaborationRepositoryImpl implements CollaborationRepository {
     String? endTime,
     String? location,
     String? eventType,
-  }) =>
-      _remote.createCollaboration(
-        requesterId: requesterId,
-        targetUserId: targetUserId,
-        description: description,
-        title: title,
-        eventId: eventId,
-        budget: budget,
-        date: date,
-        startTime: startTime,
-        endTime: endTime,
-        location: location,
-        eventType: eventType,
-      );
+  }) => _remote.createCollaboration(
+    requesterId: requesterId,
+    targetUserId: targetUserId,
+    description: description,
+    title: title,
+    eventId: eventId,
+    budget: budget,
+    date: date,
+    startTime: startTime,
+    endTime: endTime,
+    location: location,
+    eventType: eventType,
+  );
 
   @override
   Future<List<CollaborationEntity>> getCollaborationsByTargetUserId(
     String targetUserId, {
     CollaborationStatus? status,
-  }) =>
-      _remote.getCollaborationsByTargetUserId(targetUserId, status: status);
+  }) => _remote.getCollaborationsByTargetUserId(targetUserId, status: status);
 
   @override
   Future<List<CollaborationEntity>> getCollaborationsByEventId(
     String eventId, {
     CollaborationStatus? status,
-  }) =>
-      _remote.getCollaborationsByEventId(eventId, status: status);
+  }) => _remote.getCollaborationsByEventId(eventId, status: status);
 
   @override
   Future<List<CollaborationEntity>> getCollaborationsByRequesterId(
     String requesterId, {
     CollaborationStatus? status,
-  }) =>
-      _remote.getCollaborationsByRequesterId(requesterId, status: status);
+  }) => _remote.getCollaborationsByRequesterId(requesterId, status: status);
 
   @override
   Future<void> updateStatus(
     String collaborationId,
     CollaborationStatus status, {
     bool? confirmingIsPlanner,
-  }) =>
-      _remote.updateStatus(
-        collaborationId,
-        status,
-        confirmingIsPlanner: confirmingIsPlanner,
-      );
+  }) => _remote.updateStatus(
+    collaborationId,
+    status,
+    confirmingIsPlanner: confirmingIsPlanner,
+  );
 
   @override
   Future<void> confirmCompletionByCreative(String collaborationId) =>
@@ -89,8 +84,10 @@ class CollaborationRepositoryImpl implements CollaborationRepository {
   }
 
   @override
-  Future<bool> hasExistingCollaboration(String requesterId, String targetUserId) =>
-      _remote.hasExistingCollaboration(requesterId, targetUserId);
+  Future<bool> hasExistingCollaboration(
+    String requesterId,
+    String targetUserId,
+  ) => _remote.hasExistingCollaboration(requesterId, targetUserId);
 
   @override
   Future<bool> hasActiveCollaborationBetween(String userId1, String userId2) =>
@@ -100,19 +97,11 @@ class CollaborationRepositoryImpl implements CollaborationRepository {
   Stream<List<CollaborationEntity>> watchCollaborationsByTargetUserId(
     String targetUserId, {
     CollaborationStatus? status,
-  }) =>
-      _remote.watchCollaborationsByTargetUserId(
-        targetUserId,
-        status: status,
-      );
+  }) => _remote.watchCollaborationsByTargetUserId(targetUserId, status: status);
 
   @override
   Stream<List<CollaborationEntity>> watchCollaborationsByRequesterId(
     String requesterId, {
     CollaborationStatus? status,
-  }) =>
-      _remote.watchCollaborationsByRequesterId(
-        requesterId,
-        status: status,
-      );
+  }) => _remote.watchCollaborationsByRequesterId(requesterId, status: status);
 }

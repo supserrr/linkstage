@@ -52,8 +52,7 @@ class ReviewRepositoryImpl implements ReviewRepository {
   Future<ReviewEntity?> getReviewByBookingAndReviewer(
     String bookingId,
     String reviewerId,
-  ) =>
-      _remote.getReviewByBookingAndReviewer(bookingId, reviewerId);
+  ) => _remote.getReviewByBookingAndReviewer(bookingId, reviewerId);
 
   @override
   Future<ReviewEntity> createCollaborationReview({
@@ -78,8 +77,7 @@ class ReviewRepositoryImpl implements ReviewRepository {
   Future<ReviewEntity?> getReviewByCollaborationAndReviewer(
     String collaborationId,
     String reviewerId,
-  ) =>
-      _remote.getReviewByCollaborationAndReviewer(collaborationId, reviewerId);
+  ) => _remote.getReviewByCollaborationAndReviewer(collaborationId, reviewerId);
 
   @override
   Future<void> addReply(String reviewId, String text) =>
