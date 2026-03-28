@@ -52,4 +52,4 @@ git shortlog -sn --all
 # or GitHub: Insights → Contributors
 ```
 
-A dated snapshot for this repo is kept in [git_contribution_snapshot.md](git_contribution_snapshot.md) (regenerated when attribution work lands).
+A dated snapshot for this repo is kept in [git_contribution_snapshot.md](git_contribution_snapshot.md). Re-run `git shortlog -sn HEAD` on the report due date and update that file if counts drift.
