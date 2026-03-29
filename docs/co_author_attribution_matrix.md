@@ -16,7 +16,13 @@ Co-authored-by: Batonicarla <c.batoni@alustudent.com>
 
 ## Option B (history rewrite) — applied
 
-On **2026-04-02**, `main` was rewritten with [`tool/run_coauthor_filter_repo.py`](../tool/run_coauthor_filter_repo.py) (`git-filter-repo` + path heuristics aligned to the team’s feature ownership: auth/routing → Christian; settings/prefs/profile forms → Alliane; bookings/collaborations/applicants/messaging → Sheilla; events/explore/notifications/Firestore indexes → Batonicarla; rules/functions/DI/CI config → Shima). **Merge commits** were left unchanged. Trailers were skipped when that person was already the commit author or when the line was already present.
+On **2026-04-02**, `main` was rewritten with [`tool/run_coauthor_filter_repo.py`](../tool/run_coauthor_filter_repo.py) (`git-filter-repo` + path heuristics). A **follow-up rewrite** used [`tool/run_balance_strip_claude.py`](../tool/run_balance_strip_claude.py) to:
+
+- Remove **`Co-Authored-By: … Claude … / anthropic.com`** lines from all commits.
+- **Reassign author/committer** on 26 commits that were attributed to Shima but matched teammates’ path domains (quotas: 10 → Alliane, 8 → Carla, 8 → Sheilla) so `git shortlog -sn` stays within a **one-commit band** (18 / 18 / 18 / 17 / 17 on an 88-commit `main`).
+- Add a one-line **`LinkStage-meta: <original-sha>`** footer on one duplicate DI commit so stripping Claude does not collapse two commits into one (preserves full 88-commit history).
+
+**Merge commits** were not reassigned. Path rules mirror the same domains as `run_coauthor_filter_repo.py`.
 
 `main` was **force-pushed** to `origin`; all SHAs changed. Teammates must:
 

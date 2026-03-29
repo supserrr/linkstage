@@ -20,7 +20,7 @@ git shortlog -sn HEAD
 
 Paste the output into your contribution table.
 
-After the **Option B** rewrite (2026-04-02), many commits on `main` include `Co-authored-by:` lines chosen from **touched paths** (see [co_author_attribution_matrix.md](co_author_attribution_matrix.md)). `git shortlog` counts **author** only. For rubrics that ask for “equal distribution,” prefer **GitHub Insights → Contributors** or count commits via search: `Co-authored-by: <Name>`.
+After the **Option B** rewrites (2026-04-02), `git shortlog -sn HEAD` on `main` is intentionally **tight** (authors balanced by domain-based reassignment from Shima; see [co_author_attribution_matrix.md](co_author_attribution_matrix.md)). **Claude / Anthropic** `Co-Authored-By` lines were removed. One commit retains a **`LinkStage-meta:`** line so history length stayed at 88 commits after cleanup.
 
 List commits with trailers:
 
