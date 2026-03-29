@@ -14,34 +14,33 @@ Co-authored-by: Sheilla Keza Ruvugabigwi <s.ruvugabig@alustudent.com>
 Co-authored-by: Batonicarla <c.batoni@alustudent.com>
 ```
 
-## Historical commits (Option B — optional rewrite)
+## Option B (history rewrite) — applied
 
-These SHAs were flagged where **integration work on `main`** touched domains owned by other members (from `git log -- <paths>` and commit subjects). **Confirm with each co-author** before rewriting messages.
+On **2026-04-02**, `main` was rewritten with [`tool/run_coauthor_filter_repo.py`](../tool/run_coauthor_filter_repo.py) (`git-filter-repo` + path heuristics aligned to the team’s feature ownership: auth/routing → Christian; settings/prefs/profile forms → Alliane; bookings/collaborations/applicants/messaging → Sheilla; events/explore/notifications/Firestore indexes → Batonicarla; rules/functions/DI/CI config → Shima). **Merge commits** were left unchanged. Trailers were skipped when that person was already the commit author or when the line was already present.
 
-| SHA (short) | Primary author (Git) | Suggested co-authors (verify first) | Rationale |
-|-------------|----------------------|-------------------------------------|-----------|
-| `086dfa8` | Shima Serein | Christian, Batonicarla | Notifications/Firebase, auth repository, planner dashboard, broad tests |
-| `c64b089` | Shima Serein | Christian, Sheilla, Batonicarla | Auth, booking datasource/repo, planner/collaboration wiring |
-| `a940bd5` | Shima Serein | Christian | Verify-email and onboarding username (auth flows) |
-| `06721eb` | Shima Serein | Sheilla, Christian | Cubits for bookings, applicants, collaboration, chat, login, etc. |
-| `f60f521` | Shima Serein | Alliane, Sheilla, Batonicarla | Planner/creative profiles, dashboard, events UI |
+`main` was **force-pushed** to `origin`; all SHAs changed. Teammates must:
 
-### If the team applies Option B
+```bash
+git fetch origin
+git checkout main
+git reset --hard origin/main
+```
+
+**Stale remote feature branches** on GitHub may still point at pre-rewrite history; prefer working from `main` or delete/recreate those branches from the new `main`.
+
+### Manual Option B (if you need to redo without the script)
 
 1. Agree a **push freeze**; everyone stops pushing to `main`.
 2. `git fetch origin && git checkout main && git pull`
-3. `git rebase -i <commit-before-first-rewrite>` → mark commits above as `reword`, append the agreed `Co-authored-by:` lines to each message.
+3. `git rebase -i <base>` → `reword` chosen commits → append agreed `Co-authored-by:` lines.
 4. `git push --force-with-lease origin main`
-5. Teammates: `git fetch origin && git reset --hard origin/main` (or rebase open branches).
-
-**Risk:** All SHAs after the earliest rewritten commit change; regenerate contribution stats and update the report on the **same date** as the export.
 
 ## Decision log (choose-rewrite)
 
 | Decision | Choice |
 |----------|--------|
-| **Pushed `main` history** | **Option A (forward-only)** in this session: no force-push; historical SHAs unchanged. Option B remains available using the table above when the whole team agrees. |
-| **New local work** | Landed as **multiple commits** with `Co-authored-by:` trailers keyed to domain owners (see recent `git log` after the attribution commits). |
+| **Pushed `main` history** | **Option B applied** (automated `git-filter-repo` + `git push --force origin main`). |
+| **Primary vs co-author counts** | `git shortlog` still counts **commit author** only; use **GitHub Insights → Contributors** (or commit search for `Co-authored-by:`) for credit that includes co-authors. |
 
 ## Contribution report alignment
 
