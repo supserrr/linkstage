@@ -43,9 +43,17 @@ class PlannerProfileCubit extends Cubit<PlannerProfileState> {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       final user = await _userRepository.getUser(plannerId);
-      final plannerProfile =
+      var plannerProfile =
           await _plannerProfileRepository.getPlannerProfile(plannerId) ??
           PlannerProfileEntity(userId: plannerId);
+      final plannerDn = plannerProfile.displayName?.trim() ?? '';
+      if (plannerDn.isEmpty &&
+          user?.displayName != null &&
+          user!.displayName!.trim().isNotEmpty) {
+        plannerProfile = plannerProfile.copyWith(
+          displayName: user.displayName!.trim(),
+        );
+      }
       final events = await _eventRepository.fetchEventsByPlannerId(plannerId);
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);

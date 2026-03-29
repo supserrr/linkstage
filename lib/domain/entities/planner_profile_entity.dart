@@ -51,6 +51,7 @@ class PlannerProfileEntity extends Equatable {
   PlannerProfileEntity copyWith({
     String? photoUrl,
     ProfileVisibility? profileVisibility,
+    String? displayName,
   }) {
     return PlannerProfileEntity(
       userId: userId,
@@ -59,7 +60,7 @@ class PlannerProfileEntity extends Equatable {
       eventTypes: eventTypes,
       languages: languages,
       portfolioUrls: portfolioUrls,
-      displayName: displayName,
+      displayName: displayName ?? this.displayName,
       role: role,
       photoUrl: photoUrl ?? this.photoUrl,
       profileVisibility: profileVisibility ?? this.profileVisibility,

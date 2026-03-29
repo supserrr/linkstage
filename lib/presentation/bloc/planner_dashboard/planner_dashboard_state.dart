@@ -1,13 +1,29 @@
 import '../../../domain/entities/event_entity.dart';
 
-/// A single recent activity item (e.g. proposal received).
+/// Kind of row shown in planner home recent activity.
+enum PlannerHomeActivityKind {
+  /// Creative submitted an application (pending booking).
+  creativeApplication,
+
+  /// Creative accepted the planner's gig invitation.
+  invitationAccepted,
+
+  /// Creative declined the planner's gig invitation.
+  invitationDeclined,
+}
+
+/// A single recent activity item (e.g. application or invitation response).
 class PlannerDashboardActivityItem {
   const PlannerDashboardActivityItem({
+    required this.kind,
+    required this.eventId,
     required this.creativeName,
     required this.eventTitle,
     required this.createdAt,
   });
 
+  final PlannerHomeActivityKind kind;
+  final String eventId;
   final String creativeName;
   final String eventTitle;
   final DateTime createdAt;

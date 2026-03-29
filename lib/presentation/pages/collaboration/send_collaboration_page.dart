@@ -178,7 +178,7 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
                       maxLength: 100,
                       decoration: const InputDecoration(
                         hintText:
-                            'e.g. Wedding Photography, Corporate Event DJ',
+                            'e.g. Musanze wedding photos, Kigali corporate DJ',
                         border: OutlineInputBorder(),
                         helperText: 'Required for direct proposals',
                       ),
@@ -427,7 +427,8 @@ class _SendCollaborationPageState extends State<SendCollaborationPage> {
                               controller: _locationController,
                               decoration: const InputDecoration(
                                 labelText: 'Location',
-                                hintText: 'Optional',
+                                hintText:
+                                    'Optional, e.g. Kigali Convention Centre',
                                 border: OutlineInputBorder(),
                               ),
                             ),

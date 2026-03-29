@@ -14,6 +14,11 @@ class AppConstants {
   /// SharedPreferences key for email when waiting for sign-in link completion.
   static const String pendingEmailLinkSignInKey = 'pending_email_link_sign_in';
 
+  /// SharedPreferences key (suffix planner user id): booking IDs removed from planner
+  /// home "Recent Activity" after viewing that event's applicants list.
+  static String plannerHomeActivityAckBookingsKey(String plannerId) =>
+      'planner_home_activity_ack_bookings_$plannerId';
+
   /// Regex for basic email validation.
   static final RegExp emailRegex = RegExp(
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',

@@ -57,6 +57,14 @@ const List<String> _months = [
 String _formatEventDate(DateTime d) =>
     '${_weekdays[d.weekday - 1]}, ${_months[d.month - 1]} ${d.day}';
 
+void _popEventDetailOrGoHome(BuildContext context) {
+  if (context.canPop()) {
+    context.pop();
+  } else {
+    context.go(AppRoutes.home);
+  }
+}
+
 String _formatTimeForDisplay(String stored) {
   if (stored.isEmpty) return stored;
   final parts = stored
@@ -131,7 +139,7 @@ class _EventDetailView extends StatelessWidget {
               hasError: state.error != null,
               error: state.error,
               onRefresh: () async => cubit.load(),
-              onBack: () => context.pop(),
+              onBack: () => _popEventDetailOrGoHome(context),
               child: const EventDetailSkeleton(),
             ),
           );
@@ -234,7 +242,7 @@ class _EventDetailView extends StatelessWidget {
       pinned: true,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () => context.pop(),
+        onPressed: () => _popEventDetailOrGoHome(context),
       ),
       actions: [
         if (!isCreator)

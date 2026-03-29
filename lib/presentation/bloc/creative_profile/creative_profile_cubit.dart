@@ -31,11 +31,18 @@ class CreativeProfileCubit extends Cubit<CreativeProfileState> {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       var profile = await _profileRepository.getProfileByUserId(userId);
-      if (profile != null &&
-          (profile.photoUrl == null || profile.photoUrl!.isEmpty)) {
-        final user = await _userRepository.getUser(userId);
-        if (user?.photoUrl != null && user!.photoUrl!.isNotEmpty) {
+      final user = await _userRepository.getUser(userId);
+      if (profile != null) {
+        if ((profile.photoUrl == null || profile.photoUrl!.isEmpty) &&
+            user?.photoUrl != null &&
+            user!.photoUrl!.isNotEmpty) {
           profile = profile.copyWith(photoUrl: user.photoUrl);
+        }
+        final currentDn = profile.displayName?.trim() ?? '';
+        if (currentDn.isEmpty &&
+            user?.displayName != null &&
+            user!.displayName!.trim().isNotEmpty) {
+          profile = profile.copyWith(displayName: user.displayName!.trim());
         }
       }
       final reviews = await _reviewRepository.getReviewsByRevieweeId(userId);

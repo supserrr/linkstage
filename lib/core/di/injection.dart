@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -58,6 +59,10 @@ import '../services/push_notification_service.dart';
 
 /// Global service locator.
 final GetIt sl = GetIt.instance;
+
+/// Incremented when planner acknowledges home recent-activity items (prefs), so
+/// [PlannerDashboardCubit] can rebuild while the home tab stays mounted in the shell.
+final ValueNotifier<int> plannerHomeActivityAckRevision = ValueNotifier(0);
 
 /// Initialize dependency injection.
 Future<void> initInjection() async {

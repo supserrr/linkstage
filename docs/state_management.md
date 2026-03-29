@@ -59,7 +59,7 @@ Modal bottom sheets and dialogs may still use `StatefulBuilder` for ephemeral UI
 
 ### PlannerDashboardCubit (Combined Streams)
 
-`PlannerDashboardCubit` subscribes to both `EventRepository.getEventsByPlannerId()` and `BookingRepository.watchPendingBookingsByPlannerId()`. It combines both streams to build dashboard state (events, applicants count, recent activity). The dashboard updates when events or pending bookings change.
+`PlannerDashboardCubit` subscribes to `EventRepository.getEventsByPlannerId()`, `BookingRepository.watchPendingBookingsByPlannerId()`, `watchAcceptedInvitationBookingsByPlannerId()`, and `watchDeclinedInvitationBookingsByPlannerId()`. It merges these with planner events to build dashboard state (events, applicants count, recent activity). Recent activity lists **unacknowledged** items: pending applications and invitation outcomes (`wasInvitation`), only for **non-past** events (`EventDateUtils.isPastEvent`). Booking IDs are stored under `AppConstants.plannerHomeActivityAckBookingsKey` after the planner opens that event's applicants list (`EventApplicantsCubit`). `plannerHomeActivityAckRevision` in `injection.dart` bumps when those prefs change so the home tab (kept alive in the shell) calls `refreshAfterAcknowledgements()`.
 
 ## Dependency Injection
 

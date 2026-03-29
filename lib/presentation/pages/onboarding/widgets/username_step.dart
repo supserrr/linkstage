@@ -111,7 +111,7 @@ class _UsernameStepState extends State<UsernameStep> {
                               decoration: const InputDecoration(
                                 labelText: 'Username',
                                 prefixText: '@ ',
-                                hintText: 'johndoe',
+                                hintText: 'marie_uwimana',
                               ),
                               autofocus: true,
                               textCapitalization: TextCapitalization.none,

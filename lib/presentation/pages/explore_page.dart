@@ -394,7 +394,7 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
                         TextField(
                           controller: locationController,
                           decoration: const InputDecoration(
-                            hintText: 'e.g. Kigali, Rwanda',
+                            hintText: 'e.g. Kigali, Musanze, or Huye',
                             border: OutlineInputBorder(),
                             isDense: true,
                           ),
