@@ -10,17 +10,15 @@ Use this file to keep the **course report contribution table** aligned with repo
 
 ## Commit counts by author (`git shortlog -sn HEAD`)
 
-Recorded after attribution commits landed (see `git log` for `Co-authored-by:` footers; GitHub also surfaces co-authors on the web UI).
+Before you freeze the report, run:
 
-```
-    41	Shima Serein
-    24	Christian
-    14	Alliane Umutoniwase
-    11	Sheilla Keza Ruvugabigwi
-     9	Batonicarla
+```bash
+git checkout main
+git pull origin main
+git shortlog -sn HEAD
 ```
 
-*(Re-run `git shortlog -sn HEAD` on the report due date; totals change with every new commit.)*
+Paste the output into your contribution table. Commits with `Co-authored-by:` footers still list **you** as primary author in `shortlog`; GitHub’s commit and Insights views also show **co-authors** for those SHAs.
 
 ## GitHub (optional cross-check)
 
