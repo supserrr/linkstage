@@ -37,29 +37,22 @@ class RoleSelectionPage extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          return _RoleSelectionView(user: user);
+          return _RoleSelectionView(user: user, state: state);
         },
       ),
     );
   }
 }
 
-class _RoleSelectionView extends StatefulWidget {
-  const _RoleSelectionView({required this.user});
+class _RoleSelectionView extends StatelessWidget {
+  const _RoleSelectionView({required this.user, required this.state});
 
   final UserEntity user;
-
-  @override
-  State<_RoleSelectionView> createState() => _RoleSelectionViewState();
-}
-
-class _RoleSelectionViewState extends State<_RoleSelectionView> {
-  UserRole? _selectedRole;
+  final RoleSelectionState state;
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<RoleSelectionCubit>().state;
-    final user = widget.user;
+    final selected = state.highlightedRole;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final asset = isDark
         ? 'assets/images/role_page_illustration_dark.svg'
@@ -99,11 +92,10 @@ class _RoleSelectionViewState extends State<_RoleSelectionView> {
                             const SizedBox(height: 32),
                             _RoleCard(
                               title: 'Event Planner',
-                              isSelected:
-                                  _selectedRole == UserRole.eventPlanner,
-                              onTap: () => setState(
-                                () => _selectedRole = UserRole.eventPlanner,
-                              ),
+                              isSelected: selected == UserRole.eventPlanner,
+                              onTap: () => context
+                                  .read<RoleSelectionCubit>()
+                                  .setHighlightedRole(UserRole.eventPlanner),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -115,12 +107,12 @@ class _RoleSelectionViewState extends State<_RoleSelectionView> {
                             _RoleCard(
                               title: 'Creative Professional',
                               isSelected:
-                                  _selectedRole ==
-                                  UserRole.creativeProfessional,
-                              onTap: () => setState(
-                                () => _selectedRole =
+                                  selected == UserRole.creativeProfessional,
+                              onTap: () => context
+                                  .read<RoleSelectionCubit>()
+                                  .setHighlightedRole(
                                     UserRole.creativeProfessional,
-                              ),
+                                  ),
                             ),
                           ],
                         ),
@@ -143,12 +135,12 @@ class _RoleSelectionViewState extends State<_RoleSelectionView> {
                 child: AppButton(
                   label: 'Get started',
                   onPressed:
-                      _selectedRole == null ||
+                      selected == null ||
                           state.status == RoleSelectionStatus.loading
                       ? null
                       : () => context.read<RoleSelectionCubit>().selectRole(
                           user,
-                          _selectedRole!,
+                          selected,
                         ),
                   isLoading: state.status == RoleSelectionStatus.loading,
                 ),

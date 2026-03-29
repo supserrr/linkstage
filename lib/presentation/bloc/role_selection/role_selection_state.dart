@@ -8,15 +8,16 @@ class RoleSelectionState {
     this.role,
     this.user,
     this.error,
+    this.highlightedRole,
   });
 
-  const RoleSelectionState.initial()
+  const RoleSelectionState.initial({this.highlightedRole})
     : status = RoleSelectionStatus.initial,
       role = null,
       user = null,
       error = null;
 
-  const RoleSelectionState.loading()
+  const RoleSelectionState.loading({this.highlightedRole})
     : status = RoleSelectionStatus.loading,
       role = null,
       user = null,
@@ -24,16 +25,18 @@ class RoleSelectionState {
 
   RoleSelectionState.success(this.role, [this.user])
     : status = RoleSelectionStatus.success,
-      error = null;
+      error = null,
+      highlightedRole = role;
 
-  final UserEntity? user;
-
-  RoleSelectionState.error(this.error)
+  RoleSelectionState.error(this.error, {this.highlightedRole})
     : status = RoleSelectionStatus.error,
       role = null,
       user = null;
 
+  final UserEntity? user;
+
   final RoleSelectionStatus status;
   final UserRole? role;
   final String? error;
+  final UserRole? highlightedRole;
 }

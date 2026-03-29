@@ -38,6 +38,123 @@ import '../widgets/molecules/vendor_card.dart';
 /// Explore mode: Creatives or Events.
 enum ExploreTab { creatives, events }
 
+/// UI state for [_ExploreView] (creative role explore).
+class CreativeExploreUiState {
+  const CreativeExploreUiState({
+    this.tab = ExploreTab.events,
+    this.selectedCategory,
+    this.selectedEventType = 'All',
+    this.events = const [],
+    this.eventsLoading = false,
+    this.eventsError,
+    this.acceptedEventIds = const {},
+  });
+
+  final ExploreTab tab;
+  final ProfileCategory? selectedCategory;
+  final String selectedEventType;
+  final List<EventEntity> events;
+  final bool eventsLoading;
+  final String? eventsError;
+  final Set<String> acceptedEventIds;
+
+  List<EventEntity> get filteredEvents {
+    if (selectedEventType == 'All') return events;
+    return events.where((e) {
+      final t = (e.eventType).toLowerCase();
+      final k = selectedEventType.toLowerCase();
+      return t.contains(k);
+    }).toList();
+  }
+
+  CreativeExploreUiState copyWith({
+    ExploreTab? tab,
+    ProfileCategory? selectedCategory,
+    String? selectedEventType,
+    List<EventEntity>? events,
+    bool? eventsLoading,
+    String? eventsError,
+    Set<String>? acceptedEventIds,
+    bool clearEventsError = false,
+  }) {
+    return CreativeExploreUiState(
+      tab: tab ?? this.tab,
+      selectedCategory: selectedCategory ?? this.selectedCategory,
+      selectedEventType: selectedEventType ?? this.selectedEventType,
+      events: events ?? this.events,
+      eventsLoading: eventsLoading ?? this.eventsLoading,
+      eventsError: clearEventsError ? null : (eventsError ?? this.eventsError),
+      acceptedEventIds: acceptedEventIds ?? this.acceptedEventIds,
+    );
+  }
+}
+
+class CreativeExploreCubit extends Cubit<CreativeExploreUiState> {
+  CreativeExploreCubit() : super(const CreativeExploreUiState());
+
+  void setTab(ExploreTab tab) {
+    emit(state.copyWith(tab: tab));
+  }
+
+  void setSelectedCategory(ProfileCategory? category) {
+    emit(state.copyWith(selectedCategory: category));
+  }
+
+  void setSelectedEventType(String type) {
+    emit(state.copyWith(selectedEventType: type));
+  }
+
+  Future<void> loadEvents() async {
+    emit(state.copyWith(eventsLoading: true, clearEventsError: true));
+    try {
+      final currentUserId = sl<AuthRedirectNotifier>().user?.id;
+      final profileRepo = sl<ProfileRepository>();
+      final eventRepo = sl<EventRepository>();
+      final bookingRepo = sl<BookingRepository>();
+
+      final profileFuture = currentUserId != null
+          ? profileRepo.getProfileByUserId(currentUserId)
+          : Future<ProfileEntity?>.value(null);
+      final eventsFuture = eventRepo.fetchDiscoverableEvents(limit: 100);
+      final acceptedFuture = currentUserId != null
+          ? bookingRepo.getAcceptedBookingsByCreativeId(currentUserId)
+          : Future<List<BookingEntity>>.value([]);
+
+      final results = await Future.wait([
+        profileFuture,
+        eventsFuture,
+        acceptedFuture,
+      ]);
+      final profile = results[0] as ProfileEntity?;
+      var list = (results[1] as List<EventEntity>)
+          .where(EventDateUtils.isUpcomingEvent)
+          .toList();
+
+      list.sort((a, b) {
+        final scoreA = scoreEventForCreative(a, profile);
+        final scoreB = scoreEventForCreative(b, profile);
+        if (scoreB != scoreA) return scoreB.compareTo(scoreA);
+        final dateA = a.date ?? DateTime(0);
+        final dateB = b.date ?? DateTime(0);
+        return dateA.compareTo(dateB);
+      });
+
+      final acceptedBookings = results[2] as List<BookingEntity>;
+      final acceptedIds = acceptedBookings.map((b) => b.eventId).toSet();
+
+      emit(
+        state.copyWith(
+          events: list,
+          acceptedEventIds: acceptedIds,
+          eventsLoading: false,
+        ),
+      );
+    } catch (e) {
+      emit(state.copyWith(eventsLoading: false, eventsError: e.toString()));
+    }
+  }
+}
+
 /// Event type filter for search (client-side). Most common categories first.
 const List<String> _eventTypeFilters = [
   'All',
@@ -50,8 +167,96 @@ const List<String> _eventTypeFilters = [
   'Workshop',
 ];
 
-/// Top-level tab: Creatives or Event Planners.
-enum _AccountTypeTab { creatives, eventPlanners }
+/// Top-level tab: Creatives or Event Planners (unified explore for planners).
+enum ExploreAccountTab { creatives, eventPlanners }
+
+/// UI state for [_UnifiedExploreView] (planner role explore).
+class UnifiedExploreUiState {
+  const UnifiedExploreUiState({
+    this.accountTab = ExploreAccountTab.creatives,
+    this.selectedCategory,
+    this.selectedLocation,
+    this.planners = const [],
+    this.plannersLoading = false,
+    this.plannersError,
+  });
+
+  final ExploreAccountTab accountTab;
+  final ProfileCategory? selectedCategory;
+  final String? selectedLocation;
+  final List<PlannerProfileEntity> planners;
+  final bool plannersLoading;
+  final String? plannersError;
+
+  UnifiedExploreUiState copyWith({
+    ExploreAccountTab? accountTab,
+    ProfileCategory? selectedCategory,
+    String? selectedLocation,
+    List<PlannerProfileEntity>? planners,
+    bool? plannersLoading,
+    String? plannersError,
+    bool clearPlannersError = false,
+  }) {
+    return UnifiedExploreUiState(
+      accountTab: accountTab ?? this.accountTab,
+      selectedCategory: selectedCategory ?? this.selectedCategory,
+      selectedLocation: selectedLocation ?? this.selectedLocation,
+      planners: planners ?? this.planners,
+      plannersLoading: plannersLoading ?? this.plannersLoading,
+      plannersError: clearPlannersError
+          ? null
+          : (plannersError ?? this.plannersError),
+    );
+  }
+}
+
+class UnifiedExploreCubit extends Cubit<UnifiedExploreUiState> {
+  UnifiedExploreCubit(this._currentUserId)
+    : super(const UnifiedExploreUiState());
+
+  final String? _currentUserId;
+
+  void setAccountTab(ExploreAccountTab tab) {
+    emit(state.copyWith(accountTab: tab));
+    final s = state;
+    if (tab == ExploreAccountTab.eventPlanners &&
+        s.planners.isEmpty &&
+        !s.plannersLoading) {
+      loadPlanners();
+    }
+  }
+
+  void setSelectedCategory(ProfileCategory? category) {
+    emit(state.copyWith(selectedCategory: category));
+  }
+
+  void applyFilters({ProfileCategory? category, String? location}) {
+    emit(
+      UnifiedExploreUiState(
+        accountTab: state.accountTab,
+        selectedCategory: category,
+        selectedLocation: location,
+        planners: state.planners,
+        plannersLoading: state.plannersLoading,
+        plannersError: state.plannersError,
+      ),
+    );
+  }
+
+  Future<void> loadPlanners() async {
+    emit(state.copyWith(plannersLoading: true, clearPlannersError: true));
+    try {
+      final repo = sl<PlannerProfileRepository>();
+      final list = await repo.getPlannerProfiles(
+        limit: 50,
+        excludeUserId: _currentUserId,
+      );
+      emit(state.copyWith(planners: list, plannersLoading: false));
+    } catch (e) {
+      emit(state.copyWith(plannersLoading: false, plannersError: e.toString()));
+    }
+  }
+}
 
 /// Explore and discovery page. Role-based:
 /// - Creatives: Events | Creatives (find gigs, discover creatives).
@@ -76,8 +281,14 @@ class ExplorePage extends StatelessWidget {
             onlyCreativeAccounts: true,
           )..add(ProfilesLoadRequested()),
           child: isEventPlanner
-              ? _UnifiedExploreView(currentUserId: currentUserId)
-              : const _ExploreView(),
+              ? BlocProvider(
+                  create: (_) => UnifiedExploreCubit(currentUserId),
+                  child: _UnifiedExploreView(currentUserId: currentUserId),
+                )
+              : BlocProvider(
+                  create: (_) => CreativeExploreCubit()..loadEvents(),
+                  child: const _ExploreView(),
+                ),
         );
       },
     );
@@ -97,12 +308,6 @@ class _UnifiedExploreView extends StatefulWidget {
 class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
   final _searchController = TextEditingController();
   Timer? _debounce;
-  _AccountTypeTab _accountTab = _AccountTypeTab.creatives;
-  ProfileCategory? _selectedCategory;
-  String? _selectedLocation;
-  List<PlannerProfileEntity> _planners = [];
-  bool _plannersLoading = false;
-  String? _plannersError;
 
   static const List<(ProfileCategory?, String)> _categoryOptions = [
     (null, 'All'),
@@ -129,38 +334,11 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
     });
   }
 
-  Future<void> _loadPlanners() async {
-    if (!mounted) return;
-    setState(() {
-      _plannersLoading = true;
-      _plannersError = null;
-    });
-    try {
-      final repo = sl<PlannerProfileRepository>();
-      final list = await repo.getPlannerProfiles(
-        limit: 50,
-        excludeUserId: widget.currentUserId,
-      );
-      if (mounted) {
-        setState(() {
-          _planners = list;
-          _plannersLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _plannersLoading = false;
-          _plannersError = e.toString();
-        });
-      }
-    }
-  }
-
   void _showFilterSheet(BuildContext context) {
-    var tempCategory = _selectedCategory;
+    final unified = context.read<UnifiedExploreCubit>();
+    var tempCategory = unified.state.selectedCategory;
     final locationController = TextEditingController(
-      text: _selectedLocation ?? '',
+      text: unified.state.selectedLocation ?? '',
     );
     showModalBottomSheet<void>(
       context: context,
@@ -239,18 +417,17 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
                             Expanded(
                               child: FilledButton(
                                 onPressed: () {
-                                  setState(() {
-                                    _selectedCategory = tempCategory;
-                                    _selectedLocation = locationController.text
-                                        .trim();
-                                    if (_selectedLocation?.isEmpty == true) {
-                                      _selectedLocation = null;
-                                    }
-                                  });
+                                  final trimmed = locationController.text
+                                      .trim();
+                                  final loc = trimmed.isEmpty ? null : trimmed;
+                                  unified.applyFilters(
+                                    category: tempCategory,
+                                    location: loc,
+                                  );
                                   context.read<ProfilesBloc>().add(
                                     ProfilesLoadRequested(
-                                      category: _selectedCategory,
-                                      location: _selectedLocation,
+                                      category: tempCategory,
+                                      location: loc,
                                     ),
                                   );
                                   Navigator.pop(ctx);
@@ -284,6 +461,8 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final ui = context.watch<UnifiedExploreCubit>().state;
+    final unifiedCubit = context.read<UnifiedExploreCubit>();
 
     return Scaffold(
       appBar: AppBar(
@@ -343,32 +522,27 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: SegmentedButton<_AccountTypeTab>(
+              child: SegmentedButton<ExploreAccountTab>(
                 segments: const [
-                  ButtonSegment<_AccountTypeTab>(
-                    value: _AccountTypeTab.creatives,
+                  ButtonSegment<ExploreAccountTab>(
+                    value: ExploreAccountTab.creatives,
                     label: Text('Creatives'),
                   ),
-                  ButtonSegment<_AccountTypeTab>(
-                    value: _AccountTypeTab.eventPlanners,
+                  ButtonSegment<ExploreAccountTab>(
+                    value: ExploreAccountTab.eventPlanners,
                     label: Text('Event Planners'),
                   ),
                 ],
-                selected: {_accountTab},
-                onSelectionChanged: (Set<_AccountTypeTab> s) {
+                selected: {ui.accountTab},
+                onSelectionChanged: (Set<ExploreAccountTab> s) {
                   if (s.isNotEmpty) {
-                    setState(() => _accountTab = s.first);
-                    if (s.first == _AccountTypeTab.eventPlanners &&
-                        _planners.isEmpty &&
-                        !_plannersLoading) {
-                      _loadPlanners();
-                    }
+                    unifiedCubit.setAccountTab(s.first);
                   }
                 },
               ),
             ),
           ),
-          if (_accountTab == _AccountTypeTab.creatives) ...[
+          if (ui.accountTab == ExploreAccountTab.creatives) ...[
             SliverToBoxAdapter(
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -376,14 +550,14 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: _categoryOptions.map((e) {
-                    final isSelected = _selectedCategory == e.$1;
+                    final isSelected = ui.selectedCategory == e.$1;
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: AppFilterChip(
                         label: e.$2,
                         selected: isSelected,
                         onTap: () {
-                          setState(() => _selectedCategory = e.$1);
+                          unifiedCubit.setSelectedCategory(e.$1);
                           context.read<ProfilesBloc>().add(
                             ProfilesFilterChanged(category: e.$1),
                           );
@@ -413,8 +587,8 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
                         context.push(
                           AppRoutes.exploreCreativesAll,
                           extra: {
-                            'category': _selectedCategory,
-                            'location': _selectedLocation,
+                            'category': ui.selectedCategory,
+                            'location': ui.selectedLocation,
                           },
                         );
                       },
@@ -428,10 +602,10 @@ class _UnifiedExploreViewState extends State<_UnifiedExploreView> {
             _PlannerCreativesList(),
           ] else ...[
             _EventPlannersList(
-              planners: _planners,
-              loading: _plannersLoading,
-              error: _plannersError,
-              onRefresh: _loadPlanners,
+              planners: ui.planners,
+              loading: ui.plannersLoading,
+              error: ui.plannersError,
+              onRefresh: () => unifiedCubit.loadPlanners(),
             ),
           ],
           const SliverPadding(padding: EdgeInsets.only(bottom: 96)),
@@ -748,19 +922,11 @@ class _ExploreView extends StatefulWidget {
 class _ExploreViewState extends State<_ExploreView> {
   final _searchController = TextEditingController();
   Timer? _debounce;
-  ExploreTab _tab = ExploreTab.events;
-  ProfileCategory? _selectedCategory;
-  String _selectedEventType = 'All';
-  List<EventEntity> _events = [];
-  bool _eventsLoading = false;
-  String? _eventsError;
-  Set<String> _acceptedEventIds = {};
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
-    _loadEvents();
   }
 
   void _onSearchChanged() {
@@ -774,65 +940,6 @@ class _ExploreViewState extends State<_ExploreView> {
     });
   }
 
-  Future<void> _loadEvents() async {
-    if (!mounted) return;
-    setState(() {
-      _eventsLoading = true;
-      _eventsError = null;
-    });
-    try {
-      final currentUserId = sl<AuthRedirectNotifier>().user?.id;
-      final profileRepo = sl<ProfileRepository>();
-      final eventRepo = sl<EventRepository>();
-      final bookingRepo = sl<BookingRepository>();
-
-      final profileFuture = currentUserId != null
-          ? profileRepo.getProfileByUserId(currentUserId)
-          : Future<ProfileEntity?>.value(null);
-      final eventsFuture = eventRepo.fetchDiscoverableEvents(limit: 100);
-      final acceptedFuture = currentUserId != null
-          ? bookingRepo.getAcceptedBookingsByCreativeId(currentUserId)
-          : Future<List<BookingEntity>>.value([]);
-
-      final results = await Future.wait([
-        profileFuture,
-        eventsFuture,
-        acceptedFuture,
-      ]);
-      final profile = results[0] as ProfileEntity?;
-      var list = (results[1] as List<EventEntity>)
-          .where(EventDateUtils.isUpcomingEvent)
-          .toList();
-
-      list.sort((a, b) {
-        final scoreA = scoreEventForCreative(a, profile);
-        final scoreB = scoreEventForCreative(b, profile);
-        if (scoreB != scoreA) return scoreB.compareTo(scoreA);
-        final dateA = a.date ?? DateTime(0);
-        final dateB = b.date ?? DateTime(0);
-        return dateA.compareTo(dateB);
-      });
-
-      final acceptedBookings = results[2] as List<BookingEntity>;
-      final acceptedIds = acceptedBookings.map((b) => b.eventId).toSet();
-
-      if (mounted) {
-        setState(() {
-          _events = list;
-          _acceptedEventIds = acceptedIds;
-          _eventsLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _eventsLoading = false;
-          _eventsError = e.toString();
-        });
-      }
-    }
-  }
-
   @override
   void dispose() {
     _debounce?.cancel();
@@ -841,19 +948,12 @@ class _ExploreViewState extends State<_ExploreView> {
     super.dispose();
   }
 
-  List<EventEntity> get _filteredEvents {
-    if (_selectedEventType == 'All') return _events;
-    return _events.where((e) {
-      final t = (e.eventType).toLowerCase();
-      final k = _selectedEventType.toLowerCase();
-      return t.contains(k);
-    }).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final ui = context.watch<CreativeExploreCubit>().state;
+    final exploreCubit = context.read<CreativeExploreCubit>();
 
     return Scaffold(
       appBar: AppBar(
@@ -863,7 +963,9 @@ class _ExploreViewState extends State<_ExploreView> {
       ),
       body: CustomMaterialIndicator(
         onRefresh: () async {
-          if (_tab == ExploreTab.events) await _loadEvents();
+          if (ui.tab == ExploreTab.events) {
+            await exploreCubit.loadEvents();
+          }
         },
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -916,20 +1018,20 @@ class _ExploreViewState extends State<_ExploreView> {
                       label: Text('Creatives'),
                     ),
                   ],
-                  selected: {_tab},
+                  selected: {ui.tab},
                   onSelectionChanged: (Set<ExploreTab> s) {
-                    if (s.isNotEmpty) setState(() => _tab = s.first);
+                    if (s.isNotEmpty) exploreCubit.setTab(s.first);
                   },
                 ),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            if (_tab == ExploreTab.creatives) ...[
+            if (ui.tab == ExploreTab.creatives) ...[
               SliverToBoxAdapter(
                 child: _CategoryChips(
-                  selected: _selectedCategory,
+                  selected: ui.selectedCategory,
                   onSelected: (c) {
-                    setState(() => _selectedCategory = c);
+                    exploreCubit.setSelectedCategory(c);
                     context.read<ProfilesBloc>().add(
                       ProfilesFilterChanged(category: c),
                     );
@@ -941,8 +1043,8 @@ class _ExploreViewState extends State<_ExploreView> {
             ] else ...[
               SliverToBoxAdapter(
                 child: _EventTypeChips(
-                  selected: _selectedEventType,
-                  onSelected: (s) => setState(() => _selectedEventType = s),
+                  selected: ui.selectedEventType,
+                  onSelected: exploreCubit.setSelectedEventType,
                 ),
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 16)),
@@ -959,11 +1061,11 @@ class _ExploreViewState extends State<_ExploreView> {
               ),
               const SliverToBoxAdapter(child: SizedBox(height: 12)),
               _EventsList(
-                events: _filteredEvents,
-                acceptedEventIds: _acceptedEventIds,
-                loading: _eventsLoading,
-                error: _eventsError,
-                onRefresh: _loadEvents,
+                events: ui.filteredEvents,
+                acceptedEventIds: ui.acceptedEventIds,
+                loading: ui.eventsLoading,
+                error: ui.eventsError,
+                onRefresh: exploreCubit.loadEvents,
               ),
             ],
             const SliverPadding(padding: EdgeInsets.only(bottom: 96)),

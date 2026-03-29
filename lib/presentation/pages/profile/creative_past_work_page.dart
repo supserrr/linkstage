@@ -58,21 +58,13 @@ class CreativePastWorkPage extends StatelessWidget {
   }
 }
 
-class _CreativePastWorkView extends StatefulWidget {
+class _CreativePastWorkView extends StatelessWidget {
   const _CreativePastWorkView({required this.isViewingOwn});
 
   final bool isViewingOwn;
 
   @override
-  State<_CreativePastWorkView> createState() => _CreativePastWorkViewState();
-}
-
-class _CreativePastWorkViewState extends State<_CreativePastWorkView> {
-  bool _isConfigMode = false;
-
-  @override
   Widget build(BuildContext context) {
-    final isViewingOwn = widget.isViewingOwn;
     return BlocBuilder<CreativePastWorkCubit, CreativePastWorkState>(
       builder: (context, state) {
         if (state.isLoading &&
@@ -176,7 +168,7 @@ class _CreativePastWorkViewState extends State<_CreativePastWorkView> {
                         showOnProfile: !state.hiddenIds.contains(
                           item.bookingId,
                         ),
-                        showVisibilityToggle: isViewingOwn && _isConfigMode,
+                        showVisibilityToggle: isViewingOwn && state.configMode,
                         onVisibilityChanged: (show) =>
                             cubit.setItemVisibility(item.bookingId, show),
                       ),
@@ -203,7 +195,7 @@ class _CreativePastWorkViewState extends State<_CreativePastWorkView> {
                         showOnProfile: !state.hiddenIds.contains(
                           item.collaboration.id,
                         ),
-                        showVisibilityToggle: isViewingOwn && _isConfigMode,
+                        showVisibilityToggle: isViewingOwn && state.configMode,
                         onVisibilityChanged: (show) => cubit.setItemVisibility(
                           item.collaboration.id,
                           show,
@@ -218,7 +210,7 @@ class _CreativePastWorkViewState extends State<_CreativePastWorkView> {
         return Scaffold(
           appBar: AppBar(
             title: Text(
-              _isConfigMode
+              state.configMode
                   ? 'Configure past work'
                   : (isViewingOwn ? 'Your Past Work' : 'Past Work'),
             ),
@@ -227,10 +219,10 @@ class _CreativePastWorkViewState extends State<_CreativePastWorkView> {
                   (state.pastEvents.isNotEmpty ||
                       state.pastCollaborations.isNotEmpty))
                 IconButton(
-                  icon: Icon(_isConfigMode ? Icons.check : Icons.edit),
+                  icon: Icon(state.configMode ? Icons.check : Icons.edit),
                   onPressed: () =>
-                      setState(() => _isConfigMode = !_isConfigMode),
-                  tooltip: _isConfigMode ? 'Done' : 'Configure visibility',
+                      context.read<CreativePastWorkCubit>().toggleConfigMode(),
+                  tooltip: state.configMode ? 'Done' : 'Configure visibility',
                 ),
             ],
           ),

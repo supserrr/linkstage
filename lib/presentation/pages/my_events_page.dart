@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_borders.dart';
 import '../bloc/my_events/my_events_cubit.dart';
 import '../bloc/my_events/my_events_state.dart';
+import '../bloc/my_events/planner_collaborations_tab_cubit.dart';
+import '../bloc/my_events/planner_collaborations_tab_state.dart';
 import '../../core/di/injection.dart';
 import '../../core/router/app_router.dart';
 import '../../core/utils/event_date_utils.dart';
@@ -161,7 +163,7 @@ class _MyEventsView extends StatelessWidget {
               );
             },
           ),
-          _PlannerCollaborationsTab(plannerId: plannerId),
+          _PlannerCollaborationsTabContent(plannerId: plannerId),
         ],
       ),
     );
@@ -258,234 +260,209 @@ Widget _buildEventsSections(
   );
 }
 
-class _PlannerCollaborationsTab extends StatefulWidget {
-  const _PlannerCollaborationsTab({required this.plannerId});
+class _PlannerCollaborationsTabContent extends StatelessWidget {
+  const _PlannerCollaborationsTabContent({required this.plannerId});
 
   final String plannerId;
 
   @override
-  State<_PlannerCollaborationsTab> createState() =>
-      _PlannerCollaborationsTabState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) {
+        final c = PlannerCollaborationsTabCubit(
+          sl<CollaborationRepository>(),
+          sl<UserRepository>(),
+        );
+        Future.microtask(() => c.load(plannerId));
+        return c;
+      },
+      child:
+          BlocBuilder<
+            PlannerCollaborationsTabCubit,
+            PlannerCollaborationsTabState
+          >(
+            builder: (context, state) {
+              return _plannerCollaborationsTabBody(context, state, plannerId);
+            },
+          ),
+    );
+  }
 }
 
-class _PlannerCollaborationsTabState extends State<_PlannerCollaborationsTab> {
-  List<CollaborationEntity> _collaborations = [];
-  Map<String, String> _targetNames = {};
-  Map<String, String?> _targetPhotoUrls = {};
-  bool _loading = true;
-  String? _error;
+Widget _plannerCollaborationsSkeletonList() => ListView.builder(
+  padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+  physics: const AlwaysScrollableScrollPhysics(),
+  itemCount: 5,
+  itemBuilder: (context, index) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: CollaborationProposalTileSkeleton(margin: EdgeInsets.zero),
+  ),
+);
 
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final list = await sl<CollaborationRepository>()
-          .getCollaborationsByRequesterId(widget.plannerId);
-      final targetIds = list.map((c) => c.targetUserId).toSet().toList();
-      final usersMap = targetIds.isEmpty
-          ? <String, UserEntity>{}
-          : await sl<UserRepository>().getUsersByIds(targetIds);
-      final names = <String, String>{};
-      final photoUrls = <String, String?>{};
-      for (final id in targetIds) {
-        final u = usersMap[id];
-        names[id] = u?.displayName ?? u?.email ?? 'Creative';
-        photoUrls[id] = u?.photoUrl;
-      }
-      if (mounted) {
-        setState(() {
-          _collaborations = list;
-          _targetNames = names;
-          _targetPhotoUrls = photoUrls;
-          _loading = false;
-          _error = null;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _error = e.toString().replaceFirst('Exception: ', '');
-        });
-      }
-    }
-  }
-
-  Widget _buildPlannerCollaborationsSections(
-    BuildContext context, {
-    required List<CollaborationEntity> active,
-    required List<CollaborationEntity> past,
-  }) {
-    final slivers = <Widget>[];
-    if (active.isNotEmpty) {
-      slivers.add(
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              'Active',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+Widget _plannerCollaborationsSections(
+  BuildContext context, {
+  required List<CollaborationEntity> active,
+  required List<CollaborationEntity> past,
+  required Map<String, String> targetNames,
+  required Map<String, String?> targetPhotoUrls,
+}) {
+  final slivers = <Widget>[];
+  if (active.isNotEmpty) {
+    slivers.add(
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text(
+            'Active',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         ),
-      );
-      slivers.add(
-        SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-            final c = active[index];
-            final targetName = _targetNames[c.targetUserId] ?? 'Creative';
-            final targetPhotoUrl = _targetPhotoUrls[c.targetUserId];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _SentCollaborationTile(
-                collaboration: c,
-                targetName: targetName,
-                targetPhotoUrl: targetPhotoUrl,
-                onMessage: c.status == CollaborationStatus.accepted
-                    ? () => context.go(AppRoutes.chatWithUser(c.targetUserId))
-                    : null,
-                onViewMore: () => context.push(
-                  AppRoutes.collaborationDetail,
-                  extra: {
-                    'collaboration': c,
-                    'otherPersonName': targetName,
-                    'otherPersonId': c.targetUserId,
-                    'otherPersonRole': UserRole.creativeProfessional,
-                    'viewerIsCreative': false,
-                    'otherPersonPhotoUrl': targetPhotoUrl,
-                  },
-                ),
-              ),
-            );
-          }, childCount: active.length),
-        ),
-      );
-      slivers.add(const SliverToBoxAdapter(child: SizedBox(height: 24)));
-    }
-    if (past.isNotEmpty) {
-      slivers.add(
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              'Past',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-          ),
-        ),
-      );
-      slivers.add(
-        SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-            final c = past[index];
-            final targetName = _targetNames[c.targetUserId] ?? 'Creative';
-            final targetPhotoUrl = _targetPhotoUrls[c.targetUserId];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _SentCollaborationTile(
-                collaboration: c,
-                targetName: targetName,
-                targetPhotoUrl: targetPhotoUrl,
-                onMessage: null,
-                onViewMore: () => context.push(
-                  AppRoutes.collaborationDetail,
-                  extra: {
-                    'collaboration': c,
-                    'otherPersonName': targetName,
-                    'otherPersonId': c.targetUserId,
-                    'otherPersonRole': UserRole.creativeProfessional,
-                    'viewerIsCreative': false,
-                    'otherPersonPhotoUrl': targetPhotoUrl,
-                  },
-                ),
-              ),
-            );
-          }, childCount: past.length),
-        ),
-      );
-    }
-    return CustomScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      slivers: [
-        const SliverPadding(padding: EdgeInsets.only(top: 16)),
-        ...slivers,
-        const SliverPadding(padding: EdgeInsets.only(bottom: 96)),
-      ],
+      ),
     );
-  }
-
-  static Widget _skeletonList() => ListView.builder(
-    padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-    physics: const AlwaysScrollableScrollPhysics(),
-    itemCount: 5,
-    itemBuilder: (context, index) => Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: CollaborationProposalTileSkeleton(margin: EdgeInsets.zero),
-    ),
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    if (_loading && _collaborations.isEmpty && _error == null) {
-      return _skeletonList();
-    }
-    final active = _collaborations
-        .where(
-          (c) =>
-              c.status == CollaborationStatus.pending ||
-              c.status == CollaborationStatus.accepted,
-        )
-        .toList();
-    final past =
-        _collaborations
-            .where((c) => c.status == CollaborationStatus.completed)
-            .toList()
-          ..sort((a, b) {
-            final da = a.createdAt ?? DateTime(0);
-            final db = b.createdAt ?? DateTime(0);
-            return db.compareTo(da);
-          });
-    final hasAny = active.isNotEmpty || past.isNotEmpty;
-    if (!hasAny && _error == null) {
-      return EmptyStateIllustrated(
-        assetPathDark: 'assets/images/no_events_empty_dark.svg',
-        assetPathLight: 'assets/images/no_events_empty_light.svg',
-        headline: 'No proposals sent yet',
-        description:
-            "Visit a creative's profile and tap Collaborate to send a proposal.",
-        primaryLabel: 'Browse creatives',
-        onPrimaryPressed: () => context.go(AppRoutes.explore),
-      );
-    }
-    final body = !hasAny
-        ? _skeletonList()
-        : _buildPlannerCollaborationsSections(
-            context,
-            active: active,
-            past: past,
+    slivers.add(
+      SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final c = active[index];
+          final targetName = targetNames[c.targetUserId] ?? 'Creative';
+          final targetPhotoUrl = targetPhotoUrls[c.targetUserId];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _SentCollaborationTile(
+              collaboration: c,
+              targetName: targetName,
+              targetPhotoUrl: targetPhotoUrl,
+              onMessage: c.status == CollaborationStatus.accepted
+                  ? () => context.go(AppRoutes.chatWithUser(c.targetUserId))
+                  : null,
+              onViewMore: () => context.push(
+                AppRoutes.collaborationDetail,
+                extra: {
+                  'collaboration': c,
+                  'otherPersonName': targetName,
+                  'otherPersonId': c.targetUserId,
+                  'otherPersonRole': UserRole.creativeProfessional,
+                  'viewerIsCreative': false,
+                  'otherPersonPhotoUrl': targetPhotoUrl,
+                },
+              ),
+            ),
           );
-    return ConnectionErrorOverlay(
-      hasError: _error != null,
-      error: _error,
-      onRefresh: () async => _load(),
-      onBack: () => context.go(AppRoutes.home),
-      child: body,
+        }, childCount: active.length),
+      ),
+    );
+    slivers.add(const SliverToBoxAdapter(child: SizedBox(height: 24)));
+  }
+  if (past.isNotEmpty) {
+    slivers.add(
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text(
+            'Past',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ),
+      ),
+    );
+    slivers.add(
+      SliverList(
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final c = past[index];
+          final targetName = targetNames[c.targetUserId] ?? 'Creative';
+          final targetPhotoUrl = targetPhotoUrls[c.targetUserId];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _SentCollaborationTile(
+              collaboration: c,
+              targetName: targetName,
+              targetPhotoUrl: targetPhotoUrl,
+              onMessage: null,
+              onViewMore: () => context.push(
+                AppRoutes.collaborationDetail,
+                extra: {
+                  'collaboration': c,
+                  'otherPersonName': targetName,
+                  'otherPersonId': c.targetUserId,
+                  'otherPersonRole': UserRole.creativeProfessional,
+                  'viewerIsCreative': false,
+                  'otherPersonPhotoUrl': targetPhotoUrl,
+                },
+              ),
+            ),
+          );
+        }, childCount: past.length),
+      ),
     );
   }
+  return CustomScrollView(
+    physics: const AlwaysScrollableScrollPhysics(),
+    slivers: [
+      const SliverPadding(padding: EdgeInsets.only(top: 16)),
+      ...slivers,
+      const SliverPadding(padding: EdgeInsets.only(bottom: 96)),
+    ],
+  );
+}
+
+Widget _plannerCollaborationsTabBody(
+  BuildContext context,
+  PlannerCollaborationsTabState state,
+  String plannerId,
+) {
+  if (state.loading && state.collaborations.isEmpty && state.error == null) {
+    return _plannerCollaborationsSkeletonList();
+  }
+  final active = state.collaborations
+      .where(
+        (c) =>
+            c.status == CollaborationStatus.pending ||
+            c.status == CollaborationStatus.accepted,
+      )
+      .toList();
+  final past =
+      state.collaborations
+          .where((c) => c.status == CollaborationStatus.completed)
+          .toList()
+        ..sort((a, b) {
+          final da = a.createdAt ?? DateTime(0);
+          final db = b.createdAt ?? DateTime(0);
+          return db.compareTo(da);
+        });
+  final hasAny = active.isNotEmpty || past.isNotEmpty;
+  if (!hasAny && state.error == null) {
+    return EmptyStateIllustrated(
+      assetPathDark: 'assets/images/no_events_empty_dark.svg',
+      assetPathLight: 'assets/images/no_events_empty_light.svg',
+      headline: 'No proposals sent yet',
+      description:
+          "Visit a creative's profile and tap Collaborate to send a proposal.",
+      primaryLabel: 'Browse creatives',
+      onPrimaryPressed: () => context.go(AppRoutes.explore),
+    );
+  }
+  final body = !hasAny
+      ? _plannerCollaborationsSkeletonList()
+      : _plannerCollaborationsSections(
+          context,
+          active: active,
+          past: past,
+          targetNames: state.targetNames,
+          targetPhotoUrls: state.targetPhotoUrls,
+        );
+  return ConnectionErrorOverlay(
+    hasError: state.error != null,
+    error: state.error,
+    onRefresh: () async =>
+        context.read<PlannerCollaborationsTabCubit>().load(plannerId),
+    onBack: () => context.go(AppRoutes.home),
+    child: body,
+  );
 }
 
 class _SentCollaborationTile extends StatelessWidget {

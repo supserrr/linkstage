@@ -23,6 +23,29 @@ UI (BlocBuilder) <-> Bloc/Cubit <-> Repository <-> Data Source <-> Firestore
 2. **Streams for listings**: List screens (events, profiles, bookings, dashboard) use Firestore `snapshots()` streams for real-time updates.
 3. **One-time calls for mutations**: Create, update, delete operations use `Future`-based repository methods. The corresponding streams emit updated data automatically.
 4. **Loading and error states**: All BlocBuilder usages handle loading, error, and empty states explicitly.
+5. **Avoid `setState` for feature state**: Prefer small feature-scoped Cubits (e.g. filters, upload flags, step index) or existing domain Blocs/Cubits. Modal bottom sheets may still use `StatefulBuilder` for ephemeral form state inside the sheet.
+
+### Local / page-scoped Cubits (examples)
+
+| Cubit | Role |
+| ----- | ---- |
+| `CreativeExploreCubit` / `UnifiedExploreCubit` | Explore tabs, filters, discoverable events, planner list (`explore_page.dart`) |
+| `MessagesPageCubit` | Chat list search query, filter chips, refresh nonce |
+| `LocationPickerCubit` | Map selection + geocoding |
+| `FollowingPageCubit` | Followed planners list load/error |
+| `PlannerCollaborationsTabCubit` | Planner “Collaborations” tab on My Events |
+| `LoginFormCubit` | Toggle email-link vs Google entry |
+| `ProfilePhotoUploadCubit` | Profile / portfolio upload busy flag |
+| `UsernameStepCubit` | Username availability check UI |
+| `ProfileSetupFlowCubit` | Profile setup `PageView` index |
+| `CreativePastWorkCubit` | Past work `configMode` for visibility editing |
+| `EventApplicantsCubit` | Planner applicants list, accept/reject/complete IDs, reviews map |
+| `BookingsCubit` | Creative gigs + collaborations lists, maps, confirming completion ID |
+| `SendCollaborationFormCubit` | Proposal form: submitting flag, event type, date, times |
+| `CollaborationDetailUiCubit` | Detail overrides (status, creative confirmed), review flag, confirming completion |
+| `ChatPageCubit` | Chat header/session fields, new-messages banner, scroll sync |
+
+Modal bottom sheets and dialogs may still use `StatefulBuilder` for ephemeral UI (e.g. star rating in a sheet).
 
 ## Examples
 
@@ -42,14 +65,10 @@ UI (BlocBuilder) <-> Bloc/Cubit <-> Repository <-> Data Source <-> Firestore
 
 Blocs and Cubits are created via `BlocProvider` in pages. Repositories and data sources are registered in `lib/core/di/injection.dart` using GetIt. Data sources use `FirebaseFirestore.instance` by default and can be overridden for tests.
 
-## Chat (chatview_connect)
+## Chat (custom UI)
 
-Chat is implemented via the **chatview** and **chatview_connect** packages. Chat data and real-time streams are handled inside the packages (Firestore and Firebase Storage); the app does not use a custom ConversationRepository or Bloc for chat.
+Chat uses `ConversationRepository` streams (`watchMessages`, `watchConversations`) and `ChatPage` with `ChatPageCubit` for session UI state (resolved chat id, other user display, new-message banner). See [Chat](chat.md) for collection layout.
 
-- **Current user**: Set when the Messages tab is built: `ChatViewConnect.instance.setCurrentUserId(currentUser.id)` (from `AuthRepository.currentUser`).
-- **Screens**: `MessagesPage` shows `ChatList` (list of conversations); tapping a chat opens `ChatPage` at `/messages/chat/:chatId`. Opening a chat with a specific user (e.g. from profile "Contact planner") uses `/messages/with/:userId` and creates or finds the 1:1 room.
-- **Firestore**: Chat uses a separate `chat_users` collection (and package-default chats/messages collections) so it does not clash with the existing `users` collection. See [Chat](chat.md) for details.
+## Future work
 
-## Future Features
-
-- **BookingsPage (creatives)**: When real gig data is shown, use `BookingsCubit` with `BookingRepository.watchCompletedBookingsByCreativeId()` stream.
+- **Optional**: Extract tiny Cubits for other `StatefulBuilder`-only flows if they grow beyond modal-local state.

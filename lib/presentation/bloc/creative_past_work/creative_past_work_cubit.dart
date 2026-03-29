@@ -191,6 +191,11 @@ class CreativePastWorkCubit extends Cubit<CreativePastWorkState> {
     }
   }
 
+  void toggleConfigMode() {
+    if (!_isViewingOwn) return;
+    emit(state.copyWith(configMode: !state.configMode));
+  }
+
   /// Toggle visibility for an item (creative config). Only when viewing own.
   Future<void> setItemVisibility(String itemId, bool show) async {
     if (!_isViewingOwn) return;

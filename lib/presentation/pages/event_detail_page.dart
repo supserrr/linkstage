@@ -681,12 +681,13 @@ class _HostedBySection extends StatefulWidget {
 }
 
 class _HostedBySectionState extends State<_HostedBySection> {
-  bool _isFollowing = false;
+  late final _HostedByFollowCubit _followingCubit;
   StreamSubscription<Set<String>>? _subscription;
 
   @override
   void initState() {
     super.initState();
+    _followingCubit = _HostedByFollowCubit();
     _subscribe();
   }
 
@@ -698,15 +699,15 @@ class _HostedBySectionState extends State<_HostedBySection> {
     _subscription = sl<FollowedPlannersRepository>()
         .watchFollowedPlannerIds(currentUserId)
         .listen((ids) {
-          if (mounted && ids.contains(plannerId) != _isFollowing) {
-            setState(() => _isFollowing = ids.contains(plannerId));
-          }
+          if (!mounted) return;
+          _followingCubit.sync(ids.contains(plannerId));
         });
   }
 
   @override
   void dispose() {
     _subscription?.cancel();
+    _followingCubit.close();
     super.dispose();
   }
 
@@ -802,87 +803,103 @@ class _HostedBySectionState extends State<_HostedBySection> {
         planner?.id != null &&
         widget.currentUserId != null &&
         planner!.id == widget.currentUserId;
-    final canFollow = !isSelf && !_isFollowing;
-    final canUnfollow = !isSelf && _isFollowing;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Hosted by',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            GestureDetector(
-              onTap: () => _openEnlargedPhoto(context),
-              child: CircleAvatar(
-                radius: 28,
-                backgroundColor: colorScheme.primaryContainer,
-                backgroundImage: (planner?.photoUrl ?? '').isNotEmpty
-                    ? CachedNetworkImageProvider(planner!.photoUrl!)
-                    : null,
-                child: (planner?.photoUrl ?? '').isEmpty
-                    ? Text(
-                        name.isNotEmpty ? name[0].toUpperCase() : '?',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          color: colorScheme.onPrimaryContainer,
-                        ),
-                      )
-                    : null,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: InkWell(
-                onTap: () => _openPlannerProfile(context),
-                borderRadius: BorderRadius.circular(AppBorders.chipRadius),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        widget.plannerProfile?.role?.isNotEmpty == true
-                            ? widget.plannerProfile!.role!
-                            : 'Event Planner',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
+    return BlocProvider.value(
+      value: _followingCubit,
+      child: BlocBuilder<_HostedByFollowCubit, bool>(
+        builder: (context, isFollowing) {
+          final canFollow = !isSelf && !isFollowing;
+          final canUnfollow = !isSelf && isFollowing;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Hosted by',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-            OutlinedButton(
-              onPressed: canFollow
-                  ? _onFollowTap
-                  : canUnfollow
-                  ? _onUnfollowTap
-                  : null,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: isSelf && !_isFollowing
-                    ? colorScheme.onSurfaceVariant
-                    : null,
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => _openEnlargedPhoto(context),
+                    child: CircleAvatar(
+                      radius: 28,
+                      backgroundColor: colorScheme.primaryContainer,
+                      backgroundImage: (planner?.photoUrl ?? '').isNotEmpty
+                          ? CachedNetworkImageProvider(planner!.photoUrl!)
+                          : null,
+                      child: (planner?.photoUrl ?? '').isEmpty
+                          ? Text(
+                              name.isNotEmpty ? name[0].toUpperCase() : '?',
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                color: colorScheme.onPrimaryContainer,
+                              ),
+                            )
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _openPlannerProfile(context),
+                      borderRadius: BorderRadius.circular(
+                        AppBorders.chipRadius,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              widget.plannerProfile?.role?.isNotEmpty == true
+                                  ? widget.plannerProfile!.role!
+                                  : 'Event Planner',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  OutlinedButton(
+                    onPressed: canFollow
+                        ? _onFollowTap
+                        : canUnfollow
+                        ? _onUnfollowTap
+                        : null,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: isSelf && !isFollowing
+                          ? colorScheme.onSurfaceVariant
+                          : null,
+                    ),
+                    child: Text(isFollowing ? 'Unfollow' : 'Follow'),
+                  ),
+                ],
               ),
-              child: Text(_isFollowing ? 'Unfollow' : 'Follow'),
-            ),
-          ],
-        ),
-      ],
+            ],
+          );
+        },
+      ),
     );
   }
+}
+
+class _HostedByFollowCubit extends Cubit<bool> {
+  _HostedByFollowCubit() : super(false);
+
+  void sync(bool following) => emit(following);
 }
 
 class _EventGallery extends StatelessWidget {

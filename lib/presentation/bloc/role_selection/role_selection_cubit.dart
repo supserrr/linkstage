@@ -10,8 +10,12 @@ class RoleSelectionCubit extends Cubit<RoleSelectionState> {
 
   final UpsertUserUseCase _upsertUser;
 
+  void setHighlightedRole(UserRole role) {
+    emit(RoleSelectionState.initial(highlightedRole: role));
+  }
+
   Future<void> selectRole(UserEntity user, UserRole role) async {
-    emit(const RoleSelectionState.loading());
+    emit(RoleSelectionState.loading(highlightedRole: role));
     try {
       final userWithRole = UserEntity(
         id: user.id,
@@ -25,7 +29,12 @@ class RoleSelectionCubit extends Cubit<RoleSelectionState> {
       await _upsertUser(userWithRole);
       emit(RoleSelectionState.success(role, userWithRole));
     } catch (e) {
-      emit(RoleSelectionState.error(e.toString()));
+      emit(
+        RoleSelectionState.error(
+          e.toString(),
+          highlightedRole: state.highlightedRole,
+        ),
+      );
     }
   }
 }

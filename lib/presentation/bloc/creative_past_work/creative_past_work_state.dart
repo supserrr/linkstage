@@ -44,6 +44,7 @@ class CreativePastWorkState {
     this.hiddenIds = const {},
     this.isLoading = false,
     this.error,
+    this.configMode = false,
   });
 
   final String? creativeName;
@@ -55,6 +56,7 @@ class CreativePastWorkState {
   final Set<String> hiddenIds;
   final bool isLoading;
   final String? error;
+  final bool configMode;
 
   CreativePastWorkState copyWith({
     String? creativeName,
@@ -64,6 +66,7 @@ class CreativePastWorkState {
     Set<String>? hiddenIds,
     bool? isLoading,
     String? error,
+    bool? configMode,
   }) {
     return CreativePastWorkState(
       creativeName: creativeName ?? this.creativeName,
@@ -73,6 +76,7 @@ class CreativePastWorkState {
       hiddenIds: hiddenIds ?? this.hiddenIds,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      configMode: configMode ?? this.configMode,
     );
   }
 }
