@@ -119,7 +119,7 @@ void main() {
   ) async {
     await registerChatSl(
       currentUser: const UserEntity(id: 'u1', email: 'u1@test.com'),
-      getOrCreateChat: (_, __) => Completer<String>().future,
+      getOrCreateChat: (_, _) => Completer<String>().future,
     );
 
     await tester.pumpWidget(

@@ -229,11 +229,11 @@ void main() {
       routes: [
         GoRoute(
           path: '/my-events',
-          builder: (_, __) => MyEventsPage(myEventsCubit: cubit),
+          builder: (_, _) => MyEventsPage(myEventsCubit: cubit),
         ),
         GoRoute(
           path: AppRoutes.createEvent,
-          builder: (_, __) => const Scaffold(body: Text('CreateEventStub')),
+          builder: (_, _) => const Scaffold(body: Text('CreateEventStub')),
         ),
       ],
     );
@@ -276,11 +276,11 @@ void main() {
       routes: [
         GoRoute(
           path: '/my-events',
-          builder: (_, __) => MyEventsPage(myEventsCubit: cubit),
+          builder: (_, _) => MyEventsPage(myEventsCubit: cubit),
         ),
         GoRoute(
           path: AppRoutes.createEvent,
-          builder: (_, __) => const Scaffold(body: Text('CreateEventStub')),
+          builder: (_, _) => const Scaffold(body: Text('CreateEventStub')),
         ),
       ],
     );
@@ -329,7 +329,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/my-events',
-          builder: (_, __) => MyEventsPage(myEventsCubit: cubit),
+          builder: (_, _) => MyEventsPage(myEventsCubit: cubit),
         ),
         GoRoute(
           path: '/event/:id',
@@ -388,11 +388,11 @@ void main() {
       routes: [
         GoRoute(
           path: '/my-events',
-          builder: (_, __) => MyEventsPage(myEventsCubit: cubit),
+          builder: (_, _) => MyEventsPage(myEventsCubit: cubit),
         ),
         GoRoute(
           path: AppRoutes.explore,
-          builder: (_, __) => const Scaffold(body: Text('ExploreStub')),
+          builder: (_, _) => const Scaffold(body: Text('ExploreStub')),
         ),
       ],
     );

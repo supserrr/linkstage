@@ -279,7 +279,7 @@ void main() {
           ),
           GoRoute(
             path: AppRoutes.createEvent,
-            builder: (_, __) => const Scaffold(body: Text('CreateEventStub')),
+            builder: (_, _) => const Scaffold(body: Text('CreateEventStub')),
           ),
         ],
       );
@@ -338,7 +338,7 @@ void main() {
           ),
           GoRoute(
             path: AppRoutes.notifications,
-            builder: (_, __) => const Scaffold(body: Text('NotificationsStub')),
+            builder: (_, _) => const Scaffold(body: Text('NotificationsStub')),
           ),
         ],
       );
@@ -401,7 +401,7 @@ void main() {
           ),
           GoRoute(
             path: AppRoutes.bookings,
-            builder: (_, __) => const Scaffold(body: Text('BookingsStub')),
+            builder: (_, _) => const Scaffold(body: Text('BookingsStub')),
           ),
         ],
       );

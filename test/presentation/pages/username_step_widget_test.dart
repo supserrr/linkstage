@@ -14,11 +14,13 @@ class _ProfileSetupLikeCubit extends Cubit<ProfileSetupState>
 
   var checked = 0;
 
+  @override
   Future<bool> checkUsernameAvailable(String username) async {
     checked++;
     return true;
   }
 
+  @override
   void setUsername(String value) {
     emit(state.copyWith(username: value));
   }

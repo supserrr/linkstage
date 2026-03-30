@@ -29,7 +29,7 @@ void main() {
     await sl.reset();
   });
 
-  Future<void> _registerAuth(UserEntity user) async {
+  Future<void> registerAuth(UserEntity user) async {
     final authRepo = MockAuthRepository();
     final userRepo = MockUserRepository();
     final profileRepo = MockProfileRepository();
@@ -55,7 +55,7 @@ void main() {
   testWidgets('shows bottom nav on tab roots and switches branches', (
     tester,
   ) async {
-    await _registerAuth(
+    await registerAuth(
       const UserEntity(
         id: 'creative-1',
         email: 'c@test.com',

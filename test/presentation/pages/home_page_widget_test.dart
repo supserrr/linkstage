@@ -248,7 +248,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/home',
-          builder: (_, __) => const HomePage(),
+          builder: (_, _) => const HomePage(),
         ),
         GoRoute(
           path: AppRoutes.roleSelection,
