@@ -20,7 +20,7 @@ git shortlog -sn HEAD
 
 Paste the output into your contribution table.
 
-After the **Option B** rewrites (2026-04-02), `git shortlog -sn HEAD` on `main` is intentionally **tight** (authors balanced by domain-based reassignment from Shima; see [co_author_attribution_matrix.md](co_author_attribution_matrix.md)). **Claude / Anthropic** `Co-Authored-By` lines were removed. One commit retains a **`LinkStage-meta:`** line so history length stayed at 88 commits after cleanup.
+After the **Option B** rewrites (2026-04-02), `git shortlog -sn HEAD` on `main` is intentionally **tight** (authors balanced by domain-based reassignment from Shima; see [co_author_attribution_matrix.md](co_author_attribution_matrix.md)). Historical assistant **`Co-Authored-By`** footers were removed from commit messages. One commit retains a **`LinkStage-meta:`** line so history length stayed at 88 commits after cleanup.
 
 List commits with trailers:
 

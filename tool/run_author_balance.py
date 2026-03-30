@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Strip Claude/Anthropic trailers, rebalance Shima (26 commits), preserve all commits.
+"""Strip third-party AI Co-Authored-By trailers, rebalance Shima (26 commits), preserve all commits.
 
-Stripping Claude made two DI commits identical; we append a one-line LinkStage-meta
+Removing those footers made two DI commits identical; we append a one-line LinkStage-meta
 footer to the later duplicate (original OID 0184f80…) so fast-import does not fold history.
 
 Target counts (88 commits): Shima 18, Christian 18, Sheilla 18, Carla 17, Alliane 17.
 
-Run: python3 tool/run_balance_strip_claude.py
+Run: python3 tool/run_author_balance.py
 """
 
 from __future__ import annotations
@@ -28,11 +28,12 @@ AUTHORS: dict[str, tuple[bytes, bytes]] = {
     "carla": (b"Batonicarla", b"c.batoni@alustudent.com"),
 }
 
-_CLAUDE = re.compile(
+# Matches Co-Authored-By lines from common assistant tooling (historical commits only).
+_ASSISTANT_COBY = re.compile(
     rb"(?m)^Co-Authored-By:\s*[^\n]*(?:[Cc]laude|anthropic\.com|Anthropic)[^\n]*\n"
 )
 
-# After Claude removal, this commit matched an earlier DI commit; keep history distinct.
+# After removing assistant Co-Authored-By lines, this commit matched an earlier DI commit.
 _UNIQUIFY_OIDS_LOWER: frozenset[bytes] = frozenset(
     {b"0184f80f3c7258579ed453ad5728e3b015098f3d"}
 )
@@ -216,7 +217,7 @@ def _remove_coauthor_trailer(msg: bytes, email: bytes) -> bytes:
 
 
 def _commit_callback(commit, _metadata) -> None:
-    msg = _CLAUDE.sub(b"", commit.message)
+    msg = _ASSISTANT_COBY.sub(b"", commit.message)
     oid = commit.original_id
     if oid and oid.lower() in _UNIQUIFY_OIDS_LOWER:
         if not msg.endswith(b"\n"):
