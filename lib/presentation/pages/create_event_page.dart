@@ -445,12 +445,20 @@ class _CreateEventView extends StatelessWidget {
   Future<void> _pickDate(BuildContext context) async {
     final cubit = context.read<CreateEventCubit>();
     final state = cubit.state;
-    final initial = state.date ?? DateTime.now();
+    final now = DateTime.now();
+    DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+    final today = dateOnly(now);
+    final initial = state.date != null ? dateOnly(state.date!) : today;
+    // initialDate must be on or after firstDate. Using today alone breaks for past events.
+    final pastWindowStart = dateOnly(DateTime(now.year - 10, 1, 1));
+    final firstDate = initial.isBefore(today)
+        ? (initial.isBefore(pastWindowStart) ? initial : pastWindowStart)
+        : today;
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+      firstDate: firstDate,
+      lastDate: today.add(const Duration(days: 365 * 2)),
     );
     if (picked != null) {
       cubit.setDate(picked);
