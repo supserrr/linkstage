@@ -1,10 +1,27 @@
 # LinkStage
 
-LinkStage is a mobile marketplace connecting event planners with creative professionals (DJs, photographers, decorators, content creators) in Rwanda.
+[![Flutter](https://img.shields.io/badge/Flutter-%5E3.11-02569B?logo=flutter)](https://flutter.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Getting Started
+Mobile marketplace connecting event planners with creative professionals (DJs, photographers, decorators, content creators) in Rwanda.
 
-Please refer to our detailed [Setup Guide](docs/setup.md) to get the application running locally and configure dependencies like Firebase and Supabase.
+**Stack:** Flutter · Firebase (Auth, Firestore, Hosting) · optional Supabase (signed uploads, push-related Edge Functions).
+
+## Screenshots
+
+Planner (left) · creative (right) in dual mockups. Source assets: [`docs/images/readme/`](docs/images/readme/).
+
+| Home | Explore |
+|------|---------|
+| ![Home — planner and creative](docs/images/readme/01-home-or-feed.png) | ![Explore — planner and creative](docs/images/readme/02-browse-or-detail.png) |
+
+| Profile | Chat |
+|---------|------|
+| ![Profile — planner and creative](docs/images/readme/03-profile.png) | ![Chat inbox](docs/images/readme/04-feature-chat-or-notifications.png) |
+
+## Setup
+
+**Requirements:** Flutter `^3.11.0` ([`pubspec.yaml`](pubspec.yaml)), toolchain that passes `flutter doctor`, a **Firebase** project for auth and Firestore. **Supabase** only if you use signed uploads or push helpers.
 
 ```bash
 git clone https://github.com/supserrr/linkstage.git
@@ -13,34 +30,16 @@ flutter pub get
 flutter run
 ```
 
+Before full auth, media, or push behavior works, configure Firebase (and Supabase if needed). Full steps: **[Developer setup](docs/setup.md)**.
+
 ## Documentation
 
-Full documentation is available in the [`docs/`](docs/) directory:
+- [Developer setup](docs/setup.md) — Firebase, Supabase, run, test, build, Android signing
+- [ERD & Firestore rules](docs/erd.md)
+- [State management](docs/state_management.md)
 
-- **Guides & Setup**
-  - [System Setup](docs/setup.md)
-  - [App Icons Setup](docs/app_icons_setup.md)
-  - [Splash Screen Setup](docs/splash_screen_setup.md)
-  - [Firebase MCP Setup](docs/firebase-mcp-setup.md)
-- **Architecture & Data**
-  - [State Management](docs/state_management.md)
-  - [Entity Relationship Diagram (ERD)](docs/erd.md)
-  - [Firestore Troubleshooting](docs/troubleshooting_firestore.md)
-  - [Line coverage (tests + scoped metrics)](docs/setup.md#line-coverage-for-reports) — see Setup guide
-- **Features**
-  - [Event Creation Flow](docs/create_event_flow.md)
-  - [Chat System](docs/chat.md)
-  - [Push Notifications](docs/push_notifications.md)
-  - [Supabase Storage Setup](docs/supabase_storage_setup.md)
-  - [Localization](docs/localization.md)
-- **Privacy & Security**
-  - [Privacy Settings](docs/privacy.md)
-  - [Wipe User Data](docs/wipe_user_data.md)
-
-## Support
-
-If you need help or want to report an issue, please check the documentation or open an issue in the repository.
+Other guides (chat, push, localization, icons, troubleshooting) are linked from [docs/setup.md](docs/setup.md#documentation).
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+[MIT License](LICENSE).
