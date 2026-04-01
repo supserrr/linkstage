@@ -1,13 +1,9 @@
-/// Utilities for image URLs.
-/// Note: Supabase image transforms (/render/image/public/) require Pro plan.
-/// Use the original public URL so images load on free tier.
+/// Image URLs for avatars / portfolio. We keep raw storage URLs: Supabase
+/// `/render/image/` transforms need a paid plan, so resizing params are ignored.
 class ImageUrlUtils {
-  // Intentionally uncovered: library-private constructor prevents instantiation
-  // of this static-only utility class, and is not reachable from tests.
   ImageUrlUtils._();
 
-  /// Returns the URL for display. For Supabase/other storage, returns [url] as-is.
-  /// [width] and [height] are ignored (transforms require Supabase Pro).
+  /// Pass-through URL; [width]/[height] reserved for future paid-tier transforms.
   static String thumbnailUrl(String url, {int width = 96, int height = 96}) {
     if (url.isEmpty) return url;
     return url;

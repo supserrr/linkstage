@@ -1,5 +1,10 @@
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform, visibleForTesting;
+    show
+        defaultTargetPlatform,
+        kDebugMode,
+        kIsWeb,
+        TargetPlatform,
+        visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
@@ -130,11 +135,11 @@ class AppRouter {
     final splashNotifier = sl<SplashNotifier>();
     return GoRouter(
       initialLocation: AppRoutes.splash,
-      debugLogDiagnostics: true,
+      debugLogDiagnostics: kDebugMode,
       refreshListenable: Listenable.merge([authNotifier, splashNotifier]),
       redirect: (context, state) {
-        // Firebase email link auth URLs open the app via App Links; handle them
-        // as auth completion, not navigation. Redirect to splash so auth flow runs.
+        // Email-link sign-in lands as a deep link; treat it as auth completion,
+        // not a real route — bounce through splash so AuthBloc can finish.
         final loc = state.uri.toString();
         if (loc.contains('__/auth') || loc.contains('finishSignIn')) {
           return AppRoutes.splash;
@@ -163,8 +168,8 @@ class AppRouter {
             state.matchedLocation == AppRoutes.notifications ||
             state.matchedLocation == AppRoutes.following;
 
-        // On iOS, use the same flow as Android: no onboarding intro, role selection, or
-        // profile setup — go straight to login or home so both platforms show the same screens.
+        // iOS build for this course skips role-selection + profile-setup gates so
+        // testers hit login/home with the same screens as Android without extra steps.
         final bool alignWithAndroid =
             !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 

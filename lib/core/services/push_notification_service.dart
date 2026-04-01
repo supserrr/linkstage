@@ -13,8 +13,8 @@ typedef HttpPost =
       Object? body,
     });
 
-/// Sends push notifications via the Supabase Edge Function.
-/// Called by the app after Firestore writes (bookings, collaborations).
+/// Calls Supabase Edge Functions with the signed-in user's ID token after
+/// domain writes (bookings, collabs, planner publish) so the backend can fan out FCM.
 class PushNotificationService {
   PushNotificationService({FirebaseAuth? firebaseAuth, HttpPost? httpPost})
     : _auth = firebaseAuth ?? FirebaseAuth.instance,

@@ -140,13 +140,14 @@ flutter test --coverage
 
 - **Whole codebase** (all paths in `coverage/lcov.info`): sum every `LF:` / `LH:` record.
 
-### Filtered aggregate (recommended CI / “app code” gate)
+### Filtered-style aggregate (optional, for reports or CI)
 
-The **filtered** metric excludes glue and generated files that are costly to cover in unit tests:
+For an **“app code”** percentage without treating every large screen as equal to domain logic, exclude the paths below when you summarize `coverage/lcov.info` (manually, in a spreadsheet, or with the system **`lcov`** package if installed):
 
 | Excluded path | Rationale |
 |---------------|-----------|
-| `lib/core/router/app_router.dart` | Large route table; covered by integration-style tests or manual QA |
+| `lib/presentation/pages/` (prefix) | Full-screen pages; breadth-style widget tests optional |
+| `lib/core/router/app_router.dart` | Large route table; integration-style or manual QA |
 | `lib/core/router/auth_redirect.dart` | Auth redirect notifier; shell / integration |
 | `lib/core/di/injection.dart` | DI bootstrap |
 | `lib/firebase_options.dart` | Generated Firebase options |
@@ -154,44 +155,33 @@ The **filtered** metric excludes glue and generated files that are costly to cov
 | `lib/core/services/fcm_service.dart` | FCM glue (integration-tested) |
 | `lib/l10n/` (prefix) | Generated localizations |
 
-Additional **exact paths** (large screens, onboarding/settings subpages, dashboards, etc.) are excluded so the filtered gate can track **~80%+** line coverage on the remaining code without treating every pixel of UI as the same ROI as domain/data tests. The authoritative list is `_excludedExactPaths` in [`tool/coverage_filtered.dart`](../tool/coverage_filtered.dart) (kept in one place so CI and docs stay aligned).
-
-Regenerate `coverage/lcov_filtered.info` and print percentages:
+Example after `flutter test --coverage` (adjust patterns to match your `lcov` version):
 
 ```bash
-dart run tool/coverage_filtered.dart
+lcov --remove coverage/lcov.info \
+  'lib/presentation/pages/*' \
+  'lib/l10n/*' \
+  'lib/core/router/app_router.dart' \
+  'lib/core/router/auth_redirect.dart' \
+  'lib/core/di/injection.dart' \
+  'lib/firebase_options.dart' \
+  'lib/data/datasources/auth_remote_datasource.dart' \
+  'lib/core/services/fcm_service.dart' \
+  -o coverage/lcov_filtered.info
+lcov --summary coverage/lcov_filtered.info
 ```
 
-Or run tests + full + filtered in one step:
+Reaching **~80% on full `lcov.info`** (no exclusions) typically requires **on the order of two thousand** additional instrumented lines (mostly breadth-style widget tests on large `presentation` pages). Prefer reporting **full** vs **filtered** separately in write-ups.
 
-```bash
-./tool/coverage.sh
-```
-
-Optional **fail CI** if filtered line coverage is below 80%:
-
-```bash
-./tool/coverage.sh --min-filtered-percent=80
-```
-
-Optional **fail CI** if **whole-repo** (`coverage/lcov.info`) line coverage is below a threshold (stricter than filtered—includes router, large screens, generated l10n, DI, etc.):
-
-```bash
-./tool/coverage.sh --min-full-percent=80
-```
-
-Reaching **~80% on full `lcov.info`** typically requires **on the order of two thousand** additional instrumented lines (mostly breadth-style widget tests on large `presentation` pages). Use this gate only when the team commits to that scope; otherwise prefer the **filtered** gate above.
-
-**CI gate:** standardize on **filtered** line coverage (not raw `lcov.info`) for a repo-wide percentage target, unless you explicitly need router/DI in the denominator.
-
-**Measured reference:** On a full `flutter test --coverage` run, **full** `coverage/lcov.info` was **65.83%** (9623 / 14617 lines hit). Re-run `./tool/coverage.sh` after adding tests for current numbers. The **filtered** metric from `dart run tool/coverage_filtered.dart` depends on `_excludedExactPaths` in [`tool/coverage_filtered.dart`](../tool/coverage_filtered.dart); run `./tool/coverage.sh` to print the current filtered LF/LH. For release review, always report **full** and **filtered** percentages separately; filtered excludes glue, integration-heavy sources, and large UI files listed in `tool/coverage_filtered.dart`.
+**Measured reference:** On a full `flutter test --coverage` run, **full** `coverage/lcov.info` was **65.83%** (9623 / 14617 lines hit). Re-run `flutter test --coverage` after adding tests for current numbers.
 
 ### Scoped domain + utils (coursework reports)
 
-**Scoped: `lib/domain` + `lib/core/utils`** (entities, use cases, shared utils—not the whole UI layer):
+**Scoped: `lib/domain` + `lib/core/utils`** (entities, use cases, shared utils—not the whole UI layer). With `lcov` installed:
 
 ```bash
-dart run tool/coverage_domain_utils.dart
+lcov --extract coverage/lcov.info 'lib/domain/*' 'lib/core/utils/*' -o coverage/lcov_domain_utils.info
+lcov --summary coverage/lcov_domain_utils.info
 ```
 
 For coursework PDF **Figure 9.3**, the terminal screenshot usually shows the **whole-repo** line aggregate; state the **scoped** or **filtered** percentage separately in §9.3 so graders do not confuse partial coverage with full-app coverage.

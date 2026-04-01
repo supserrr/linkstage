@@ -10,7 +10,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../domain/repositories/user_repository.dart';
 
-/// Wraps OnboardingCubit to expose Listenable for router refresh.
+/// Bridges onboarding cubit → [Listenable] so GoRouter rebuilds on step changes.
 class OnboardingListenable extends ChangeNotifier {
   OnboardingListenable(this._cubit) {
     _subscription = _cubit.stream.listen((_) => notifyListeners());
@@ -29,8 +29,8 @@ class OnboardingListenable extends ChangeNotifier {
   }
 }
 
-/// Notifier that completes when auth is ready and minimum display duration has
-/// passed (event-driven splash).
+/// Splash clears only after Firebase user snapshot is ready *and* ~2.8s elapsed
+/// (avoids a flash of login on cold start).
 class SplashNotifier extends ChangeNotifier {
   SplashNotifier(this._authNotifier) {
     _authNotifier.addListener(_onAuthUpdate);
@@ -71,7 +71,8 @@ class SplashNotifier extends ChangeNotifier {
   }
 }
 
-/// Notifier for router refresh when auth state changes.
+/// Listens to Firebase Auth, then pulls `users` + role-specific profile from Firestore
+/// so redirects match email verification, role pick, and first-time profile creation.
 class AuthRedirectNotifier extends ChangeNotifier {
   AuthRedirectNotifier(
     this._authRepository,
@@ -95,7 +96,7 @@ class AuthRedirectNotifier extends ChangeNotifier {
 
   bool get isAuthenticated => _authRepository.currentUser != null;
 
-  /// User is authenticated but has not verified their email.
+  /// Firebase user exists but `emailVerified` is still false (passwordless link flow).
   bool get needsEmailVerification =>
       isAuthenticated &&
       _authRepository.currentUser != null &&
@@ -105,12 +106,14 @@ class AuthRedirectNotifier extends ChangeNotifier {
 
   bool get isReady => !_loading;
 
+  /// Signed in + verified, but `users.role` still null (post-login branch).
   bool get needsRoleSelection =>
       isAuthenticated &&
       !needsEmailVerification &&
       _user != null &&
       _user!.role == null;
 
+  /// Role is set in `users` but we have no planner/creative profile row yet.
   bool get needsProfileSetup {
     if (!isAuthenticated ||
         needsEmailVerification ||
@@ -137,6 +140,7 @@ class AuthRedirectNotifier extends ChangeNotifier {
     try {
       var user = await _userRepository.getUser(authUser.id);
       if (user != null) {
+        // Google sign-in often has photo on Auth before Firestore `users` is written.
         final needsPhotoSync =
             (user.photoUrl == null || user.photoUrl!.isEmpty) &&
             authUser.photoUrl != null &&
