@@ -23,6 +23,7 @@ class EventDetailState {
   final int applicationCount;
   final List<String?> applicantPhotoUrls;
   final bool hasApplied;
+
   /// True when the current user is a creative with an accepted booking for this event.
   final bool hasAcceptedBooking;
   final bool isLoading;

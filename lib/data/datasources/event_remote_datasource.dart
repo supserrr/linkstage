@@ -11,6 +11,7 @@ class EventRemoteDataSource {
   final FirebaseFirestore _firestore;
 
   static const String _eventsCollection = 'events';
+  static const String _bookingsCollection = 'bookings';
 
   /// Stream of events for a planner.
   Stream<List<EventEntity>> getEventsByPlannerId(String plannerId) {
@@ -166,7 +167,10 @@ class EventRemoteDataSource {
 
   /// Fetch a single event by ID.
   Future<EventEntity?> getEventById(String eventId) async {
-    final doc = await _firestore.collection(_eventsCollection).doc(eventId).get();
+    final doc = await _firestore
+        .collection(_eventsCollection)
+        .doc(eventId)
+        .get();
     if (doc.exists && doc.data() != null) {
       return EventModel.fromFirestore(doc).toEntity();
     }
@@ -183,8 +187,9 @@ class EventRemoteDataSource {
     final results = <EventEntity>[];
     for (var i = 0; i < uniqueIds.length; i += chunkSize) {
       final chunk = uniqueIds.skip(i).take(chunkSize).toList();
-      final refs =
-          chunk.map((id) => _firestore.collection(_eventsCollection).doc(id));
+      final refs = chunk.map(
+        (id) => _firestore.collection(_eventsCollection).doc(id),
+      );
       final docs = await Future.wait(refs.map((ref) => ref.get()));
       for (final doc in docs) {
         if (doc.exists && doc.data() != null) {
@@ -202,8 +207,22 @@ class EventRemoteDataSource {
     });
   }
 
-  /// Delete an event.
+  /// Delete an event and all bookings that reference it (planner-owned cleanup).
   Future<void> deleteEvent(String eventId) async {
+    final bookingDocs = await _firestore
+        .collection(_bookingsCollection)
+        .where('eventId', isEqualTo: eventId)
+        .get();
+    const maxOps = 500;
+    final docs = bookingDocs.docs;
+    for (var i = 0; i < docs.length; i += maxOps) {
+      final batch = _firestore.batch();
+      final end = i + maxOps > docs.length ? docs.length : i + maxOps;
+      for (var j = i; j < end; j++) {
+        batch.delete(docs[j].reference);
+      }
+      await batch.commit();
+    }
     await _firestore.collection(_eventsCollection).doc(eventId).delete();
   }
 

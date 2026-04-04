@@ -1,0 +1,180 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    match /users/{userId}/saved_creatives/{docId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/followed_planners/{docId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/device_tokens/{tokenId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/notification_reads/{docId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Denormalized by Cloud Function when booking is accepted; used for event location visibility.
+    // Cloud Function writes via Admin SDK; client only reads own.
+    match /users/{userId}/accepted_event_ids/{eventId} {
+      allow read: if isOwner(userId);
+      allow write: if false;
+    }
+
+    match /users/{userId}/planner_new_event_notifications/{docId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /creative_past_work_preferences/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    match /profiles/{profileId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Owner may edit full profile. Any signed-in user may adjust only aggregated
+      // review stats on another doc (after writing a review); see updateProfileRatingStats.
+      // hasOnly() ensures no other fields change, so userId cannot be altered via this path.
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rating', 'reviewCount'])
+      );
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /planner_profiles/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+
+    match /events/{eventId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.plannerId == request.auth.uid
+        && (!('locationVisibility' in request.resource.data)
+            || request.resource.data.locationVisibility in ['public', 'private', 'acceptedCreatives']);
+      // request.resource is null on delete; validate incoming data only on update.
+      allow update: if isAuthenticated() && resource.data.plannerId == request.auth.uid
+        && (!('locationVisibility' in request.resource.data)
+            || request.resource.data.locationVisibility in ['public', 'private', 'acceptedCreatives']);
+      allow delete: if isAuthenticated() && resource.data.plannerId == request.auth.uid;
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        (request.resource.data.creativeId == request.auth.uid ||
+         request.resource.data.plannerId == request.auth.uid);
+      allow update: if isAuthenticated() &&
+        (resource.data.creativeId == request.auth.uid ||
+         resource.data.plannerId == request.auth.uid);
+      allow delete: if isAuthenticated() &&
+        (resource.data.creativeId == request.auth.uid ||
+         resource.data.plannerId == request.auth.uid);
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.reviewerId == request.auth.uid;
+      // Restrict updates: only reviewee can add reply; anyone can like/flag (client validates)
+      allow update: if isAuthenticated() && (
+        (resource.data.revieweeId == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reply', 'replyAt'])
+          && request.resource.data.get('reply', '').size() <= 1000)
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy', 'likeCount'])
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['flaggedBy', 'flagCount'])
+      );
+      allow delete: if false;
+    }
+
+    // Past work: allow any authenticated user to read completed collaborations
+    // so planners can view a creative's past work. Client filters by creative's
+    // hiddenIds when viewing another user's profile.
+    match /collaborations/{collaborationId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.requesterId == request.auth.uid ||
+         resource.data.targetUserId == request.auth.uid ||
+         resource.data.status == 'completed');
+      allow create: if isAuthenticated() && request.resource.data.requesterId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.targetUserId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // Legacy conversations collection (unused by app; deny to reduce attack surface).
+    match /conversations/{conversationId} {
+      allow read, write: if false;
+    }
+
+    match /conversations/{conversationId}/messages/{messageId} {
+      allow read, write: if false;
+    }
+
+    // Chat (chatview_connect): read for display names; write for ensureChatUser(otherUser)
+    // when opening a chat. Initiator syncs both participants' docs, so write must allow
+    // non-owners. Restrict write to validate doc structure: id must match path.
+    match /chat_users/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated()
+        && request.resource.data.get('id', '') == userId;
+      allow delete: if isOwner(userId);
+    }
+
+    // Helper: user is a participant in the chat.
+    function isChatParticipant(chatId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/chats/$(chatId)/users/$(request.auth.uid));
+    }
+
+    match /chats/{chatId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isChatParticipant(chatId);
+    }
+
+    // Only add self or add others when already a participant (e.g. creator adding second user).
+    match /chats/{chatId}/users/{userId} {
+      allow create: if isAuthenticated() && (
+        request.auth.uid == userId || isChatParticipant(chatId)
+      );
+      allow read, update, delete: if isChatParticipant(chatId);
+    }
+
+    match /chats/{chatId}/messages/{messageId} {
+      allow read: if isChatParticipant(chatId);
+      allow create: if isChatParticipant(chatId) &&
+        request.resource.data.get('message', '').size() <= 2000;
+      allow update, delete: if isChatParticipant(chatId);
+    }
+
+    // Chat list: user can only read/write their own doc. Requires request.auth.uid == userId.
+    // Deploy: firebase deploy --only firestore:rules (v2 force re-upload)
+    match /user_chats/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Chat list entries: user can only read their own. Write allowed if owner or
+    // a chat participant (so initiator can add the conversation to the other's list).
+    match /user_chats/{userId}/chats/{chatId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) || isChatParticipant(chatId);
+    }
+  }
+}

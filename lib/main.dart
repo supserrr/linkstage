@@ -1,122 +1,177 @@
-import 'package:flutter/material.dart';
+import 'package:app_links/app_links.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:developer' as developer;
 
-void main() {
-  runApp(const MyApp());
+import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import 'app.dart';
+import 'core/di/injection.dart';
+import 'core/theme/app_theme.dart';
+import 'core/services/fcm_service.dart';
+import 'domain/repositories/auth_repository.dart';
+import 'firebase_options.dart';
+import 'presentation/bloc/settings/settings_cubit.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Background message received - system handles notification display
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+  try {
+    await AppTheme.preloadFonts();
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint('Font preload failed: $e');
+    }
+  }
+
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    // Enable persistence so Firestore serves cached data first (instant loads).
+    // Must be set before any other Firestore operations.
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+    );
+    final useAuthEmulator = const bool.fromEnvironment(
+      'USE_AUTH_EMULATOR',
+      defaultValue: false,
+    );
+    final useFirestoreEmulator = const bool.fromEnvironment(
+      'USE_FIRESTORE_EMULATOR',
+      defaultValue: false,
+    );
+
+    if (useAuthEmulator) {
+      const customHost = String.fromEnvironment('AUTH_EMULATOR_HOST');
+      final host = customHost.isEmpty ? 'localhost' : customHost;
+      const authEmulatorPort = 9099;
+      await FirebaseAuth.instance.useAuthEmulator(host, authEmulatorPort);
+      if (kDebugMode) {
+        debugPrint(
+          'Firebase Auth emulator: $host:$authEmulatorPort '
+          '(run: firebase emulators:start --only auth, or include auth in suite)',
+        );
+      }
+    }
+    // Auth emulator tokens are not valid on production Firestore; rules see no user → permission-denied.
+    if (useFirestoreEmulator || useAuthEmulator) {
+      FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
+      if (kDebugMode && useAuthEmulator) {
+        debugPrint(
+          'Firebase Firestore emulator: localhost:8080 '
+          '(enabled with auth emulator so signed-in writes match security rules)',
+        );
+      }
+    }
+  } on UnimplementedError catch (_) {
+    if (kDebugMode) {
+      debugPrint(
+        'Firebase not configured. Run: dart run flutterfire_cli:flutterfire configure',
+      );
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint('Firebase init failed: $e');
+    }
+  }
+
+  await initInjection();
+
+  await _handleInitialAuthLink();
+  _listenForAuthLinks();
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  try {
+    await FcmService.initialize();
+    final fcm = sl<FcmService>();
+    final auth = sl<AuthRepository>();
+    final settings = sl<SettingsCubit>();
+    if (auth.currentUser != null && settings.state.notificationsEnabled) {
+      await fcm.registerTokenIfNeeded();
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint('FCM init failed: $e');
+    }
+  }
+
+  runApp(const LinkStageApp());
+}
+
+Future<void> _handleInitialAuthLink() async {
+  try {
+    final appLinks = AppLinks();
+    final uri = await appLinks.getInitialLink();
+    if (uri != null) {
+      await _completeSignInWithEmailLink(uri.toString());
+    }
+  } catch (e, st) {
+    developer.log(
+      'Error handling initial link: $e',
+      name: 'linkstage.auth',
+      error: e,
+      stackTrace: st,
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
+void _listenForAuthLinks() {
+  final appLinks = AppLinks();
+  appLinks.uriLinkStream
+      .listen((Uri? uri) async {
+        if (uri != null) {
+          await _completeSignInWithEmailLink(uri.toString());
+        }
+      })
+      .onError((Object e, StackTrace st) {
+        developer.log(
+          'Auth link stream error: $e',
+          name: 'linkstage.auth',
+          error: e,
+          stackTrace: st,
+        );
+      });
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+Future<void> _completeSignInWithEmailLink(String link) async {
+  try {
+    final auth = sl<AuthRepository>();
+    if (!auth.isSignInWithEmailLink(link)) return;
+    final email = auth.pendingEmailForLinkSignIn;
+    if (email == null || email.isEmpty) {
+      developer.log(
+        'Email link opened but no pending email in storage. '
+        'Use the same device/app session after "Send sign-in link", or open the link in the browser and use "Open in app".',
+        name: 'linkstage.auth',
+      );
+      return;
+    }
+    await auth.signInWithEmailLink(email, link);
+  } catch (e, st) {
+    developer.log(
+      'Error completing email link sign-in: $e',
+      name: 'linkstage.auth',
+      error: e,
+      stackTrace: st,
     );
   }
 }
