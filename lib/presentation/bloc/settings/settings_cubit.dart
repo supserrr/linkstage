@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/services/fcm_service.dart';
-import '../../../domain/entities/user_entity.dart';
+import '../../../domain/entities/user_entity.dart'
     show ProfileVisibility, UserRole, WhoCanMessage;
 import '../../../domain/repositories/auth_repository.dart';
 import '../../../domain/repositories/planner_profile_repository.dart';
@@ -26,24 +26,24 @@ class SettingsCubit extends Cubit<SettingsState> {
     AuthRepository? authRepository,
     ProfileRepository? profileRepository,
     PlannerProfileRepository? plannerProfileRepository,
-  })  : _userRepository = userRepository,
-        _authRepository = authRepository,
-        _profileRepository = profileRepository,
-        _plannerProfileRepository = plannerProfileRepository,
-        super(
-          SettingsState(
-            themeMode: _themeModeFromIndex(_prefs.getInt(_keyThemeMode) ?? 0),
-            notificationsEnabled: _prefs.getBool(_keyNotifications) ?? true,
-            language: _prefs.getString(_keyLanguage) ?? 'en',
-            profileVisibility: _profileVisibilityFromIndex(
-              _prefs.getInt(_keyProfileVisibility) ?? 0,
-            ),
-            whoCanMessage: _whoCanMessageFromIndex(
-              _prefs.getInt(_keyWhoCanMessage) ?? 0,
-            ),
-            showOnlineStatus: _prefs.getBool(_keyShowOnlineStatus) ?? true,
-          ),
-        );
+  }) : _userRepository = userRepository,
+       _authRepository = authRepository,
+       _profileRepository = profileRepository,
+       _plannerProfileRepository = plannerProfileRepository,
+       super(
+         SettingsState(
+           themeMode: _themeModeFromIndex(_prefs.getInt(_keyThemeMode) ?? 0),
+           notificationsEnabled: _prefs.getBool(_keyNotifications) ?? true,
+           language: _prefs.getString(_keyLanguage) ?? 'en',
+           profileVisibility: _profileVisibilityFromIndex(
+             _prefs.getInt(_keyProfileVisibility) ?? 0,
+           ),
+           whoCanMessage: _whoCanMessageFromIndex(
+             _prefs.getInt(_keyWhoCanMessage) ?? 0,
+           ),
+           showOnlineStatus: _prefs.getBool(_keyShowOnlineStatus) ?? true,
+         ),
+       );
 
   final SharedPreferences _prefs;
   final UserRepository? _userRepository;
@@ -181,11 +181,13 @@ class SettingsCubit extends Cubit<SettingsState> {
     await _prefs.setInt(_keyProfileVisibility, _profileVisibilityToIndex(pv));
     await _prefs.setInt(_keyWhoCanMessage, _whoCanMessageToIndex(wcm));
     await _prefs.setBool(_keyShowOnlineStatus, sos);
-    emit(state.copyWith(
-      profileVisibility: pv,
-      whoCanMessage: wcm,
-      showOnlineStatus: sos,
-    ));
+    emit(
+      state.copyWith(
+        profileVisibility: pv,
+        whoCanMessage: wcm,
+        showOnlineStatus: sos,
+      ),
+    );
   }
 
   Future<void> _syncPrivacyToFirestore({
@@ -215,8 +217,8 @@ class SettingsCubit extends Cubit<SettingsState> {
           );
         }
       } else if (user.role == UserRole.eventPlanner) {
-        final plannerProfile =
-            await _plannerProfileRepository?.getPlannerProfile(user.id);
+        final plannerProfile = await _plannerProfileRepository
+            ?.getPlannerProfile(user.id);
         if (plannerProfile != null) {
           await _plannerProfileRepository?.upsertPlannerProfile(
             plannerProfile.copyWith(profileVisibility: profileVisibility),

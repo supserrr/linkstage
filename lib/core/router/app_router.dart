@@ -1,4 +1,10 @@
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show
+        defaultTargetPlatform,
+        kDebugMode,
+        kIsWeb,
+        TargetPlatform,
+        visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
@@ -71,6 +77,7 @@ class AppRoutes {
       '/view/creative/$userId/past-work';
   static const String myEvents = '/my-events';
   static const String createEvent = '/bookings/create-event';
+
   /// Standalone edit event (outside shell). Must be top-level so extra (event)
   /// is preserved; shell child routes can lose extra.
   static const String editEvent = '/edit-event';
@@ -94,7 +101,8 @@ class AppRoutes {
   static String chatWithUser(String userId) => '/messages/with/$userId';
 
   /// Path for sending a collaboration proposal to a creative.
-  static String sendCollaboration(String targetUserId) => '/collaborate/$targetUserId';
+  static String sendCollaboration(String targetUserId) =>
+      '/collaborate/$targetUserId';
 
   static const String collaborationDetail = '/collaboration/detail';
 
@@ -108,21 +116,30 @@ class AppRoutes {
 class AppRouter {
   AppRouter._();
 
-  static final GoRouter router = _createRouter();
+  static GoRouter? _router;
+
+  /// Lazily builds the router so tests can reset [sl] and call
+  /// [resetRouterForTest] before first use in a test isolate.
+  static GoRouter get router => _router ??= _createRouter();
+
+  /// Clears the cached [GoRouter] so the next [router] access rebuilds with
+  /// current service-locator registrations. For tests only.
+  @visibleForTesting
+  static void resetRouterForTest() {
+    _router?.dispose();
+    _router = null;
+  }
 
   static GoRouter _createRouter() {
     final authNotifier = sl<AuthRedirectNotifier>();
     final splashNotifier = sl<SplashNotifier>();
     return GoRouter(
       initialLocation: AppRoutes.splash,
-      debugLogDiagnostics: true,
-      refreshListenable: Listenable.merge([
-        authNotifier,
-        splashNotifier,
-      ]),
+      debugLogDiagnostics: kDebugMode,
+      refreshListenable: Listenable.merge([authNotifier, splashNotifier]),
       redirect: (context, state) {
-        // Firebase email link auth URLs open the app via App Links; handle them
-        // as auth completion, not navigation. Redirect to splash so auth flow runs.
+        // Email-link sign-in lands as a deep link; treat it as auth completion,
+        // not a real route — bounce through splash so AuthBloc can finish.
         final loc = state.uri.toString();
         if (loc.contains('__/auth') || loc.contains('finishSignIn')) {
           return AppRoutes.splash;
@@ -151,8 +168,8 @@ class AppRouter {
             state.matchedLocation == AppRoutes.notifications ||
             state.matchedLocation == AppRoutes.following;
 
-        // On iOS, use the same flow as Android: no onboarding intro, role selection, or
-        // profile setup — go straight to login or home so both platforms show the same screens.
+        // iOS build for this course skips role-selection + profile-setup gates so
+        // testers hit login/home with the same screens as Android without extra steps.
         final bool alignWithAndroid =
             !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
@@ -200,7 +217,8 @@ class AppRouter {
           }
           if (!alignWithAndroid &&
               isAppRoute &&
-              (authNotifier.needsRoleSelection || authNotifier.needsProfileSetup)) {
+              (authNotifier.needsRoleSelection ||
+                  authNotifier.needsProfileSetup)) {
             if (authNotifier.needsRoleSelection) {
               return AppRoutes.roleSelection;
             }
@@ -215,6 +233,14 @@ class AppRouter {
           name: 'splash',
           builder: (context, state) => const SplashPage(),
         ),
+        GoRoute(
+          path: AppRoutes.createEvent,
+          name: 'createEvent',
+          builder: (context, state) {
+            final creativeId = state.uri.queryParameters['creativeId'] ?? '';
+            return CreateEventPage(invitedCreativeId: creativeId);
+          },
+        ),
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) =>
               BottomNavShell(navigationShell: navigationShell),
@@ -224,219 +250,220 @@ class AppRouter {
                 GoRoute(
                   path: '/home',
                   name: 'home',
-                      pageBuilder: (context, state) =>
-                          const NoTransitionPage(child: HomePage()),
-                    ),
-                  ],
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: HomePage()),
                 ),
-                StatefulShellBranch(
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/explore',
+                  name: 'explore',
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: ExplorePage()),
                   routes: [
                     GoRoute(
-                      path: '/explore',
-                      name: 'explore',
-                      pageBuilder: (context, state) =>
-                          const NoTransitionPage(child: ExplorePage()),
-                      routes: [
-                        GoRoute(
-                          path: 'creatives',
-                          name: 'exploreCreativesAll',
-                          builder: (context, state) {
-                            final extra = state.extra as Map<String, dynamic>?;
-                            return ExploreCreativesAllPage(
-                              category: extra?['category'] as ProfileCategory?,
-                              location: extra?['location'] as String?,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                StatefulShellBranch(
-                  routes: [
-                    GoRoute(
-                      path: '/messages',
-                      name: 'messages',
-                      pageBuilder: (context, state) =>
-                          const NoTransitionPage(child: MessagesPage()),
-                      routes: [
-                        GoRoute(
-                          path: 'chat/:chatId',
-                          name: 'chat',
-                          builder: (context, state) {
-                            final chatId = state.pathParameters['chatId'] ?? '';
-                            if (chatId.isEmpty) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (context.mounted) {
-                                  showToast(context, 'Chat not found', isError: true);
-                                  context.go(AppRoutes.messages);
-                                }
-                              });
-                              return Scaffold(
-                                body: Center(
-                                  child: LoadingAnimationWidget.stretchedDots(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    size: 48,
-                                  ),
-                                ),
-                              );
-                            }
-                            return ChatPage(chatId: chatId);
-                          },
-                        ),
-                        GoRoute(
-                          path: 'with/:userId',
-                          name: 'chatWithUser',
-                          builder: (context, state) {
-                            final userId = state.pathParameters['userId'] ?? '';
-                            if (userId.isEmpty) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (context.mounted) {
-                                  showToast(context, 'User not found', isError: true);
-                                  context.go(AppRoutes.messages);
-                                }
-                              });
-                              return Scaffold(
-                                body: Center(
-                                  child: LoadingAnimationWidget.stretchedDots(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    size: 48,
-                                  ),
-                                ),
-                              );
-                            }
-                            return ChatPage(otherUserId: userId);
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                StatefulShellBranch(
-                  routes: [
-                    GoRoute(
-                      path: '/bookings',
-                      name: 'bookings',
-                      pageBuilder: (context, state) =>
-                          const NoTransitionPage(child: ActivityTabPage()),
-                      routes: [
-                        GoRoute(
-                          path: 'create-event',
-                          name: 'createEvent',
-                          builder: (context, state) {
-                            final creativeId =
-                                state.uri.queryParameters['creativeId'] ?? '';
-                            return CreateEventPage(invitedCreativeId: creativeId);
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                StatefulShellBranch(
-                  routes: [
-                    GoRoute(
-                      path: '/profile',
-                      name: 'profile',
-                      pageBuilder: (context, state) =>
-                          const NoTransitionPage(child: SettingsPage()),
-                      routes: [
-                        GoRoute(
-                          path: 'change-username',
-                          name: 'changeUsername',
-                          pageBuilder: (context, state) => MaterialPage(
-                            key: state.pageKey,
-                            child: const ChangeUsernamePage(),
-                          ),
-                        ),
-                        GoRoute(
-                          path: 'change-email',
-                          name: 'changeEmail',
-                          pageBuilder: (context, state) => MaterialPage(
-                            key: state.pageKey,
-                            child: const ChangeEmailPage(),
-                          ),
-                        ),
-                        GoRoute(
-                          path: 'privacy',
-                          name: 'privacy',
-                          pageBuilder: (context, state) => MaterialPage(
-                            key: state.pageKey,
-                            child: const PrivacySettingsPage(),
-                          ),
-                        ),
-                        GoRoute(
-                          path: 'view',
-                          name: 'viewProfile',
-                          pageBuilder: (context, state) => MaterialPage(
-                            key: state.pageKey,
-                            child: const ViewProfilePage(),
-                          ),
-                          routes: [
-                            GoRoute(
-                              path: 'reviews',
-                              name: 'profileReviews',
-                              pageBuilder: (context, state) {
-                                final userId =
-                                    state.uri.queryParameters['userId'] ?? '';
-                                return MaterialPage(
-                                  key: state.pageKey,
-                                  child: ProfileReviewsPage(revieweeUserId: userId),
-                                );
-                              },
-                            ),
-                            GoRoute(
-                              path: 'portfolio',
-                              name: 'profilePortfolio',
-                              pageBuilder: (context, state) {
-                                final userId =
-                                    state.uri.queryParameters['userId'] ?? '';
-                                return MaterialPage(
-                                  key: state.pageKey,
-                                  child: ProfilePortfolioPage(userId: userId),
-                                );
-                              },
-                            ),
-                            GoRoute(
-                              path: 'past-work',
-                              name: 'profilePastWork',
-                              pageBuilder: (context, state) {
-                                final userId =
-                                    state.uri.queryParameters['userId'] ?? '';
-                                return MaterialPage(
-                                  key: state.pageKey,
-                                  child: CreativePastWorkPage(userId: userId),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                        GoRoute(
-                          path: 'creative-profile',
-                          name: 'creativeProfile',
-                          pageBuilder: (context, state) => MaterialPage(
-                            key: state.pageKey,
-                            child: const CreativeProfileEditPage(),
-                          ),
-                        ),
-                        GoRoute(
-                          path: 'planner-profile',
-                          name: 'plannerProfile',
-                          pageBuilder: (context, state) => MaterialPage(
-                            key: state.pageKey,
-                            child: const PlannerProfileEditPage(),
-                          ),
-                        ),
-                      ],
+                      path: 'creatives',
+                      name: 'exploreCreativesAll',
+                      builder: (context, state) {
+                        final extra = state.extra as Map<String, dynamic>?;
+                        return ExploreCreativesAllPage(
+                          category: extra?['category'] as ProfileCategory?,
+                          location: extra?['location'] as String?,
+                        );
+                      },
                     ),
                   ],
                 ),
               ],
             ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/messages',
+                  name: 'messages',
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: MessagesPage()),
+                  routes: [
+                    GoRoute(
+                      path: 'chat/:chatId',
+                      name: 'chat',
+                      builder: (context, state) {
+                        final chatId = state.pathParameters['chatId'] ?? '';
+                        if (chatId.isEmpty) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (context.mounted) {
+                              showToast(
+                                context,
+                                'Chat not found',
+                                isError: true,
+                              );
+                              context.go(AppRoutes.messages);
+                            }
+                          });
+                          return Scaffold(
+                            body: Center(
+                              child: LoadingAnimationWidget.stretchedDots(
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 48,
+                              ),
+                            ),
+                          );
+                        }
+                        return ChatPage(chatId: chatId);
+                      },
+                    ),
+                    GoRoute(
+                      path: 'with/:userId',
+                      name: 'chatWithUser',
+                      builder: (context, state) {
+                        final userId = state.pathParameters['userId'] ?? '';
+                        if (userId.isEmpty) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (context.mounted) {
+                              showToast(
+                                context,
+                                'User not found',
+                                isError: true,
+                              );
+                              context.go(AppRoutes.messages);
+                            }
+                          });
+                          return Scaffold(
+                            body: Center(
+                              child: LoadingAnimationWidget.stretchedDots(
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 48,
+                              ),
+                            ),
+                          );
+                        }
+                        return ChatPage(otherUserId: userId);
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/bookings',
+                  name: 'bookings',
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: ActivityTabPage()),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/profile',
+                  name: 'profile',
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: SettingsPage()),
+                  routes: [
+                    GoRoute(
+                      path: 'change-username',
+                      name: 'changeUsername',
+                      pageBuilder: (context, state) => MaterialPage(
+                        key: state.pageKey,
+                        child: const ChangeUsernamePage(),
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'change-email',
+                      name: 'changeEmail',
+                      pageBuilder: (context, state) => MaterialPage(
+                        key: state.pageKey,
+                        child: const ChangeEmailPage(),
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'privacy',
+                      name: 'privacy',
+                      pageBuilder: (context, state) => MaterialPage(
+                        key: state.pageKey,
+                        child: const PrivacySettingsPage(),
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'view',
+                      name: 'viewProfile',
+                      pageBuilder: (context, state) => MaterialPage(
+                        key: state.pageKey,
+                        child: const ViewProfilePage(),
+                      ),
+                      routes: [
+                        GoRoute(
+                          path: 'reviews',
+                          name: 'profileReviews',
+                          pageBuilder: (context, state) {
+                            final userId =
+                                state.uri.queryParameters['userId'] ?? '';
+                            return MaterialPage(
+                              key: state.pageKey,
+                              child: ProfileReviewsPage(revieweeUserId: userId),
+                            );
+                          },
+                        ),
+                        GoRoute(
+                          path: 'portfolio',
+                          name: 'profilePortfolio',
+                          pageBuilder: (context, state) {
+                            final userId =
+                                state.uri.queryParameters['userId'] ?? '';
+                            return MaterialPage(
+                              key: state.pageKey,
+                              child: ProfilePortfolioPage(userId: userId),
+                            );
+                          },
+                        ),
+                        GoRoute(
+                          path: 'past-work',
+                          name: 'profilePastWork',
+                          pageBuilder: (context, state) {
+                            final userId =
+                                state.uri.queryParameters['userId'] ?? '';
+                            return MaterialPage(
+                              key: state.pageKey,
+                              child: CreativePastWorkPage(userId: userId),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    GoRoute(
+                      path: 'creative-profile',
+                      name: 'creativeProfile',
+                      pageBuilder: (context, state) => MaterialPage(
+                        key: state.pageKey,
+                        child: const CreativeProfileEditPage(),
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'planner-profile',
+                      name: 'plannerProfile',
+                      pageBuilder: (context, state) => MaterialPage(
+                        key: state.pageKey,
+                        child: const PlannerProfileEditPage(),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
         GoRoute(
           path: AppRoutes.login,
           name: 'login',
-          builder: (context, state) => const LoginPage(),
+          builder: (context, state) {
+            final mode = state.uri.queryParameters['mode'];
+            final showEmail = mode == 'email';
+            return LoginPage(initialShowEmailForm: showEmail);
+          },
         ),
         GoRoute(
           path: AppRoutes.verifyEmail,
@@ -671,7 +698,8 @@ class AppRouter {
           path: AppRoutes.roleSelection,
           name: 'roleSelection',
           builder: (context, state) {
-            final user = (state.extra as UserEntity?) ??
+            final user =
+                (state.extra as UserEntity?) ??
                 authNotifier.user ??
                 sl<AuthRepository>().currentUser;
             if (user == null) {
@@ -691,7 +719,8 @@ class AppRouter {
           path: AppRoutes.profileSetup,
           name: 'profileSetup',
           builder: (context, state) {
-            final user = (state.extra as UserEntity?) ??
+            final user =
+                (state.extra as UserEntity?) ??
                 authNotifier.user ??
                 sl<AuthRepository>().currentUser;
             if (user == null) {

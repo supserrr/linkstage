@@ -1,6 +1,15 @@
 import 'package:equatable/equatable.dart';
 
-enum ChangeUsernameStatus { initial, checking, available, unavailable, invalid, submitting, success, error }
+enum ChangeUsernameStatus {
+  initial,
+  checking,
+  available,
+  unavailable,
+  invalid,
+  submitting,
+  success,
+  error,
+}
 
 class ChangeUsernameState extends Equatable {
   const ChangeUsernameState({
@@ -39,7 +48,8 @@ class ChangeUsernameState extends Equatable {
       currentUsername: currentUsername ?? this.currentUsername,
       validationError: validationError,
       isAvailable: isAvailable ?? this.isAvailable,
-      isCheckingAvailability: isCheckingAvailability ?? this.isCheckingAvailability,
+      isCheckingAvailability:
+          isCheckingAvailability ?? this.isCheckingAvailability,
       status: status ?? this.status,
       errorMessage: errorMessage,
       nextChangeDate: nextChangeDate ?? this.nextChangeDate,
@@ -49,13 +59,13 @@ class ChangeUsernameState extends Equatable {
 
   @override
   List<Object?> get props => [
-        currentUsername,
-        validationError,
-        isAvailable,
-        isCheckingAvailability,
-        status,
-        errorMessage,
-        nextChangeDate,
-        isSubmitting,
-      ];
+    currentUsername,
+    validationError,
+    isAvailable,
+    isCheckingAvailability,
+    status,
+    errorMessage,
+    nextChangeDate,
+    isSubmitting,
+  ];
 }

@@ -49,6 +49,7 @@ class CreateEventPage extends StatelessWidget {
   const CreateEventPage({super.key, this.event, this.invitedCreativeId = ''});
 
   final EventEntity? event;
+
   /// Creative to invite when creating a new event (from Book Now flow).
   final String invitedCreativeId;
 
@@ -127,7 +128,8 @@ class _CreateEventView extends StatelessWidget {
                 child: TextFormField(
                   initialValue: state.title,
                   decoration: const InputDecoration(
-                    hintText: 'e.g. Wedding Reception, Corporate Gala',
+                    hintText:
+                        'e.g. Kigali wedding reception, corporate year-end party',
                   ),
                   onChanged: (v) =>
                       context.read<CreateEventCubit>().setTitle(v),
@@ -140,7 +142,8 @@ class _CreateEventView extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<String>(
-                      initialValue: _standardEventTypes.contains(state.eventType)
+                      initialValue:
+                          _standardEventTypes.contains(state.eventType)
                           ? state.eventType
                           : 'Other',
                       decoration: const InputDecoration(
@@ -154,10 +157,7 @@ class _CreateEventView extends StatelessWidget {
                       ),
                       items: [
                         ..._standardEventTypes.map(
-                          (e) => DropdownMenuItem(
-                            value: e,
-                            child: Text(e),
-                          ),
+                          (e) => DropdownMenuItem(value: e, child: Text(e)),
                         ),
                         const DropdownMenuItem(
                           value: 'Other',
@@ -167,8 +167,8 @@ class _CreateEventView extends StatelessWidget {
                       onChanged: (v) {
                         if (v != null) {
                           context.read<CreateEventCubit>().setEventType(
-                                v == 'Other' ? state.eventType : v,
-                              );
+                            v == 'Other' ? state.eventType : v,
+                          );
                         }
                       },
                     ),
@@ -177,7 +177,8 @@ class _CreateEventView extends StatelessWidget {
                       TextFormField(
                         initialValue: state.eventType,
                         decoration: const InputDecoration(
-                          hintText: 'Enter event type (e.g. Festival, Meetup)',
+                          hintText:
+                              'Enter event type (e.g. Umuganura, tech meetup)',
                           border: OutlineInputBorder(),
                           isDense: true,
                         ),
@@ -259,7 +260,9 @@ class _CreateEventView extends StatelessWidget {
                   decoration: const InputDecoration(
                     hintText: 'Optional, in RWF - leave blank if not specified',
                   ),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   onChanged: (v) {
                     final n = double.tryParse(v.trim());
                     context.read<CreateEventCubit>().setBudget(n);
@@ -275,7 +278,8 @@ class _CreateEventView extends StatelessWidget {
                       initialValue: state.venueName,
                       decoration: const InputDecoration(
                         labelText: 'Place name',
-                        hintText: 'e.g. Innovation Hub, Convention Center',
+                        hintText:
+                            'e.g. Kigali Convention Centre, Intare Arena',
                       ),
                       onChanged: (v) =>
                           context.read<CreateEventCubit>().setVenueName(v),
@@ -285,7 +289,7 @@ class _CreateEventView extends StatelessWidget {
                       initialValue: state.location,
                       decoration: const InputDecoration(
                         labelText: 'Address',
-                        hintText: 'e.g. 124 Main St, City',
+                        hintText: 'e.g. KG 11 Ave, Remera, Kigali',
                       ),
                       onChanged: (v) =>
                           context.read<CreateEventCubit>().setLocation(v),
@@ -314,8 +318,8 @@ class _CreateEventView extends StatelessWidget {
                     Text(
                       'Location visibility',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     SegmentedButton<LocationVisibility>(
@@ -349,8 +353,8 @@ class _CreateEventView extends StatelessWidget {
                     Text(
                       _locationVisibilityHint(state.locationVisibility),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -381,9 +385,7 @@ class _CreateEventView extends StatelessWidget {
                 title: 'Status',
                 child: DropdownButtonFormField<EventStatus>(
                   initialValue: state.status,
-                  decoration: const InputDecoration(
-                    hintText: 'Select status',
-                  ),
+                  decoration: const InputDecoration(hintText: 'Select status'),
                   items: const [
                     DropdownMenuItem(
                       value: EventStatus.draft,
@@ -406,7 +408,9 @@ class _CreateEventView extends StatelessWidget {
                 buildWhen: (a, b) =>
                     a.isSaving != b.isSaving || a.status != b.status,
                 builder: (context, state) {
-                  final label = state.status == EventStatus.open ? 'Publish' : 'Save';
+                  final label = state.status == EventStatus.open
+                      ? 'Publish'
+                      : 'Save';
                   return SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -423,9 +427,7 @@ class _CreateEventView extends StatelessWidget {
                             )
                           : Text(
                               label,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
+                              style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w600),
                             ),
                     ),
@@ -443,12 +445,20 @@ class _CreateEventView extends StatelessWidget {
   Future<void> _pickDate(BuildContext context) async {
     final cubit = context.read<CreateEventCubit>();
     final state = cubit.state;
-    final initial = state.date ?? DateTime.now();
+    final now = DateTime.now();
+    DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
+    final today = dateOnly(now);
+    final initial = state.date != null ? dateOnly(state.date!) : today;
+    // initialDate must be on or after firstDate. Using today alone breaks for past events.
+    final pastWindowStart = dateOnly(DateTime(now.year - 10, 1, 1));
+    final firstDate = initial.isBefore(today)
+        ? (initial.isBefore(pastWindowStart) ? initial : pastWindowStart)
+        : today;
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+      firstDate: firstDate,
+      lastDate: today.add(const Duration(days: 365 * 2)),
     );
     if (picked != null) {
       cubit.setDate(picked);
@@ -466,8 +476,10 @@ class _CreateEventView extends StatelessWidget {
         return TimeOfDay(hour: h, minute: m);
       }
       if (h != null && m != null && h >= 1 && h <= 12 && m >= 0 && m <= 59) {
-        final pm = parts.length >= 3 &&
-            (parts[2].toUpperCase().startsWith('P') || parts[2].toUpperCase() == 'PM');
+        final pm =
+            parts.length >= 3 &&
+            (parts[2].toUpperCase().startsWith('P') ||
+                parts[2].toUpperCase() == 'PM');
         final hour = pm ? (h == 12 ? 12 : h + 12) : (h == 12 ? 0 : h);
         return TimeOfDay(hour: hour, minute: m);
       }
@@ -492,11 +504,9 @@ class _CreateEventView extends StatelessWidget {
   Future<void> _pickStartTime(BuildContext context) async {
     final cubit = context.read<CreateEventCubit>();
     final state = cubit.state;
-    final initial = _parseTime(state.startTime) ?? const TimeOfDay(hour: 9, minute: 0);
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: initial,
-    );
+    final initial =
+        _parseTime(state.startTime) ?? const TimeOfDay(hour: 9, minute: 0);
+    final picked = await showTimePicker(context: context, initialTime: initial);
     if (picked != null) {
       cubit.setStartTime(_timeToStorage(picked));
     }
@@ -505,11 +515,9 @@ class _CreateEventView extends StatelessWidget {
   Future<void> _pickEndTime(BuildContext context) async {
     final cubit = context.read<CreateEventCubit>();
     final state = cubit.state;
-    final initial = _parseTime(state.endTime) ?? const TimeOfDay(hour: 17, minute: 0);
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: initial,
-    );
+    final initial =
+        _parseTime(state.endTime) ?? const TimeOfDay(hour: 17, minute: 0);
+    final picked = await showTimePicker(context: context, initialTime: initial);
     if (picked != null) {
       cubit.setEndTime(_timeToStorage(picked));
     }
@@ -549,7 +557,11 @@ class _CreateEventView extends StatelessWidget {
       );
     } catch (e) {
       if (context.mounted) {
-        showToast(context, 'Could not get location: ${e.toString()}', isError: true);
+        showToast(
+          context,
+          'Could not get location: ${e.toString()}',
+          isError: true,
+        );
       }
     }
   }
@@ -575,9 +587,13 @@ class _CreateEventView extends StatelessWidget {
   String _formatAddress(geocoding.Placemark p) {
     final parts = <String>[];
     if (p.street != null && p.street!.isNotEmpty) parts.add(p.street!);
-    if (p.subLocality != null && p.subLocality!.isNotEmpty) parts.add(p.subLocality!);
+    if (p.subLocality != null && p.subLocality!.isNotEmpty) {
+      parts.add(p.subLocality!);
+    }
     if (p.locality != null && p.locality!.isNotEmpty) parts.add(p.locality!);
-    if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty) parts.add(p.administrativeArea!);
+    if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty) {
+      parts.add(p.administrativeArea!);
+    }
     if (p.country != null && p.country!.isNotEmpty) parts.add(p.country!);
     return parts.join(', ');
   }
@@ -606,9 +622,7 @@ class _CreateEventView extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        cubit.setImageError(
-          e.toString().replaceAll('Exception:', '').trim(),
-        );
+        cubit.setImageError(e.toString().replaceAll('Exception:', '').trim());
       }
     }
   }
@@ -740,9 +754,9 @@ class _Section extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
               title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
           child,

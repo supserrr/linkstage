@@ -1,8 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
+import '../bloc/bookings/bookings_cubit.dart';
+import '../bloc/bookings/bookings_state.dart';
 import '../widgets/atoms/glass_card.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,8 +22,6 @@ import '../../domain/entities/event_entity.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/booking_repository.dart';
 import '../../domain/repositories/collaboration_repository.dart';
-import '../../domain/repositories/event_repository.dart';
-import '../../domain/repositories/user_repository.dart';
 import '../widgets/molecules/app_detail_chip.dart';
 import '../widgets/molecules/connection_error_overlay.dart';
 import '../widgets/molecules/empty_state_illustrated.dart';
@@ -29,7 +30,11 @@ import '../widgets/molecules/profile_avatar.dart';
 
 /// Gigs tab for creatives: shows events they applied to (pending) and accepted gigs.
 class BookingsPage extends StatefulWidget {
-  const BookingsPage({super.key});
+  const BookingsPage({super.key, this.bookingsCubit});
+
+  /// When set (e.g. in tests), this cubit is used and not closed by the page.
+  /// When null, the page creates its own [BookingsCubit] and calls [BookingsCubit.load].
+  final BookingsCubit? bookingsCubit;
 
   @override
   State<BookingsPage> createState() => _BookingsPageState();
@@ -38,115 +43,30 @@ class BookingsPage extends StatefulWidget {
 class _BookingsPageState extends State<BookingsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  List<BookingEntity> _invited = [];
-  List<BookingEntity> _applications = [];
-  List<BookingEntity> _accepted = [];
-  List<BookingEntity> _completed = [];
-  List<CollaborationEntity> _collaborations = [];
-  Map<String, EventEntity?> _events = {};
-  Map<String, String> _requesterNames = {};
-  Map<String, String?> _requesterPhotoUrls = {};
-  Map<String, UserRole?> _requesterRoles = {};
-  String? _confirmingBookingId;
-  bool _loading = true;
-  String? _error;
+  late final BookingsCubit _cubit;
+  late final bool _ownsCubit;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _load();
+    final injected = widget.bookingsCubit;
+    if (injected != null) {
+      _cubit = injected;
+      _ownsCubit = false;
+    } else {
+      _cubit = BookingsCubit()..load();
+      _ownsCubit = true;
+    }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    if (_ownsCubit) {
+      _cubit.close();
+    }
     super.dispose();
-  }
-
-  Future<void> _load() async {
-    final user = sl<AuthRedirectNotifier>().user;
-    if (user?.id == null || user?.role != UserRole.creativeProfessional) {
-      if (mounted) setState(() { _loading = false; });
-      return;
-    }
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final collaborations =
-          await sl<CollaborationRepository>().getCollaborationsByTargetUserId(
-        user!.id,
-      );
-      final invited =
-          await sl<BookingRepository>().getInvitedBookingsByCreativeId(user.id);
-      final pending =
-          await sl<BookingRepository>().getPendingBookingsByCreativeId(user.id);
-      final accepted =
-          await sl<BookingRepository>().getAcceptedBookingsByCreativeId(user.id);
-      final completed =
-          await sl<BookingRepository>().getCompletedBookingsByCreativeId(user.id);
-      final eventRepo = sl<EventRepository>();
-      final eventIds = {
-        ...invited.map((b) => b.eventId),
-        ...pending.map((b) => b.eventId),
-        ...accepted.map((b) => b.eventId),
-        ...completed.map((b) => b.eventId),
-      };
-      final events = <String, EventEntity?>{};
-      for (final id in eventIds) {
-        events[id] = await eventRepo.getEventById(id);
-      }
-      final requesterIds = collaborations.map((c) => c.requesterId).toSet().toList();
-      final requesterNames = <String, String>{};
-      final requesterPhotoUrls = <String, String?>{};
-      final requesterRoles = <String, UserRole?>{};
-      for (final id in requesterIds) {
-        final u = await sl<UserRepository>().getUser(id);
-        requesterNames[id] = u?.displayName ?? u?.email ?? 'Someone';
-        requesterPhotoUrls[id] = u?.photoUrl;
-        requesterRoles[id] = u?.role;
-      }
-      final filtered = collaborations
-          .where((c) => c.status != CollaborationStatus.declined)
-          .toList();
-      final sorted = List<CollaborationEntity>.from(filtered)
-        ..sort((a, b) {
-          final order = {
-            CollaborationStatus.pending: 0,
-            CollaborationStatus.accepted: 1,
-            CollaborationStatus.completed: 2,
-          };
-          final diff = (order[a.status] ?? 2) - (order[b.status] ?? 2);
-          if (diff != 0) return diff;
-          final da = a.createdAt ?? DateTime(0);
-          final db = b.createdAt ?? DateTime(0);
-          return db.compareTo(da);
-        });
-      if (mounted) {
-        setState(() {
-          _collaborations = sorted;
-          _requesterNames = requesterNames;
-          _requesterPhotoUrls = requesterPhotoUrls;
-          _requesterRoles = requesterRoles;
-          _invited = invited;
-          _applications = pending;
-          _accepted = accepted;
-          _completed = completed;
-          _events = events;
-          _loading = false;
-          _error = null;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _error = e.toString().replaceFirst('Exception: ', '');
-        });
-      }
-    }
   }
 
   Future<void> _acceptInvitation(BookingEntity booking) async {
@@ -160,7 +80,7 @@ class _BookingsPageState extends State<BookingsPage>
         eventId: booking.eventId,
         add: true,
       );
-      final eventTitle = _events[booking.eventId]?.title ?? 'Event';
+      final eventTitle = _cubit.state.events[booking.eventId]?.title ?? 'Event';
       final user = sl<AuthRedirectNotifier>().user;
       final accepterName =
           user?.displayName ?? user?.username ?? user?.email ?? 'Someone';
@@ -177,7 +97,7 @@ class _BookingsPageState extends State<BookingsPage>
       );
       if (mounted) {
         showToast(context, 'Invitation accepted');
-        _load();
+        _cubit.load();
       }
     } catch (e) {
       if (mounted) {
@@ -199,7 +119,7 @@ class _BookingsPageState extends State<BookingsPage>
         booking.id,
         BookingStatus.declined,
       );
-      final eventTitle = _events[booking.eventId]?.title ?? 'Event';
+      final eventTitle = _cubit.state.events[booking.eventId]?.title ?? 'Event';
       final user = sl<AuthRedirectNotifier>().user;
       final declinerName =
           user?.displayName ?? user?.username ?? user?.email ?? 'Someone';
@@ -216,7 +136,7 @@ class _BookingsPageState extends State<BookingsPage>
       );
       if (mounted) {
         showToast(context, 'Invitation declined');
-        _load();
+        _cubit.load();
       }
     } catch (e) {
       if (mounted) {
@@ -226,25 +146,28 @@ class _BookingsPageState extends State<BookingsPage>
   }
 
   Future<void> _confirmCompletionByCreative(BookingEntity booking) async {
-    setState(() => _confirmingBookingId = booking.id);
+    _cubit.setConfirmingBookingId(booking.id);
     try {
       await sl<BookingRepository>().confirmCompletionByCreative(booking.id);
       if (mounted) {
         showToast(context, 'Confirmed completion');
-        _load();
+        _cubit.load();
       }
     } catch (e) {
       if (mounted) {
         showToast(context, 'Failed: $e', isError: true);
       }
     } finally {
-      if (mounted) setState(() => _confirmingBookingId = null);
+      if (mounted) _cubit.clearConfirmingBookingId();
     }
   }
 
   Future<void> _acceptCollaboration(CollaborationEntity c) async {
     try {
-      await sl<CollaborationRepository>().updateStatus(c.id, CollaborationStatus.accepted);
+      await sl<CollaborationRepository>().updateStatus(
+        c.id,
+        CollaborationStatus.accepted,
+      );
       final user = sl<AuthRedirectNotifier>().user;
       final accepterName =
           user?.displayName ?? user?.username ?? user?.email ?? 'Someone';
@@ -266,7 +189,7 @@ class _BookingsPageState extends State<BookingsPage>
             context.push(AppRoutes.chatWithUser(c.requesterId));
           }
         });
-        _load();
+        _cubit.load();
       }
     } catch (e) {
       if (mounted) {
@@ -277,7 +200,10 @@ class _BookingsPageState extends State<BookingsPage>
 
   Future<void> _declineCollaboration(CollaborationEntity c) async {
     try {
-      await sl<CollaborationRepository>().updateStatus(c.id, CollaborationStatus.declined);
+      await sl<CollaborationRepository>().updateStatus(
+        c.id,
+        CollaborationStatus.declined,
+      );
       final user = sl<AuthRedirectNotifier>().user;
       final declinerName =
           user?.displayName ?? user?.username ?? user?.email ?? 'Someone';
@@ -293,7 +219,7 @@ class _BookingsPageState extends State<BookingsPage>
       );
       if (mounted) {
         showToast(context, 'Proposal declined');
-        _load();
+        _cubit.load();
       }
     } catch (e) {
       if (mounted) {
@@ -329,68 +255,78 @@ class _BookingsPageState extends State<BookingsPage>
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gigs'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Gigs'),
-            Tab(text: 'Collaborations'),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loading ? null : _load,
-            tooltip: 'Refresh',
-          ),
-        ],
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          CustomMaterialIndicator(
-            onRefresh: _load,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            useMaterialContainer: false,
-            indicatorBuilder: (context, controller) => Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: LoadingAnimationWidget.threeRotatingDots(
-                color: Theme.of(context).colorScheme.primary,
-                size: 40,
+    return BlocProvider<BookingsCubit>.value(
+      value: _cubit,
+      child: BlocBuilder<BookingsCubit, BookingsState>(
+        builder: (context, bookingsState) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Gigs'),
+              bottom: TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(text: 'Gigs'),
+                  Tab(text: 'Collaborations'),
+                ],
               ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: bookingsState.loading
+                      ? null
+                      : () => context.read<BookingsCubit>().load(),
+                  tooltip: 'Refresh',
+                ),
+              ],
             ),
-            child: _buildGigsBody(),
-          ),
-          CustomMaterialIndicator(
-            onRefresh: _load,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            useMaterialContainer: false,
-            indicatorBuilder: (context, controller) => Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: LoadingAnimationWidget.threeRotatingDots(
-                color: Theme.of(context).colorScheme.primary,
-                size: 40,
-              ),
+            body: TabBarView(
+              controller: _tabController,
+              children: [
+                CustomMaterialIndicator(
+                  onRefresh: () => context.read<BookingsCubit>().load(),
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  useMaterialContainer: false,
+                  indicatorBuilder: (context, controller) => Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: LoadingAnimationWidget.threeRotatingDots(
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 40,
+                    ),
+                  ),
+                  child: _buildGigsBody(context, bookingsState),
+                ),
+                CustomMaterialIndicator(
+                  onRefresh: () => context.read<BookingsCubit>().load(),
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  useMaterialContainer: false,
+                  indicatorBuilder: (context, controller) => Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: LoadingAnimationWidget.threeRotatingDots(
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 40,
+                    ),
+                  ),
+                  child: _buildCollaborationsBody(context, bookingsState),
+                ),
+              ],
             ),
-            child: _buildCollaborationsBody(),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildGigsBody() {
-    final hasInvited = _invited.isNotEmpty;
-    final hasApplications = _applications.isNotEmpty;
-    final hasAccepted = _accepted.isNotEmpty;
-    final hasCompleted = _completed.isNotEmpty;
-    final hasAnyGigs = hasInvited || hasApplications || hasAccepted || hasCompleted;
+  Widget _buildGigsBody(BuildContext context, BookingsState s) {
+    final hasInvited = s.invited.isNotEmpty;
+    final hasApplications = s.applications.isNotEmpty;
+    final hasAccepted = s.accepted.isNotEmpty;
+    final hasCompleted = s.completed.isNotEmpty;
+    final hasAnyGigs =
+        hasInvited || hasApplications || hasAccepted || hasCompleted;
 
-    if (_loading && !hasAnyGigs && _error == null) {
+    if (s.loading && !hasAnyGigs && s.error == null) {
       return ListView.builder(
         padding: const EdgeInsets.only(top: 16, bottom: 96),
         physics: const AlwaysScrollableScrollPhysics(),
@@ -398,7 +334,7 @@ class _BookingsPageState extends State<BookingsPage>
         itemBuilder: (context, index) => const BookingEventTileSkeleton(),
       );
     }
-    if (!hasAnyGigs && _error == null) {
+    if (!hasAnyGigs && s.error == null) {
       return EmptyStateIllustrated(
         assetPathDark: 'assets/images/no_gigs_empty_dark.svg',
         assetPathLight: 'assets/images/no_gigs_empty_light.svg',
@@ -415,26 +351,27 @@ class _BookingsPageState extends State<BookingsPage>
             itemCount: 5,
             itemBuilder: (context, index) => const BookingEventTileSkeleton(),
           )
-        : _buildGigsSliverList();
+        : _buildGigsSliverList(s);
     return ConnectionErrorOverlay(
-      hasError: _error != null,
-      error: _error,
-      onRefresh: () async => _load(),
+      hasError: s.error != null,
+      error: s.error,
+      onRefresh: () async => context.read<BookingsCubit>().load(),
       onBack: () => context.go(AppRoutes.home),
       child: gigsBody,
     );
   }
 
-  Widget _buildCollaborationsBody() {
-    if (_loading && _collaborations.isEmpty && _error == null) {
+  Widget _buildCollaborationsBody(BuildContext context, BookingsState s) {
+    if (s.loading && s.collaborations.isEmpty && s.error == null) {
       return ListView.builder(
         padding: const EdgeInsets.only(top: 16, bottom: 96),
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: 5,
-        itemBuilder: (context, index) => const CollaborationProposalTileSkeleton(),
+        itemBuilder: (context, index) =>
+            const CollaborationProposalTileSkeleton(),
       );
     }
-    if (_collaborations.isEmpty && _error == null) {
+    if (s.collaborations.isEmpty && s.error == null) {
       return EmptyStateIllustrated(
         assetPathDark: 'assets/images/no_gigs_empty_dark.svg',
         assetPathLight: 'assets/images/no_gigs_empty_light.svg',
@@ -445,35 +382,42 @@ class _BookingsPageState extends State<BookingsPage>
         onPrimaryPressed: () => context.go(AppRoutes.explore),
       );
     }
-    final activeCollabs = _collaborations
-        .where((c) =>
-            c.status == CollaborationStatus.pending ||
-            c.status == CollaborationStatus.accepted)
+    final activeCollabs = s.collaborations
+        .where(
+          (c) =>
+              c.status == CollaborationStatus.pending ||
+              c.status == CollaborationStatus.accepted,
+        )
         .toList();
-    final pastCollabs = _collaborations
+    final pastCollabs = s.collaborations
         .where((c) => c.status == CollaborationStatus.completed)
         .toList();
-    final collabBody = _collaborations.isEmpty
+    final collabBody = s.collaborations.isEmpty
         ? ListView.builder(
             padding: const EdgeInsets.only(top: 16, bottom: 96),
             physics: const AlwaysScrollableScrollPhysics(),
             itemCount: 5,
-            itemBuilder: (context, index) => const CollaborationProposalTileSkeleton(),
+            itemBuilder: (context, index) =>
+                const CollaborationProposalTileSkeleton(),
           )
         : _buildCollaborationsSliverList(
+            context,
+            s,
             active: activeCollabs,
             past: pastCollabs,
           );
     return ConnectionErrorOverlay(
-      hasError: _error != null,
-      error: _error,
-      onRefresh: () async => _load(),
+      hasError: s.error != null,
+      error: s.error,
+      onRefresh: () async => context.read<BookingsCubit>().load(),
       onBack: () => context.go(AppRoutes.home),
       child: collabBody,
     );
   }
 
-  Widget _buildCollaborationsSliverList({
+  Widget _buildCollaborationsSliverList(
+    BuildContext context,
+    BookingsState s, {
     required List<CollaborationEntity> active,
     required List<CollaborationEntity> past,
   }) {
@@ -490,42 +434,39 @@ class _BookingsPageState extends State<BookingsPage>
             child: Text(
               'Active',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
         ),
       );
       slivers.add(
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final c = active[index];
-              final requesterName = _requesterNames[c.requesterId] ?? 'Someone';
-              final requesterPhotoUrl = _requesterPhotoUrls[c.requesterId];
-              return _CollaborationProposalTile(
-                collaboration: c,
-                requesterName: requesterName,
-                requesterPhotoUrl: requesterPhotoUrl,
-                requesterRole: _requesterRoles[c.requesterId],
-                onAccept: () => _acceptCollaboration(c),
-                onDecline: () => _declineCollaboration(c),
-                onViewMore: () => context.push(
-                  AppRoutes.collaborationDetail,
-                  extra: {
-                    'collaboration': c,
-                    'otherPersonName': requesterName,
-                    'otherPersonId': c.requesterId,
-                    'otherPersonRole': _requesterRoles[c.requesterId],
-                    'viewerIsCreative': true,
-                    'otherPersonPhotoUrl': requesterPhotoUrl,
-                  },
-                ),
-              );
-            },
-            childCount: active.length,
-          ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final c = active[index];
+            final requesterName = s.requesterNames[c.requesterId] ?? 'Someone';
+            final requesterPhotoUrl = s.requesterPhotoUrls[c.requesterId];
+            return _CollaborationProposalTile(
+              collaboration: c,
+              requesterName: requesterName,
+              requesterPhotoUrl: requesterPhotoUrl,
+              requesterRole: s.requesterRoles[c.requesterId],
+              onAccept: () => _acceptCollaboration(c),
+              onDecline: () => _declineCollaboration(c),
+              onViewMore: () => context.push(
+                AppRoutes.collaborationDetail,
+                extra: {
+                  'collaboration': c,
+                  'otherPersonName': requesterName,
+                  'otherPersonId': c.requesterId,
+                  'otherPersonRole': s.requesterRoles[c.requesterId],
+                  'viewerIsCreative': true,
+                  'otherPersonPhotoUrl': requesterPhotoUrl,
+                },
+              ),
+            );
+          }, childCount: active.length),
         ),
       );
       slivers.add(const SliverToBoxAdapter(child: SizedBox(height: 24)));
@@ -535,61 +476,58 @@ class _BookingsPageState extends State<BookingsPage>
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Text(
+            child: Text(
               'Past',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ),
         ),
       );
       slivers.add(
         SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final c = past[index];
-              final requesterName = _requesterNames[c.requesterId] ?? 'Someone';
-              final requesterPhotoUrl = _requesterPhotoUrls[c.requesterId];
-              return _CollaborationProposalTile(
-                collaboration: c,
-                requesterName: requesterName,
-                requesterPhotoUrl: requesterPhotoUrl,
-                requesterRole: _requesterRoles[c.requesterId],
-                onAccept: () => _acceptCollaboration(c),
-                onDecline: () => _declineCollaboration(c),
-                onViewMore: () => context.push(
-                  AppRoutes.collaborationDetail,
-                  extra: {
-                    'collaboration': c,
-                    'otherPersonName': requesterName,
-                    'otherPersonId': c.requesterId,
-                    'otherPersonRole': _requesterRoles[c.requesterId],
-                    'viewerIsCreative': true,
-                    'otherPersonPhotoUrl': requesterPhotoUrl,
-                  },
-                ),
-              );
-            },
-            childCount: past.length,
-          ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final c = past[index];
+            final requesterName = s.requesterNames[c.requesterId] ?? 'Someone';
+            final requesterPhotoUrl = s.requesterPhotoUrls[c.requesterId];
+            return _CollaborationProposalTile(
+              collaboration: c,
+              requesterName: requesterName,
+              requesterPhotoUrl: requesterPhotoUrl,
+              requesterRole: s.requesterRoles[c.requesterId],
+              onAccept: () => _acceptCollaboration(c),
+              onDecline: () => _declineCollaboration(c),
+              onViewMore: () => context.push(
+                AppRoutes.collaborationDetail,
+                extra: {
+                  'collaboration': c,
+                  'otherPersonName': requesterName,
+                  'otherPersonId': c.requesterId,
+                  'otherPersonRole': s.requesterRoles[c.requesterId],
+                  'viewerIsCreative': true,
+                  'otherPersonPhotoUrl': requesterPhotoUrl,
+                },
+              ),
+            );
+          }, childCount: past.length),
         ),
       );
     }
-    slivers.add(const SliverPadding(
-      padding: EdgeInsets.only(top: 8, left: 0, right: 0, bottom: 96),
-    ));
-    return CustomScrollView(
-      slivers: slivers,
+    slivers.add(
+      const SliverPadding(
+        padding: EdgeInsets.only(top: 8, left: 0, right: 0, bottom: 96),
+      ),
     );
+    return CustomScrollView(slivers: slivers);
   }
 
-  Widget _buildGigsSliverList() {
-    final hasInvited = _invited.isNotEmpty;
-    final hasApplications = _applications.isNotEmpty;
-    final hasAccepted = _accepted.isNotEmpty;
-    final hasCompleted = _completed.isNotEmpty;
+  Widget _buildGigsSliverList(BookingsState s) {
+    final hasInvited = s.invited.isNotEmpty;
+    final hasApplications = s.applications.isNotEmpty;
+    final hasAccepted = s.accepted.isNotEmpty;
+    final hasCompleted = s.completed.isNotEmpty;
     return CustomScrollView(
       slivers: [
         if (hasInvited) ...[
@@ -599,61 +537,52 @@ class _BookingsPageState extends State<BookingsPage>
               child: Text(
                 'Invitations',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
           ),
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final booking = _invited[index];
-                return _BookingEventTile(
-                  booking: booking,
-                  event: _events[booking.eventId],
-                  status: BookingStatus.invited,
-                  onTap: () => context.push(
-                    AppRoutes.eventDetail(booking.eventId),
-                  ),
-                  onAccept: () => _acceptInvitation(booking),
-                  onDecline: () => _declineInvitation(booking),
-                );
-              },
-              childCount: _invited.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final booking = s.invited[index];
+              return _BookingEventTile(
+                booking: booking,
+                event: s.events[booking.eventId],
+                status: BookingStatus.invited,
+                onTap: () =>
+                    context.push(AppRoutes.eventDetail(booking.eventId)),
+                onAccept: () => _acceptInvitation(booking),
+                onDecline: () => _declineInvitation(booking),
+              );
+            }, childCount: s.invited.length),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ],
         if (hasAccepted) ...[
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                hasInvited ? 0 : 16,
-                16,
-                8,
-              ),
+              padding: EdgeInsets.fromLTRB(16, hasInvited ? 0 : 16, 16, 8),
               child: Text(
                 'Accepted',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
           ),
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) => _BookingEventTile(
-                booking: _accepted[index],
-                event: _events[_accepted[index].eventId],
+                booking: s.accepted[index],
+                event: s.events[s.accepted[index].eventId],
                 status: BookingStatus.accepted,
                 onTap: () => context.push(
-                  AppRoutes.eventDetail(_accepted[index].eventId),
+                  AppRoutes.eventDetail(s.accepted[index].eventId),
                 ),
               ),
-              childCount: _accepted.length,
+              childCount: s.accepted.length,
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -670,23 +599,23 @@ class _BookingsPageState extends State<BookingsPage>
               child: Text(
                 'Applications',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
           ),
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) => _BookingEventTile(
-                booking: _applications[index],
-                event: _events[_applications[index].eventId],
+                booking: s.applications[index],
+                event: s.events[s.applications[index].eventId],
                 status: BookingStatus.pending,
                 onTap: () => context.push(
-                  AppRoutes.eventDetail(_applications[index].eventId),
+                  AppRoutes.eventDetail(s.applications[index].eventId),
                 ),
               ),
-              childCount: _applications.length,
+              childCount: s.applications.length,
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -696,35 +625,32 @@ class _BookingsPageState extends State<BookingsPage>
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
-              'Past',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-            ),
+                'Past',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
             ),
           ),
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final booking = _completed[index];
-                return _BookingEventTile(
-                  booking: booking,
-                  event: _events[booking.eventId],
-                  status: BookingStatus.completed,
-                  onTap: () => context.push(
-                    AppRoutes.eventDetail(booking.eventId),
-                  ),
-                  canLeaveReview: false,
-                  onLeaveReview: null,
-                  canConfirmCompletion: booking.creativeConfirmedAt == null,
-                  hasConfirmedCompletion: booking.creativeConfirmedAt != null,
-                  onConfirmCompletion: () => _confirmCompletionByCreative(booking),
-                  isConfirmingCompletion: _confirmingBookingId == booking.id,
-                );
-              },
-              childCount: _completed.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final booking = s.completed[index];
+              return _BookingEventTile(
+                booking: booking,
+                event: s.events[booking.eventId],
+                status: BookingStatus.completed,
+                onTap: () =>
+                    context.push(AppRoutes.eventDetail(booking.eventId)),
+                canLeaveReview: false,
+                onLeaveReview: null,
+                canConfirmCompletion: booking.creativeConfirmedAt == null,
+                hasConfirmedCompletion: booking.creativeConfirmedAt != null,
+                onConfirmCompletion: () =>
+                    _confirmCompletionByCreative(booking),
+                isConfirmingCompletion: s.confirmingBookingId == booking.id,
+              );
+            }, childCount: s.completed.length),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 96)),
         ],
@@ -808,8 +734,7 @@ class _CollaborationProposalTile extends StatelessWidget {
       chips.add(
         AppDetailChip(
           icon: Icons.attach_money_outlined,
-          label:
-              '${NumberFormatter.formatMoney(collaboration.budget!)} RWF',
+          label: '${NumberFormatter.formatMoney(collaboration.budget!)} RWF',
           colorScheme: colorScheme,
         ),
       );
@@ -830,13 +755,13 @@ class _CollaborationProposalTile extends StatelessWidget {
     final statusBg = status == CollaborationStatus.pending
         ? colorScheme.tertiaryContainer
         : status == CollaborationStatus.accepted
-            ? colorScheme.primaryContainer
-            : colorScheme.surfaceContainerHighest;
+        ? colorScheme.primaryContainer
+        : colorScheme.surfaceContainerHighest;
     final statusFg = status == CollaborationStatus.pending
         ? colorScheme.onTertiaryContainer
         : status == CollaborationStatus.accepted
-            ? colorScheme.onPrimaryContainer
-            : colorScheme.onSurfaceVariant;
+        ? colorScheme.onPrimaryContainer
+        : colorScheme.onSurfaceVariant;
 
     return GlassCard(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -880,7 +805,9 @@ class _CollaborationProposalTile extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: statusBg,
-                              borderRadius: BorderRadius.circular(AppBorders.chipRadius),
+                              borderRadius: BorderRadius.circular(
+                                AppBorders.chipRadius,
+                              ),
                             ),
                             child: Text(
                               _statusLabel(status),
@@ -915,11 +842,7 @@ class _CollaborationProposalTile extends StatelessWidget {
             ),
             if (topChips.isNotEmpty) ...[
               const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: topChips,
-              ),
+              Wrap(spacing: 8, runSpacing: 8, children: topChips),
             ],
             const SizedBox(height: 14),
             Divider(
@@ -1036,17 +959,17 @@ class _BookingEventTile extends StatelessWidget {
     final statusLabel = isCompleted
         ? 'Completed'
         : isInvited
-            ? 'Invitation'
-            : isAccepted
-                ? 'Accepted'
-                : 'Applied';
+        ? 'Invitation'
+        : isAccepted
+        ? 'Accepted'
+        : 'Applied';
     final statusColor = isCompleted
         ? colorScheme.secondary
         : isInvited
-            ? colorScheme.tertiary
-            : isAccepted
-                ? colorScheme.primary
-                : colorScheme.onSurfaceVariant;
+        ? colorScheme.tertiary
+        : isAccepted
+        ? colorScheme.primary
+        : colorScheme.onSurfaceVariant;
 
     // Status as subtle text (information, not action)
     final statusText = Text(
@@ -1110,7 +1033,9 @@ class _BookingEventTile extends StatelessWidget {
               style: hasConfirmedCompletion
                   ? tonalStyle.copyWith(
                       backgroundColor: WidgetStateProperty.all(
-                        colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
+                        colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.8,
+                        ),
                       ),
                       foregroundColor: WidgetStateProperty.all(
                         colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
@@ -1127,15 +1052,15 @@ class _BookingEventTile extends StatelessWidget {
                       ],
                     )
                   : isConfirmingCompletion
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: LoadingAnimationWidget.stretchedDots(
-                            color: colorScheme.onPrimary,
-                            size: 20,
-                          ),
-                        )
-                      : const Text('Confirm'),
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: LoadingAnimationWidget.stretchedDots(
+                        color: colorScheme.onPrimary,
+                        size: 20,
+                      ),
+                    )
+                  : const Text('Confirm'),
             ),
             if (canLeaveReview && onLeaveReview != null) pillSpacing,
           ],
@@ -1156,11 +1081,7 @@ class _BookingEventTile extends StatelessWidget {
           children: [
             const Text('View details'),
             const SizedBox(width: 6),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 12,
-              color: colorScheme.primary,
-            ),
+            Icon(Icons.arrow_forward_ios, size: 12, color: colorScheme.primary),
           ],
         ),
       );
@@ -1173,91 +1094,94 @@ class _BookingEventTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: AppBorders.borderRadius,
         child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  width: _imageSize,
-                  height: _imageSize,
-                  child: imageUrl != null
-                      ? CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (_, _) => Container(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: const Icon(Icons.image_outlined, size: 32),
-                          ),
-                          errorWidget: (_, _, _) => Container(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: const Icon(Icons.broken_image_outlined, size: 32),
-                          ),
-                        )
-                      : Container(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: _imageSize,
+                height: _imageSize,
+                child: imageUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (_, _) => Container(
                           color: colorScheme.surfaceContainerHighest,
-                          child: const Icon(Icons.event_outlined, size: 32),
+                          child: const Icon(Icons.image_outlined, size: 32),
                         ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              height: 1.25,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                        errorWidget: (_, _, _) => Container(
+                          color: colorScheme.surfaceContainerHighest,
+                          child: const Icon(
+                            Icons.broken_image_outlined,
+                            size: 32,
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        statusText,
-                      ],
+                      )
+                    : Container(
+                        color: colorScheme.surfaceContainerHighest,
+                        child: const Icon(Icons.event_outlined, size: 32),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            height: 1.25,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      statusText,
+                    ],
+                  ),
+                  if (eventType.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      eventType,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    if (eventType.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                  ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
                       Text(
-                        eventType,
+                        dateStr,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.calendar_today_outlined,
-                          size: 14,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          dateStr,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    actionWidget,
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 10),
+                  actionWidget,
+                ],
               ),
-            ],
+            ),
+          ],
         ),
       ),
     );

@@ -24,9 +24,9 @@ class PlannerProfileCubit extends Cubit<PlannerProfileState> {
     this._plannerProfileRepository,
     String plannerId, {
     String? viewingUserId,
-  })  : _plannerId = plannerId,
-        _viewingUserId = viewingUserId,
-        super(const PlannerProfileState()) {
+  }) : _plannerId = plannerId,
+       _viewingUserId = viewingUserId,
+       super(const PlannerProfileState()) {
     load(plannerId);
   }
 
@@ -43,31 +43,47 @@ class PlannerProfileCubit extends Cubit<PlannerProfileState> {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       final user = await _userRepository.getUser(plannerId);
-      final plannerProfile =
+      var plannerProfile =
           await _plannerProfileRepository.getPlannerProfile(plannerId) ??
-              PlannerProfileEntity(userId: plannerId);
+          PlannerProfileEntity(userId: plannerId);
+      final plannerDn = plannerProfile.displayName?.trim() ?? '';
+      if (plannerDn.isEmpty &&
+          user?.displayName != null &&
+          user!.displayName!.trim().isNotEmpty) {
+        plannerProfile = plannerProfile.copyWith(
+          displayName: user.displayName!.trim(),
+        );
+      }
       final events = await _eventRepository.fetchEventsByPlannerId(plannerId);
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final pastEvents = events
-          .where((e) =>
-              e.status == EventStatus.completed ||
-              (e.date != null && e.date!.isBefore(today)))
+          .where(
+            (e) =>
+                e.status == EventStatus.completed ||
+                (e.date != null && e.date!.isBefore(today)),
+          )
           .toList();
       final currentEvents = events
-          .where((e) =>
-              e.status != EventStatus.completed &&
-              (e.date == null || !e.date!.isBefore(today)))
+          .where(
+            (e) =>
+                e.status != EventStatus.completed &&
+                (e.date == null || !e.date!.isBefore(today)),
+          )
           .toList();
       // Only completed bookings and completed collaborations count as "worked with".
       final completedBookings = await _bookingRepository
           .getCompletedBookingsByPlannerId(plannerId);
       final collabsAsTarget = await _collaborationRepository
-          .getCollaborationsByTargetUserId(plannerId,
-              status: CollaborationStatus.completed);
+          .getCollaborationsByTargetUserId(
+            plannerId,
+            status: CollaborationStatus.completed,
+          );
       final collabsAsRequester = await _collaborationRepository
-          .getCollaborationsByRequesterId(plannerId,
-              status: CollaborationStatus.completed);
+          .getCollaborationsByRequesterId(
+            plannerId,
+            status: CollaborationStatus.completed,
+          );
       final creativeIds = <String>{
         ...completedBookings.map((b) => b.creativeId),
         ...collabsAsTarget.map((c) => c.requesterId),
@@ -80,155 +96,170 @@ class PlannerProfileCubit extends Cubit<PlannerProfileState> {
       }
       var acceptedEventIdsForViewer = <String>{};
       final viewerId = _viewingUserId;
-      if (viewerId != null &&
-          viewerId.isNotEmpty &&
-          viewerId != plannerId) {
-        final accepted =
-            await _bookingRepository.getAcceptedBookingsByCreativeId(viewerId);
-        acceptedEventIdsForViewer =
-            accepted.map((b) => b.eventId).toSet();
+      if (viewerId != null && viewerId.isNotEmpty && viewerId != plannerId) {
+        final accepted = await _bookingRepository
+            .getAcceptedBookingsByCreativeId(viewerId);
+        acceptedEventIdsForViewer = accepted.map((b) => b.eventId).toSet();
       }
-      emit(state.copyWith(
-        user: user,
-        plannerProfile: plannerProfile,
-        events: events,
-        currentEvents: currentEvents,
-        pastEvents: pastEvents,
-        recentCreatives: creatives,
-        acceptedEventIdsForViewer: acceptedEventIdsForViewer,
-        isLoading: false,
-      ));
+      emit(
+        state.copyWith(
+          user: user,
+          plannerProfile: plannerProfile,
+          events: events,
+          currentEvents: currentEvents,
+          pastEvents: pastEvents,
+          recentCreatives: creatives,
+          acceptedEventIdsForViewer: acceptedEventIdsForViewer,
+          isLoading: false,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        isLoading: false,
-        error: e.toString().replaceAll('Exception:', '').trim(),
-      ));
+      emit(
+        state.copyWith(
+          isLoading: false,
+          error: e.toString().replaceAll('Exception:', '').trim(),
+        ),
+      );
     }
   }
 
   void setBio(String value) {
     final p = state.plannerProfile;
     if (p != null) {
-      emit(state.copyWith(
-        plannerProfile: PlannerProfileEntity(
-          userId: p.userId,
-          bio: value,
-          location: p.location,
-          eventTypes: p.eventTypes,
-          languages: p.languages,
-          portfolioUrls: p.portfolioUrls,
-          displayName: p.displayName,
-          role: p.role,
+      emit(
+        state.copyWith(
+          plannerProfile: PlannerProfileEntity(
+            userId: p.userId,
+            bio: value,
+            location: p.location,
+            eventTypes: p.eventTypes,
+            languages: p.languages,
+            portfolioUrls: p.portfolioUrls,
+            displayName: p.displayName,
+            role: p.role,
+          ),
         ),
-      ));
+      );
     }
   }
 
   void setDisplayName(String value) {
     final p = state.plannerProfile;
     if (p != null) {
-      emit(state.copyWith(
-        plannerProfile: PlannerProfileEntity(
-          userId: p.userId,
-          bio: p.bio,
-          location: p.location,
-          eventTypes: p.eventTypes,
-          languages: p.languages,
-          portfolioUrls: p.portfolioUrls,
-          displayName: value.isEmpty ? null : value,
-          role: p.role,
+      emit(
+        state.copyWith(
+          plannerProfile: PlannerProfileEntity(
+            userId: p.userId,
+            bio: p.bio,
+            location: p.location,
+            eventTypes: p.eventTypes,
+            languages: p.languages,
+            portfolioUrls: p.portfolioUrls,
+            displayName: value.isEmpty ? null : value,
+            role: p.role,
+          ),
         ),
-      ));
+      );
     }
   }
 
   void setLocation(String value) {
     final p = state.plannerProfile;
     if (p != null) {
-      emit(state.copyWith(
-        plannerProfile: PlannerProfileEntity(
-          userId: p.userId,
-          bio: p.bio,
-          location: value,
-          eventTypes: p.eventTypes,
-          languages: p.languages,
-          portfolioUrls: p.portfolioUrls,
-          displayName: p.displayName,
-          role: p.role,
+      emit(
+        state.copyWith(
+          plannerProfile: PlannerProfileEntity(
+            userId: p.userId,
+            bio: p.bio,
+            location: value,
+            eventTypes: p.eventTypes,
+            languages: p.languages,
+            portfolioUrls: p.portfolioUrls,
+            displayName: p.displayName,
+            role: p.role,
+          ),
         ),
-      ));
+      );
     }
   }
 
   void setEventTypes(List<String> value) {
     final p = state.plannerProfile;
     if (p != null) {
-      emit(state.copyWith(
-        plannerProfile: PlannerProfileEntity(
-          userId: p.userId,
-          bio: p.bio,
-          location: p.location,
-          eventTypes: value,
-          languages: p.languages,
-          portfolioUrls: p.portfolioUrls,
-          displayName: p.displayName,
-          role: p.role,
+      emit(
+        state.copyWith(
+          plannerProfile: PlannerProfileEntity(
+            userId: p.userId,
+            bio: p.bio,
+            location: p.location,
+            eventTypes: value,
+            languages: p.languages,
+            portfolioUrls: p.portfolioUrls,
+            displayName: p.displayName,
+            role: p.role,
+          ),
         ),
-      ));
+      );
     }
   }
 
   void setLanguages(List<String> value) {
     final p = state.plannerProfile;
     if (p != null) {
-      emit(state.copyWith(
-        plannerProfile: PlannerProfileEntity(
-          userId: p.userId,
-          bio: p.bio,
-          location: p.location,
-          eventTypes: p.eventTypes,
-          languages: value,
-          portfolioUrls: p.portfolioUrls,
-          displayName: p.displayName,
-          role: p.role,
+      emit(
+        state.copyWith(
+          plannerProfile: PlannerProfileEntity(
+            userId: p.userId,
+            bio: p.bio,
+            location: p.location,
+            eventTypes: p.eventTypes,
+            languages: value,
+            portfolioUrls: p.portfolioUrls,
+            displayName: p.displayName,
+            role: p.role,
+          ),
         ),
-      ));
+      );
     }
   }
 
   void setPortfolioUrls(List<String> value) {
     final p = state.plannerProfile;
     if (p != null) {
-      emit(state.copyWith(
-        plannerProfile: PlannerProfileEntity(
-          userId: p.userId,
-          bio: p.bio,
-          location: p.location,
-          eventTypes: p.eventTypes,
-          languages: p.languages,
-          portfolioUrls: value,
-          displayName: p.displayName,
-          role: p.role,
+      emit(
+        state.copyWith(
+          plannerProfile: PlannerProfileEntity(
+            userId: p.userId,
+            bio: p.bio,
+            location: p.location,
+            eventTypes: p.eventTypes,
+            languages: p.languages,
+            portfolioUrls: value,
+            displayName: p.displayName,
+            role: p.role,
+          ),
         ),
-      ));
+      );
     }
   }
 
   void setRole(String? value) {
     final p = state.plannerProfile;
     if (p != null) {
-      emit(state.copyWith(
-        plannerProfile: PlannerProfileEntity(
-          userId: p.userId,
-          bio: p.bio,
-          location: p.location,
-          eventTypes: p.eventTypes,
-          languages: p.languages,
-          portfolioUrls: p.portfolioUrls,
-          displayName: p.displayName,
-          role: value?.trim().isEmpty == true ? null : value?.trim(),
+      emit(
+        state.copyWith(
+          plannerProfile: PlannerProfileEntity(
+            userId: p.userId,
+            bio: p.bio,
+            location: p.location,
+            eventTypes: p.eventTypes,
+            languages: p.languages,
+            portfolioUrls: p.portfolioUrls,
+            displayName: p.displayName,
+            role: value?.trim().isEmpty == true ? null : value?.trim(),
+          ),
         ),
-      ));
+      );
     }
   }
 
@@ -236,8 +267,7 @@ class PlannerProfileCubit extends Cubit<PlannerProfileState> {
     final p = state.plannerProfile;
     if (p == null) return;
     final dn = p.displayName?.trim();
-    final normalizedDisplay =
-        (dn == null || dn.isEmpty) ? null : dn;
+    final normalizedDisplay = (dn == null || dn.isEmpty) ? null : dn;
     final pSave = PlannerProfileEntity(
       userId: p.userId,
       bio: p.bio,
@@ -255,27 +285,31 @@ class PlannerProfileCubit extends Cubit<PlannerProfileState> {
       await _plannerProfileRepository.upsertPlannerProfile(pSave);
       final u = state.user;
       if (u != null) {
-        await _userRepository.upsertUser(UserEntity(
-          id: u.id,
-          email: u.email,
-          emailVerified: u.emailVerified,
-          username: u.username,
-          displayName: normalizedDisplay,
-          photoUrl: u.photoUrl,
-          role: u.role,
-          lastUsernameChangeAt: u.lastUsernameChangeAt,
-          profileVisibility: u.profileVisibility,
-          whoCanMessage: u.whoCanMessage,
-          showOnlineStatus: u.showOnlineStatus,
-          lastSeen: u.lastSeen,
-        ));
+        await _userRepository.upsertUser(
+          UserEntity(
+            id: u.id,
+            email: u.email,
+            emailVerified: u.emailVerified,
+            username: u.username,
+            displayName: normalizedDisplay,
+            photoUrl: u.photoUrl,
+            role: u.role,
+            lastUsernameChangeAt: u.lastUsernameChangeAt,
+            profileVisibility: u.profileVisibility,
+            whoCanMessage: u.whoCanMessage,
+            showOnlineStatus: u.showOnlineStatus,
+            lastSeen: u.lastSeen,
+          ),
+        );
       }
       emit(state.copyWith(isSaving: false));
     } catch (e) {
-      emit(state.copyWith(
-        isSaving: false,
-        error: e.toString().replaceAll('Exception:', '').trim(),
-      ));
+      emit(
+        state.copyWith(
+          isSaving: false,
+          error: e.toString().replaceAll('Exception:', '').trim(),
+        ),
+      );
     }
   }
 
@@ -305,9 +339,9 @@ class PlannerProfileCubit extends Cubit<PlannerProfileState> {
       await _eventRepository.updateEvent(updated);
       await load(_plannerId);
     } catch (e) {
-      emit(state.copyWith(
-        error: e.toString().replaceAll('Exception:', '').trim(),
-      ));
+      emit(
+        state.copyWith(error: e.toString().replaceAll('Exception:', '').trim()),
+      );
     }
   }
 }

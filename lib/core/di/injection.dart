@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -59,6 +60,10 @@ import '../services/push_notification_service.dart';
 /// Global service locator.
 final GetIt sl = GetIt.instance;
 
+/// Incremented when planner acknowledges home recent-activity items (prefs), so
+/// [PlannerDashboardCubit] can rebuild while the home tab stays mounted in the shell.
+final ValueNotifier<int> plannerHomeActivityAckRevision = ValueNotifier(0);
+
 /// Initialize dependency injection.
 Future<void> initInjection() async {
   // Data sources
@@ -93,10 +98,8 @@ Future<void> initInjection() async {
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(
-      sl<AuthRemoteDataSource>(),
-      sl<SharedPreferences>(),
-    ),
+    () =>
+        AuthRepositoryImpl(sl<AuthRemoteDataSource>(), sl<SharedPreferences>()),
   );
   sl.registerLazySingleton<UserRepository>(
     () => UserRepositoryImpl(
@@ -164,23 +167,16 @@ Future<void> initInjection() async {
   );
 
   // Use cases
-  sl.registerLazySingleton(
-    () => SendSignInLinkUseCase(sl<AuthRepository>()),
-  );
+  sl.registerLazySingleton(() => SendSignInLinkUseCase(sl<AuthRepository>()));
   sl.registerLazySingleton(
     () => SignInWithEmailLinkUseCase(sl<AuthRepository>()),
   );
   sl.registerLazySingleton(() => SignInWithGoogleUseCase(sl<AuthRepository>()));
-  sl.registerLazySingleton(
-    () => UpdateEmailUseCase(sl<AuthRepository>()),
-  );
+  sl.registerLazySingleton(() => UpdateEmailUseCase(sl<AuthRepository>()));
   sl.registerLazySingleton(() => SignOutUseCase(sl<AuthRepository>()));
   sl.registerLazySingleton(() => UpsertUserUseCase(sl<UserRepository>()));
   sl.registerLazySingleton(
-    () => ChangeUsernameUseCase(
-      sl<UserRepository>(),
-      sl<ProfileRepository>(),
-    ),
+    () => ChangeUsernameUseCase(sl<UserRepository>(), sl<ProfileRepository>()),
   );
 
   // Blocs (singleton so auth state is shared app-wide)
@@ -196,13 +192,15 @@ Future<void> initInjection() async {
   // Settings (requires async SharedPreferences)
   final prefs = await SharedPreferences.getInstance();
   sl.registerSingleton<SharedPreferences>(prefs);
-  sl.registerLazySingleton<SettingsCubit>(() => SettingsCubit(
-        prefs,
-        userRepository: sl<UserRepository>(),
-        authRepository: sl<AuthRepository>(),
-        profileRepository: sl<ProfileRepository>(),
-        plannerProfileRepository: sl<PlannerProfileRepository>(),
-      ));
+  sl.registerLazySingleton<SettingsCubit>(
+    () => SettingsCubit(
+      prefs,
+      userRepository: sl<UserRepository>(),
+      authRepository: sl<AuthRepository>(),
+      profileRepository: sl<ProfileRepository>(),
+      plannerProfileRepository: sl<PlannerProfileRepository>(),
+    ),
+  );
   sl.registerLazySingleton<OnboardingCubit>(() => OnboardingCubit(prefs));
   sl.registerLazySingleton<ProfileSetupDraftStorage>(
     () => ProfileSetupDraftStorage(prefs),

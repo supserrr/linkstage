@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../bloc/creative_profile/creative_profile_cubit.dart';
 import '../../bloc/creative_profile/creative_profile_state.dart';
+import '../../bloc/profile_photo_upload/profile_photo_upload_cubit.dart';
 import '../../../core/constants/app_borders.dart';
 import '../../../core/di/injection.dart';
 import '../../../core/utils/toast_utils.dart';
@@ -16,6 +17,7 @@ import '../../../domain/repositories/booking_repository.dart';
 import '../../../domain/repositories/profile_repository.dart';
 import '../../../domain/repositories/review_repository.dart';
 import '../../../domain/repositories/user_repository.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/router/auth_redirect.dart';
 import '../../widgets/atoms/glass_card.dart';
 import '../../widgets/molecules/chip_editor.dart';
@@ -26,7 +28,10 @@ import '../../widgets/molecules/profile_save_bar.dart';
 
 /// Creative professional profile edit page.
 class CreativeProfileEditPage extends StatelessWidget {
-  const CreativeProfileEditPage({super.key});
+  const CreativeProfileEditPage({super.key, this.creativeProfileCubit});
+
+  /// Optional injected cubit (primarily for deterministic widget tests).
+  final CreativeProfileCubit? creativeProfileCubit;
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +46,11 @@ class CreativeProfileEditPage extends StatelessWidget {
         ),
       );
     }
+    final child = const _CreativeProfileView();
+    final injected = creativeProfileCubit;
+    if (injected != null) {
+      return BlocProvider<CreativeProfileCubit>.value(value: injected, child: child);
+    }
     return BlocProvider(
       create: (_) => CreativeProfileCubit(
         sl<ProfileRepository>(),
@@ -49,7 +59,7 @@ class CreativeProfileEditPage extends StatelessWidget {
         sl<UserRepository>(),
         user.id,
       ),
-      child: const _CreativeProfileView(),
+      child: child,
     );
   }
 }
@@ -60,12 +70,12 @@ class _CreativeProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-      ),
+      appBar: AppBar(title: const Text('Edit Profile')),
       body: BlocConsumer<CreativeProfileCubit, CreativeProfileState>(
         listenWhen: (prev, curr) {
-          if (prev.isSaving && !curr.isSaving && curr.error == null) return true;
+          if (prev.isSaving && !curr.isSaving && curr.error == null) {
+            return true;
+          }
           if (curr.error != prev.error && curr.error != null) return true;
           return false;
         },
@@ -74,17 +84,17 @@ class _CreativeProfileView extends StatelessWidget {
             showToast(context, state.error!, isError: true);
           } else {
             sl<AuthRedirectNotifier>().refresh();
-            context.pop();
+            context.go(AppRoutes.viewProfile);
           }
         },
         builder: (context, state) {
           if (state.isLoading && state.profile == null) {
             return Center(
-            child: LoadingAnimationWidget.stretchedDots(
-              color: Theme.of(context).colorScheme.primary,
-              size: 48,
-            ),
-          );
+              child: LoadingAnimationWidget.stretchedDots(
+                color: Theme.of(context).colorScheme.primary,
+                size: 48,
+              ),
+            );
           }
           final profile = state.profile;
           if (profile == null) {
@@ -104,11 +114,12 @@ class _CreativeProfileView extends StatelessWidget {
                     child: ProfileEditSection(
                       title: 'Display name',
                       child: TextFormField(
-                        initialValue: profile.displayName ??
+                        initialValue:
+                            profile.displayName ??
                             sl<AuthRedirectNotifier>().user?.displayName ??
                             '',
                         decoration: const InputDecoration(
-                          hintText: 'e.g. Jane Smith',
+                          hintText: 'e.g. Marie Mukamana',
                         ),
                         maxLength: 80,
                         onChanged: (v) => context
@@ -128,7 +139,8 @@ class _CreativeProfileView extends StatelessWidget {
                         initialValue: profile.bio,
                         maxLines: 4,
                         decoration: const InputDecoration(
-                          hintText: 'e.g. Professional DJ with 7+ years experience...',
+                          hintText:
+                              'e.g. DJ and MC for weddings and events across Rwanda...',
                           alignLabelWithHint: true,
                         ),
                         onChanged: (v) =>
@@ -150,8 +162,9 @@ class _CreativeProfileView extends StatelessWidget {
                           child: ChipEditor(
                             values: profile.professions,
                             hintText: 'Add role',
-                            onChanged: (v) =>
-                                context.read<CreativeProfileCubit>().setProfessions(v),
+                            onChanged: (v) => context
+                                .read<CreativeProfileCubit>()
+                                .setProfessions(v),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -161,8 +174,9 @@ class _CreativeProfileView extends StatelessWidget {
                           child: ChipEditor(
                             values: profile.services,
                             hintText: 'Add type',
-                            onChanged: (v) =>
-                                context.read<CreativeProfileCubit>().setServices(v),
+                            onChanged: (v) => context
+                                .read<CreativeProfileCubit>()
+                                .setServices(v),
                           ),
                         ),
                       ],
@@ -182,10 +196,11 @@ class _CreativeProfileView extends StatelessWidget {
                           child: TextFormField(
                             initialValue: profile.location,
                             decoration: const InputDecoration(
-                              hintText: 'e.g. Los Angeles, CA',
+                              hintText: 'e.g. Kigali, or Musanze, Northern Province',
                             ),
-                            onChanged: (v) =>
-                                context.read<CreativeProfileCubit>().setLocation(v),
+                            onChanged: (v) => context
+                                .read<CreativeProfileCubit>()
+                                .setLocation(v),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -195,10 +210,11 @@ class _CreativeProfileView extends StatelessWidget {
                           child: TextFormField(
                             initialValue: profile.priceRange,
                             decoration: const InputDecoration(
-                              hintText: 'e.g. \$200/hr or 50,000–100,000 RWF',
+                              hintText: 'e.g. 75,000 RWF/hr or 50,000–150,000 RWF',
                             ),
-                            onChanged: (v) =>
-                                context.read<CreativeProfileCubit>().setPriceRange(v),
+                            onChanged: (v) => context
+                                .read<CreativeProfileCubit>()
+                                .setPriceRange(v),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -207,8 +223,9 @@ class _CreativeProfileView extends StatelessWidget {
                           subtitle: 'Whether you\'re currently taking bookings',
                           child: _AvailabilitySelector(
                             value: profile.availability,
-                            onChanged: (v) =>
-                                context.read<CreativeProfileCubit>().setAvailability(v),
+                            onChanged: (v) => context
+                                .read<CreativeProfileCubit>()
+                                .setAvailability(v),
                           ),
                         ),
                       ],
@@ -223,9 +240,10 @@ class _CreativeProfileView extends StatelessWidget {
                       title: 'Add languages',
                       child: ChipEditor(
                         values: profile.languages,
-                        hintText: 'e.g. English, Spanish',
-                        onChanged: (v) =>
-                            context.read<CreativeProfileCubit>().setLanguages(v),
+                        hintText: 'e.g. Kinyarwanda, English, French',
+                        onChanged: (v) => context
+                            .read<CreativeProfileCubit>()
+                            .setLanguages(v),
                       ),
                     ),
                   ),
@@ -234,9 +252,12 @@ class _CreativeProfileView extends StatelessWidget {
                     icon: Icons.photo_library_outlined,
                     title: 'Portfolio',
                     subtitle: 'Photos or videos of your work',
-                    child: _PortfolioSection(
-                      profile: profile,
-                      userId: sl<AuthRedirectNotifier>().user!.id,
+                    child: BlocProvider(
+                      create: (_) => ProfilePhotoUploadCubit(),
+                      child: _PortfolioSection(
+                        profile: profile,
+                        userId: sl<AuthRedirectNotifier>().user!.id,
+                      ),
                     ),
                   ),
                 ],
@@ -259,10 +280,7 @@ class _CreativeProfileView extends StatelessWidget {
 }
 
 class _AvailabilitySelector extends StatelessWidget {
-  const _AvailabilitySelector({
-    required this.value,
-    required this.onChanged,
-  });
+  const _AvailabilitySelector({required this.value, required this.onChanged});
 
   final ProfileAvailability? value;
   final void Function(ProfileAvailability?) onChanged;
@@ -290,47 +308,38 @@ class _AvailabilitySelector extends StatelessWidget {
   }
 }
 
-class _PortfolioSection extends StatefulWidget {
-  const _PortfolioSection({
-    required this.profile,
-    required this.userId,
-  });
+class _PortfolioSection extends StatelessWidget {
+  const _PortfolioSection({required this.profile, required this.userId});
 
   final ProfileEntity profile;
   final String userId;
 
-  @override
-  State<_PortfolioSection> createState() => _PortfolioSectionState();
-}
-
-class _PortfolioSectionState extends State<_PortfolioSection> {
-  bool _isUploading = false;
-
-  Future<void> _showAddOptions() async {
+  Future<void> _showAddOptions(BuildContext context) async {
+    final uploadCubit = context.read<ProfilePhotoUploadCubit>();
     final isVideo = await showModalBottomSheet<bool>(
       context: context,
       useRootNavigator: true,
       builder: (ctx) => GlassBottomSheet(
         child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Add photo'),
-              onTap: () => Navigator.pop(ctx, false),
-            ),
-            ListTile(
-              leading: const Icon(Icons.videocam),
-              title: const Text('Add video'),
-              onTap: () => Navigator.pop(ctx, true),
-            ),
-          ],
-        ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Add photo'),
+                onTap: () => Navigator.pop(ctx, false),
+              ),
+              ListTile(
+                leading: const Icon(Icons.videocam),
+                title: const Text('Add video'),
+                onTap: () => Navigator.pop(ctx, true),
+              ),
+            ],
+          ),
         ),
       ),
     );
-    if (isVideo == null || !mounted) return;
+    if (isVideo == null || !context.mounted) return;
     final picker = ImagePicker();
     final XFile? file = isVideo
         ? await picker.pickVideo(source: ImageSource.gallery)
@@ -340,16 +349,16 @@ class _PortfolioSectionState extends State<_PortfolioSection> {
             maxHeight: 1920,
             imageQuality: 85,
           );
-    if (file == null || !mounted) return;
-    setState(() => _isUploading = true);
+    if (file == null || !context.mounted) return;
+    uploadCubit.setUploading(true);
     try {
       final storage = sl<PortfolioStorageDataSource>();
       final url = await storage.uploadPortfolioMedia(
         file,
-        widget.userId,
+        userId,
         isVideo: isVideo,
       );
-      if (!mounted) return;
+      if (!context.mounted) return;
       final cubit = context.read<CreativeProfileCubit>();
       final p = cubit.state.profile;
       if (p == null) return;
@@ -359,17 +368,18 @@ class _PortfolioSectionState extends State<_PortfolioSection> {
         cubit.setPortfolioUrls([...p.portfolioUrls, url]);
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         showToast(context, 'Upload failed: ${e.toString()}', isError: true);
       }
     } finally {
-      if (mounted) setState(() => _isUploading = false);
+      if (context.mounted) {
+        uploadCubit.setUploading(false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final profile = widget.profile;
     final images = profile.portfolioUrls;
     final videos = profile.portfolioVideoUrls;
     const itemSize = 80.0;
@@ -385,71 +395,86 @@ class _PortfolioSectionState extends State<_PortfolioSection> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GestureDetector(
-                  onTap: _isUploading ? null : _showAddOptions,
-                  child: Container(
-                    width: itemSize,
-                    height: itemSize,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .outline
-                            .withValues(alpha: 0.6),
-                        width: 1,
-                        strokeAlign: BorderSide.strokeAlignInside,
-                      ),
-                      borderRadius: BorderRadius.circular(AppBorders.chipRadius),
-                    ),
-                    child: _isUploading
-                        ? Center(
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: LoadingAnimationWidget.stretchedDots(
-                                color: Theme.of(context).colorScheme.primary,
-                                size: 24,
-                              ),
-                            ),
-                          )
-                        : Center(
-                            child: Icon(
-                              Icons.add,
-                              size: 32,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
+                BlocBuilder<ProfilePhotoUploadCubit, bool>(
+                  builder: (context, isUploading) {
+                    return GestureDetector(
+                      onTap: isUploading
+                          ? null
+                          : () => _showAddOptions(context),
+                      child: Container(
+                        width: itemSize,
+                        height: itemSize,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withValues(alpha: 0.6),
+                            width: 1,
+                            strokeAlign: BorderSide.strokeAlignInside,
                           ),
-                  ),
+                          borderRadius: BorderRadius.circular(
+                            AppBorders.chipRadius,
+                          ),
+                        ),
+                        child: isUploading
+                            ? Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: LoadingAnimationWidget.stretchedDots(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    size: 24,
+                                  ),
+                                ),
+                              )
+                            : Center(
+                                child: Icon(
+                                  Icons.add,
+                                  size: 32,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(width: spacing),
-                ...images.map((url) => Padding(
-                      padding: const EdgeInsets.only(right: spacing),
-                      child: _PortfolioThumb(
-                        url: url,
-                        isVideo: false,
-                        itemSize: itemSize,
-                        onRemove: () {
-                          context.read<CreativeProfileCubit>().setPortfolioUrls(
-                                images.where((u) => u != url).toList(),
-                              );
-                        },
-                      ),
-                    )),
-                ...videos.map((url) => Padding(
-                      padding: const EdgeInsets.only(right: spacing),
-                      child: _PortfolioThumb(
-                        url: url,
-                        isVideo: true,
-                        itemSize: itemSize,
-                        onRemove: () {
-                          context
-                              .read<CreativeProfileCubit>()
-                              .setPortfolioVideoUrls(
-                                videos.where((u) => u != url).toList(),
-                              );
-                        },
-                      ),
-                    )),
+                ...images.map(
+                  (url) => Padding(
+                    padding: const EdgeInsets.only(right: spacing),
+                    child: _PortfolioThumb(
+                      url: url,
+                      isVideo: false,
+                      itemSize: itemSize,
+                      onRemove: () {
+                        context.read<CreativeProfileCubit>().setPortfolioUrls(
+                          images.where((u) => u != url).toList(),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                ...videos.map(
+                  (url) => Padding(
+                    padding: const EdgeInsets.only(right: spacing),
+                    child: _PortfolioThumb(
+                      url: url,
+                      isVideo: true,
+                      itemSize: itemSize,
+                      onRemove: () {
+                        context
+                            .read<CreativeProfileCubit>()
+                            .setPortfolioVideoUrls(
+                              videos.where((u) => u != url).toList(),
+                            );
+                      },
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -493,10 +518,7 @@ class _PortfolioThumb extends StatelessWidget {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 )
-              : CachedNetworkImage(
-                  imageUrl: url,
-                  fit: BoxFit.cover,
-                ),
+              : CachedNetworkImage(imageUrl: url, fit: BoxFit.cover),
         ),
         Positioned(
           top: -4,

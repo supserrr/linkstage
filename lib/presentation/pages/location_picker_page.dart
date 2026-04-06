@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart' as geocoding;
 import 'package:latlong2/latlong.dart';
+
+import '../bloc/location_picker/location_picker_cubit.dart';
+import '../bloc/location_picker/location_picker_state.dart';
 
 /// Result from the OSM location picker.
 class LocationPickerResult {
@@ -24,10 +28,12 @@ class LocationPickerPage extends StatefulWidget {
     super.key,
     this.initialLat,
     this.initialLng,
+    this.locationPickerCubit,
   });
 
   final double? initialLat;
   final double? initialLng;
+  final LocationPickerCubit? locationPickerCubit;
 
   static const LatLng _kigali = LatLng(-1.9403, 29.8739);
 
@@ -36,26 +42,16 @@ class LocationPickerPage extends StatefulWidget {
 }
 
 class _LocationPickerPageState extends State<LocationPickerPage> {
-  late MapController _mapController;
-  LatLng? _selectedPoint;
-  String? _address;
-  bool _isLoading = false;
+  late final MapController _mapController;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
-    if (widget.initialLat != null && widget.initialLng != null) {
-      _selectedPoint = LatLng(widget.initialLat!, widget.initialLng!);
-    }
   }
 
-  Future<void> _onMapTap(TapPosition tapPosition, LatLng point) async {
-    setState(() {
-      _selectedPoint = point;
-      _address = null;
-      _isLoading = true;
-    });
+  Future<void> _onMapTap(BuildContext context, LatLng point) async {
+    context.read<LocationPickerCubit>().tapMap(point);
     try {
       final placemarks = await geocoding.placemarkFromCoordinates(
         point.latitude,
@@ -64,18 +60,19 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
       final addr = placemarks.isNotEmpty
           ? _formatAddress(placemarks.first)
           : '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}';
-      if (mounted) {
-        setState(() {
-          _address = addr;
-          _isLoading = false;
-        });
+      if (context.mounted) {
+        context.read<LocationPickerCubit>().setGeocodeResult(
+          address: addr,
+          loading: false,
+        );
       }
     } catch (_) {
-      if (mounted) {
-        setState(() {
-          _address = '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}';
-          _isLoading = false;
-        });
+      if (context.mounted) {
+        context.read<LocationPickerCubit>().setGeocodeResult(
+          address:
+              '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}',
+          loading: false,
+        );
       }
     }
   }
@@ -83,102 +80,136 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
   String _formatAddress(geocoding.Placemark p) {
     final parts = <String>[];
     if (p.street != null && p.street!.isNotEmpty) parts.add(p.street!);
-    if (p.subLocality != null && p.subLocality!.isNotEmpty) parts.add(p.subLocality!);
+    if (p.subLocality != null && p.subLocality!.isNotEmpty) {
+      parts.add(p.subLocality!);
+    }
     if (p.locality != null && p.locality!.isNotEmpty) parts.add(p.locality!);
-    if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty) parts.add(p.administrativeArea!);
+    if (p.administrativeArea != null && p.administrativeArea!.isNotEmpty) {
+      parts.add(p.administrativeArea!);
+    }
     if (p.country != null && p.country!.isNotEmpty) parts.add(p.country!);
     return parts.join(', ');
   }
 
-  void _confirm() {
-    if (_selectedPoint == null) return;
-    final addr = _address ?? '${_selectedPoint!.latitude.toStringAsFixed(5)}, ${_selectedPoint!.longitude.toStringAsFixed(5)}';
-    Navigator.of(context).pop(LocationPickerResult(
-      address: addr,
-      lat: _selectedPoint!.latitude,
-      lng: _selectedPoint!.longitude,
-    ));
+  void _confirm(BuildContext context, LocationPickerState locState) {
+    final point = locState.selectedPoint;
+    if (point == null) return;
+    final addr =
+        locState.address ??
+        '${point.latitude.toStringAsFixed(5)}, ${point.longitude.toStringAsFixed(5)}';
+    Navigator.of(context).pop(
+      LocationPickerResult(
+        address: addr,
+        lat: point.latitude,
+        lng: point.longitude,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final initial = _selectedPoint ?? (widget.initialLat != null && widget.initialLng != null
+    final initialPoint = widget.initialLat != null && widget.initialLng != null
         ? LatLng(widget.initialLat!, widget.initialLng!)
-        : LocationPickerPage._kigali);
+        : null;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pick location'),
-        actions: [
-          TextButton(
-            onPressed: _selectedPoint != null ? _confirm : null,
-            child: const Text('Confirm'),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: initial,
-                initialZoom: 14,
-                onTap: _onMapTap,
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.flutter_application_1',
+    final child = BlocBuilder<LocationPickerCubit, LocationPickerState>(
+        builder: (context, locState) {
+          final initial =
+              locState.selectedPoint ??
+              (widget.initialLat != null && widget.initialLng != null
+                  ? LatLng(widget.initialLat!, widget.initialLng!)
+                  : LocationPickerPage._kigali);
+
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Pick location'),
+              actions: [
+                TextButton(
+                  onPressed: locState.selectedPoint != null
+                      ? () => _confirm(context, locState)
+                      : null,
+                  child: const Text('Confirm'),
                 ),
-                if (_selectedPoint != null)
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: _selectedPoint!,
-                        width: 40,
-                        height: 40,
-                        child: const Icon(
-                          Icons.place,
-                          color: Colors.red,
-                          size: 40,
-                        ),
+              ],
+            ),
+            body: Column(
+              children: [
+                Expanded(
+                  child: FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCenter: initial,
+                      initialZoom: 14,
+                      onTap: (tapPosition, point) => _onMapTap(context, point),
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.linkstage.app',
                       ),
+                      if (locState.selectedPoint != null)
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: locState.selectedPoint!,
+                              width: 40,
+                              height: 40,
+                              child: const Icon(
+                                Icons.place,
+                                color: Colors.red,
+                                size: 40,
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
+                  ),
+                ),
+                if (locState.selectedPoint != null)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: locState.isLoading
+                              ? SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: LoadingAnimationWidget.stretchedDots(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    size: 24,
+                                  ),
+                                )
+                              : Text(
+                                  locState.address ?? 'Getting address...',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                        ),
+                        FilledButton(
+                          onPressed: () => _confirm(context, locState),
+                          child: const Text('Use this location'),
+                        ),
+                      ],
+                    ),
                   ),
               ],
             ),
-          ),
-          if (_selectedPoint != null)
-            Container(
-              padding: const EdgeInsets.all(16),
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _isLoading
-                        ? SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: LoadingAnimationWidget.stretchedDots(
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 24,
-                            ),
-                          )
-                        : Text(
-                            _address ?? 'Getting address...',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                  ),
-                  FilledButton(
-                    onPressed: _confirm,
-                    child: const Text('Use this location'),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
+          );
+        },
+      );
+    final injected = widget.locationPickerCubit;
+    if (injected != null) {
+      return BlocProvider<LocationPickerCubit>.value(value: injected, child: child);
+    }
+    return BlocProvider(
+      create: (_) => LocationPickerCubit(initialPoint: initialPoint),
+      child: child,
     );
   }
 }

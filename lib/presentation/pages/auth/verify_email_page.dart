@@ -13,6 +13,9 @@ import '../../widgets/atoms/app_button.dart';
 import '../../widgets/atoms/auth_sign_illustration.dart';
 import '../../widgets/atoms/glass_card.dart';
 
+bool get _useAuthEmulator =>
+    const bool.fromEnvironment('USE_AUTH_EMULATOR', defaultValue: false);
+
 /// Shown after sending sign-in link, or when authenticated but email not verified.
 class VerifyEmailPage extends StatelessWidget {
   const VerifyEmailPage({super.key, this.email = ''});
@@ -34,9 +37,7 @@ class VerifyEmailPage extends StatelessWidget {
               Expanded(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxHeight: 200),
-                  child: const Center(
-                    child: AuthSignIllustration(),
-                  ),
+                  child: const Center(child: AuthSignIllustration()),
                 ),
               ),
               Padding(
@@ -45,12 +46,14 @@ class VerifyEmailPage extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   child: isLinkSentFlow
                       ? _LinkSentView(email: email)
-                      : _UnverifiedView(onSignOut: () async {
-                          await auth.signOut();
-                          if (context.mounted) {
-                            context.go(AppRoutes.login);
-                          }
-                        }),
+                      : _UnverifiedView(
+                          onSignOut: () async {
+                            await auth.signOut();
+                            if (context.mounted) {
+                              context.go(AppRoutes.login);
+                            }
+                          },
+                        ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -78,7 +81,12 @@ class _LinkSentView extends StatelessWidget {
           showToast(context, state.message, isError: true);
         }
         if (state is AuthLinkSent) {
-          showToast(context, 'Link sent. Check your email.');
+          showToast(
+            context,
+            _useAuthEmulator
+                ? 'Link ready — see instructions below (emulator does not email).'
+                : 'Link sent. Check your email.',
+          );
         }
       },
       builder: (context, state) {
@@ -89,18 +97,42 @@ class _LinkSentView extends StatelessWidget {
           children: [
             Text(
               'Check your email',
-              style: Theme.of(context)
-                  .textTheme
-                  .headlineLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'We sent a sign-in link to $email. Click the link to sign in.',
+              _useAuthEmulator
+                  ? 'The Firebase Auth emulator does not send email. After you tap '
+                      'Send sign-in link, open the terminal where '
+                      'firebase emulators:start is running and find the line '
+                      'that starts with "To sign in as" — copy that full URL and '
+                      'open it in a browser on this device.'
+                  : 'We sent a sign-in link to $email. Click the link to sign in.',
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
+            if (_useAuthEmulator) ...[
+              const SizedBox(height: 16),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Android emulator: the URL in the terminal uses '
+                    '127.0.0.1 — replace that host with 10.0.2.2 so the link '
+                    'points at your computer (e.g. http://10.0.2.2:9099/emulator/...). '
+                    'Then open that URL in Chrome on the emulator.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             AppButton(
               label: 'Resend link',
@@ -108,14 +140,28 @@ class _LinkSentView extends StatelessWidget {
                   ? null
                   : () {
                       context.read<AuthBloc>().add(
-                            AuthSendSignInLinkRequested(email: email),
-                          );
+                        AuthSendSignInLinkRequested(email: email),
+                      );
                     },
               isLoading: loading,
             ),
             const SizedBox(height: 16),
             TextButton(
-              onPressed: loading ? null : () => context.go(AppRoutes.login),
+              onPressed: loading
+                  ? null
+                  : () async {
+                      final auth = sl<AuthRepository>();
+                      await auth.clearPendingEmailForLinkSignIn();
+                      if (context.mounted) {
+                        showToast(context, 'Saved email cleared.');
+                        context.go(
+                          Uri(
+                            path: AppRoutes.login,
+                            queryParameters: const {'mode': 'email'},
+                          ).toString(),
+                        );
+                      }
+                    },
               child: const Text('Use a different email'),
             ),
           ],
@@ -138,10 +184,9 @@ class _UnverifiedView extends StatelessWidget {
       children: [
         Text(
           'Verify your email',
-          style: Theme.of(context)
-              .textTheme
-              .headlineLarge
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
@@ -151,10 +196,7 @@ class _UnverifiedView extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
-        AppButton(
-          label: 'Sign out',
-          onPressed: onSignOut,
-        ),
+        AppButton(label: 'Sign out', onPressed: onSignOut),
       ],
     );
   }

@@ -47,10 +47,12 @@ class MyEventsCubit extends Cubit<MyEventsState> {
             _latestEvents = events;
             _emitMerged();
           },
-          onError: (e) => emit(state.copyWith(
-            isLoading: false,
-            error: e.toString().replaceAll('Exception:', '').trim(),
-          )),
+          onError: (e) => emit(
+            state.copyWith(
+              isLoading: false,
+              error: e.toString().replaceAll('Exception:', '').trim(),
+            ),
+          ),
         );
 
     _bookingsSubscription = _bookingRepository
@@ -60,10 +62,12 @@ class MyEventsCubit extends Cubit<MyEventsState> {
             _latestBookings = bookings;
             _emitMerged();
           },
-          onError: (e) => emit(state.copyWith(
-            isLoading: false,
-            error: e.toString().replaceAll('Exception:', '').trim(),
-          )),
+          onError: (e) => emit(
+            state.copyWith(
+              isLoading: false,
+              error: e.toString().replaceAll('Exception:', '').trim(),
+            ),
+          ),
         );
   }
 
@@ -73,12 +77,14 @@ class MyEventsCubit extends Cubit<MyEventsState> {
       pendingCountByEventId[b.eventId] =
           (pendingCountByEventId[b.eventId] ?? 0) + 1;
     }
-    emit(state.copyWith(
-      events: _latestEvents,
-      pendingCountByEventId: pendingCountByEventId,
-      isLoading: false,
-      error: null,
-    ));
+    emit(
+      state.copyWith(
+        events: _latestEvents,
+        pendingCountByEventId: pendingCountByEventId,
+        isLoading: false,
+        error: null,
+      ),
+    );
   }
 
   /// Retry stream subscription on error.
@@ -93,7 +99,9 @@ class MyEventsCubit extends Cubit<MyEventsState> {
     try {
       if (newStatus == EventStatus.completed) {
         await _bookingRepository.completeAcceptedBookingsForEvent(eventId);
-        await _collaborationRepository.completeAcceptedCollaborationsForEvent(eventId);
+        await _collaborationRepository.completeAcceptedCollaborationsForEvent(
+          eventId,
+        );
       }
       await _eventRepository.updateEventStatus(eventId, newStatus);
       if (newStatus == EventStatus.open) {
@@ -107,7 +115,10 @@ class MyEventsCubit extends Cubit<MyEventsState> {
         if (event != null) {
           final planner = await sl<UserRepository>().getUser(_plannerId);
           final plannerName =
-              planner?.displayName ?? planner?.username ?? planner?.email ?? 'Someone';
+              planner?.displayName ??
+              planner?.username ??
+              planner?.email ??
+              'Someone';
           sl<PushNotificationService>().notifyFollowersOfPlannerEvent(
             eventId: event.id,
             plannerId: _plannerId,
@@ -117,9 +128,9 @@ class MyEventsCubit extends Cubit<MyEventsState> {
         }
       }
     } catch (e) {
-      emit(state.copyWith(
-        error: e.toString().replaceAll('Exception:', '').trim(),
-      ));
+      emit(
+        state.copyWith(error: e.toString().replaceAll('Exception:', '').trim()),
+      );
     }
   }
 
@@ -128,9 +139,10 @@ class MyEventsCubit extends Cubit<MyEventsState> {
     try {
       await _eventRepository.deleteEvent(eventId);
     } catch (e) {
-      emit(state.copyWith(
-        error: e.toString().replaceAll('Exception:', '').trim(),
-      ));
+      emit(
+        state.copyWith(error: e.toString().replaceAll('Exception:', '').trim()),
+      );
+      rethrow;
     }
   }
 

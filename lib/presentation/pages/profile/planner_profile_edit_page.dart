@@ -17,6 +17,7 @@ import '../../../domain/repositories/event_repository.dart';
 import '../../../domain/repositories/planner_profile_repository.dart';
 import '../../../domain/repositories/profile_repository.dart';
 import '../../../domain/repositories/user_repository.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/router/auth_redirect.dart';
 import '../../bloc/planner_profile/planner_profile_cubit.dart';
 import '../../bloc/planner_profile/planner_profile_state.dart';
@@ -29,7 +30,10 @@ import '../../widgets/molecules/profile_save_bar.dart';
 
 /// Event planner profile edit page.
 class PlannerProfileEditPage extends StatelessWidget {
-  const PlannerProfileEditPage({super.key});
+  const PlannerProfileEditPage({super.key, this.plannerProfileCubit});
+
+  /// Optional injected cubit (primarily for deterministic widget tests).
+  final PlannerProfileCubit? plannerProfileCubit;
 
   @override
   Widget build(BuildContext context) {
@@ -37,12 +41,17 @@ class PlannerProfileEditPage extends StatelessWidget {
     if (user == null) {
       return Scaffold(
         body: Center(
-        child: LoadingAnimationWidget.stretchedDots(
-          color: Theme.of(context).colorScheme.primary,
-          size: 48,
+          child: LoadingAnimationWidget.stretchedDots(
+            color: Theme.of(context).colorScheme.primary,
+            size: 48,
+          ),
         ),
-      ),
       );
+    }
+    final child = const _PlannerProfileView();
+    final injected = plannerProfileCubit;
+    if (injected != null) {
+      return BlocProvider<PlannerProfileCubit>.value(value: injected, child: child);
     }
     return BlocProvider(
       create: (_) => PlannerProfileCubit(
@@ -55,7 +64,7 @@ class PlannerProfileEditPage extends StatelessWidget {
         user.id,
         viewingUserId: user.id,
       ),
-      child: const _PlannerProfileView(),
+      child: child,
     );
   }
 }
@@ -69,7 +78,9 @@ class _PlannerProfileView extends StatelessWidget {
       appBar: AppBar(title: const Text('Edit Profile')),
       body: BlocConsumer<PlannerProfileCubit, PlannerProfileState>(
         listenWhen: (prev, curr) {
-          if (prev.isSaving && !curr.isSaving && curr.error == null) return true;
+          if (prev.isSaving && !curr.isSaving && curr.error == null) {
+            return true;
+          }
           if (curr.error != prev.error && curr.error != null) return true;
           return false;
         },
@@ -78,7 +89,7 @@ class _PlannerProfileView extends StatelessWidget {
             showToast(context, state.error!, isError: true);
           } else {
             sl<AuthRedirectNotifier>().refresh();
-            context.pop();
+            context.go(AppRoutes.viewProfile);
           }
         },
         builder: (context, state) {
@@ -93,8 +104,8 @@ class _PlannerProfileView extends StatelessWidget {
                       state.error!,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     FilledButton.icon(
@@ -110,18 +121,18 @@ class _PlannerProfileView extends StatelessWidget {
           }
           if (state.isLoading && state.user == null) {
             return Center(
-            child: LoadingAnimationWidget.stretchedDots(
-              color: Theme.of(context).colorScheme.primary,
-              size: 48,
-            ),
-          );
+              child: LoadingAnimationWidget.stretchedDots(
+                color: Theme.of(context).colorScheme.primary,
+                size: 48,
+              ),
+            );
           }
           final user = state.user;
           if (user == null) {
             return const Center(child: Text('User not found'));
           }
-          final profile = state.plannerProfile ??
-              PlannerProfileEntity(userId: user.id);
+          final profile =
+              state.plannerProfile ?? PlannerProfileEntity(userId: user.id);
           return Stack(
             children: [
               ListView(
@@ -142,7 +153,7 @@ class _PlannerProfileView extends StatelessWidget {
                         initialValue:
                             profile.displayName ?? user.displayName ?? '',
                         decoration: const InputDecoration(
-                          hintText: 'e.g. Jane Smith',
+                          hintText: 'Name and surname',
                         ),
                         maxLength: 80,
                         onChanged: (v) => context
@@ -163,7 +174,7 @@ class _PlannerProfileView extends StatelessWidget {
                         maxLines: 4,
                         decoration: const InputDecoration(
                           hintText:
-                              'e.g. Corporate and wedding event planner with 10+ years experience...',
+                              'e.g. Wedding and corporate planner in Kigali with 10+ years experience...',
                           alignLabelWithHint: true,
                         ),
                         onChanged: (v) =>
@@ -175,7 +186,8 @@ class _PlannerProfileView extends StatelessWidget {
                   ProfileEditSectionCard(
                     icon: Icons.badge_outlined,
                     title: 'Role',
-                    subtitle: 'Shown in Hosted by section on your events (e.g. Event Planner)',
+                    subtitle:
+                        'Shown in Hosted by section on your events (e.g. Event Planner)',
                     child: ProfileEditSection(
                       title: 'Role or title',
                       child: TextFormField(
@@ -196,11 +208,12 @@ class _PlannerProfileView extends StatelessWidget {
                     child: ProfileEditSection(
                       title: 'Event types or specializations',
                       subtitle: 'e.g. Weddings, Corporate, Concerts',
-                            child: ChipEditor(
+                      child: ChipEditor(
                         values: profile.eventTypes,
                         hintText: 'Add type',
-                        onChanged: (v) =>
-                            context.read<PlannerProfileCubit>().setEventTypes(v),
+                        onChanged: (v) => context
+                            .read<PlannerProfileCubit>()
+                            .setEventTypes(v),
                       ),
                     ),
                   ),
@@ -215,11 +228,10 @@ class _PlannerProfileView extends StatelessWidget {
                       child: TextFormField(
                         initialValue: profile.location,
                         decoration: const InputDecoration(
-                          hintText: 'e.g. Los Angeles, CA',
+                          hintText: 'e.g. Kigali, or Musanze, Northern Province',
                         ),
-                        onChanged: (v) => context
-                            .read<PlannerProfileCubit>()
-                            .setLocation(v),
+                        onChanged: (v) =>
+                            context.read<PlannerProfileCubit>().setLocation(v),
                       ),
                     ),
                   ),
@@ -230,12 +242,11 @@ class _PlannerProfileView extends StatelessWidget {
                     subtitle: 'Optional – languages you can work in',
                     child: ProfileEditSection(
                       title: 'Add languages',
-                            child: ChipEditor(
+                      child: ChipEditor(
                         values: profile.languages,
-                        hintText: 'e.g. English, Spanish',
-                        onChanged: (v) => context
-                            .read<PlannerProfileCubit>()
-                            .setLanguages(v),
+                        hintText: 'e.g. Kinyarwanda, English, French',
+                        onChanged: (v) =>
+                            context.read<PlannerProfileCubit>().setLanguages(v),
                       ),
                     ),
                   ),
@@ -249,22 +260,24 @@ class _PlannerProfileView extends StatelessWidget {
                         ? EmptyStateDotted(
                             icon: Icons.event_outlined,
                             headline: 'No past events yet',
-                            description: 'Add past events in your event management.',
+                            description:
+                                'Add past events in your event management.',
                             compact: true,
                           )
                         : Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: state.pastEvents
-                                .map((e) => Padding(
-                                      padding: const EdgeInsets.only(bottom: 8),
-                                      child: _PastEventRow(
-                                        event: e,
-                                        onShowOnProfileChanged: (show) =>
-                                            context
-                                                .read<PlannerProfileCubit>()
-                                                .setEventShowOnProfile(e, show),
-                                      ),
-                                    ))
+                                .map(
+                                  (e) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: _PastEventRow(
+                                      event: e,
+                                      onShowOnProfileChanged: (show) => context
+                                          .read<PlannerProfileCubit>()
+                                          .setEventShowOnProfile(e, show),
+                                    ),
+                                  ),
+                                )
                                 .toList(),
                           ),
                   ),
@@ -309,67 +322,65 @@ class _PastEventRow extends StatelessWidget {
     return GlassCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  if (event.imageUrls.isNotEmpty)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppBorders.chipRadius),
-                      child: SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: CachedNetworkImage(
-                          imageUrl: event.imageUrls.first,
-                          fit: BoxFit.cover,
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                if (event.imageUrls.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppBorders.chipRadius),
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: CachedNetworkImage(
+                        imageUrl: event.imageUrls.first,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  )
+                else
+                  Icon(
+                    Icons.event,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        event.title,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      Text(
+                        '$locationLine · $dateStr',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
-                    )
-                  else
-                    Icon(
-                      Icons.event,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          event.title,
-                          style: Theme.of(context).textTheme.titleSmall,
-                        ),
-                        Text(
-                          '$locationLine · $dateStr',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'Show on profile',
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-                Switch(
-                  value: event.showOnProfile,
-                  onChanged: (v) => onShowOnProfileChanged(v),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'Show on profile',
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+              Switch(
+                value: event.showOnProfile,
+                onChanged: (v) => onShowOnProfileChanged(v),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

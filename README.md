@@ -1,17 +1,45 @@
-# flutter_application_1
+# LinkStage
 
-A new Flutter project.
+[![Flutter](https://img.shields.io/badge/Flutter-%5E3.11-02569B?logo=flutter)](https://flutter.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Getting Started
+Mobile marketplace connecting event planners with creative professionals (DJs, photographers, decorators, content creators) in Rwanda.
 
-This project is a starting point for a Flutter application.
+**Stack:** Flutter · Firebase (Auth, Firestore, Hosting) · optional Supabase (signed uploads, push-related Edge Functions).
 
-A few resources to get you started if this is your first Flutter project:
+## Screenshots
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Planner (left) · creative (right) in dual mockups. Source assets: [`docs/images/readme/`](docs/images/readme/).
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+| Home | Explore |
+|------|---------|
+| ![Home — planner and creative](docs/images/readme/01-home-or-feed.png) | ![Explore — planner and creative](docs/images/readme/02-browse-or-detail.png) |
+
+| Profile | Chat |
+|---------|------|
+| ![Profile — planner and creative](docs/images/readme/03-profile.png) | ![Chat inbox](docs/images/readme/04-feature-chat-or-notifications.png) |
+
+## Setup
+
+**Requirements:** Flutter `^3.11.0` ([`pubspec.yaml`](pubspec.yaml)), toolchain that passes `flutter doctor`, a **Firebase** project for auth and Firestore. **Supabase** only if you use signed uploads or push helpers.
+
+```bash
+git clone https://github.com/supserrr/linkstage.git
+cd linkstage
+flutter pub get
+flutter run
+```
+
+Before full auth, media, or push behavior works, configure Firebase (and Supabase if needed). Full steps: **[Developer setup](docs/setup.md)**.
+
+## Documentation
+
+- [Developer setup](docs/setup.md) — Firebase, Supabase, run, test, build, Android signing
+- [ERD & Firestore rules](docs/erd.md)
+- [State management](docs/state_management.md)
+
+Other guides (chat, push, localization, icons, troubleshooting) are linked from [docs/setup.md](docs/setup.md#documentation).
+
+## License
+
+[MIT License](LICENSE).

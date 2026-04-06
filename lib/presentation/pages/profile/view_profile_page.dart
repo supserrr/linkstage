@@ -49,7 +49,13 @@ void _shareProfile(BuildContext context, String userId) {
 /// When [profileUserId] is set, shows that user's profile in read-only mode.
 /// Use [profileRole] to show planner profile (e.g. when opening from event host); otherwise creative.
 class ViewProfilePage extends StatelessWidget {
-  const ViewProfilePage({super.key, this.profileUserId, this.profileRole});
+  const ViewProfilePage({
+    super.key,
+    this.profileUserId,
+    this.profileRole,
+    this.creativeProfileCubit,
+    this.plannerProfileCubit,
+  });
 
   /// When non-empty, view this user's profile (read-only). Otherwise view own profile.
   final String? profileUserId;
@@ -57,13 +63,24 @@ class ViewProfilePage extends StatelessWidget {
   /// When viewing another user, use this to show planner profile. Omit for creative profile.
   final UserRole? profileRole;
 
+  /// Optional injected cubits (primarily for deterministic widget tests).
+  final CreativeProfileCubit? creativeProfileCubit;
+  final PlannerProfileCubit? plannerProfileCubit;
+
   @override
   Widget build(BuildContext context) {
-    final isViewingOther =
-        profileUserId != null && profileUserId!.isNotEmpty;
+    final isViewingOther = profileUserId != null && profileUserId!.isNotEmpty;
     if (isViewingOther) {
       final isPlanner = profileRole == UserRole.eventPlanner;
       if (isPlanner) {
+        final child = const _ViewProfileScaffold(
+          showEditButton: false,
+          child: _PlannerProfileView(),
+        );
+        final injected = plannerProfileCubit;
+        if (injected != null) {
+          return BlocProvider<PlannerProfileCubit>.value(value: injected, child: child);
+        }
         return BlocProvider(
           create: (_) => PlannerProfileCubit(
             sl<UserRepository>(),
@@ -75,11 +92,17 @@ class ViewProfilePage extends StatelessWidget {
             profileUserId!,
             viewingUserId: sl<AuthRedirectNotifier>().user?.id,
           ),
-          child: const _ViewProfileScaffold(
-            showEditButton: false,
-            child: _PlannerProfileView(),
-          ),
+          child: child,
         );
+      }
+      final child = const _ViewProfileScaffold(
+        showEditButton: false,
+        showShareFavorite: true,
+        child: _CreativeProfileView(),
+      );
+      final injected = creativeProfileCubit;
+      if (injected != null) {
+        return BlocProvider<CreativeProfileCubit>.value(value: injected, child: child);
       }
       return BlocProvider(
         create: (_) => CreativeProfileCubit(
@@ -89,11 +112,7 @@ class ViewProfilePage extends StatelessWidget {
           sl<UserRepository>(),
           profileUserId!,
         ),
-        child: const _ViewProfileScaffold(
-          showEditButton: false,
-          showShareFavorite: true,
-          child: _CreativeProfileView(),
-        ),
+        child: child,
       );
     }
 
@@ -101,15 +120,25 @@ class ViewProfilePage extends StatelessWidget {
     if (user == null) {
       return Scaffold(
         body: Center(
-        child: LoadingAnimationWidget.stretchedDots(
-          color: Theme.of(context).colorScheme.primary,
-          size: 48,
+          child: LoadingAnimationWidget.stretchedDots(
+            color: Theme.of(context).colorScheme.primary,
+            size: 48,
+          ),
         ),
-      ),
       );
     }
     final role = user.role;
     if (role == UserRole.creativeProfessional) {
+      final injected = creativeProfileCubit;
+      if (injected != null) {
+        return BlocProvider<CreativeProfileCubit>.value(
+          value: injected,
+          child: const _ViewProfileScaffold(
+            showEditButton: true,
+            child: _CreativeProfileView(),
+          ),
+        );
+      }
       return BlocProvider(
         create: (_) => CreativeProfileCubit(
           sl<ProfileRepository>(),
@@ -122,14 +151,23 @@ class ViewProfilePage extends StatelessWidget {
           builder: (ctx) => _ViewProfileScaffold(
             editRoute: AppRoutes.creativeProfile,
             showEditButton: true,
-            onReturnFromEdit: () =>
-                ctx.read<CreativeProfileCubit>().refresh(),
+            onReturnFromEdit: () => ctx.read<CreativeProfileCubit>().refresh(),
             child: const _CreativeProfileView(),
           ),
         ),
       );
     }
     if (role == UserRole.eventPlanner) {
+      final injected = plannerProfileCubit;
+      if (injected != null) {
+        return BlocProvider<PlannerProfileCubit>.value(
+          value: injected,
+          child: const _ViewProfileScaffold(
+            showEditButton: true,
+            child: _PlannerProfileView(),
+          ),
+        );
+      }
       return BlocProvider(
         create: (_) => PlannerProfileCubit(
           sl<UserRepository>(),
@@ -145,8 +183,7 @@ class ViewProfilePage extends StatelessWidget {
           builder: (ctx) => _ViewProfileScaffold(
             editRoute: AppRoutes.plannerProfile,
             showEditButton: true,
-            onReturnFromEdit: () =>
-                ctx.read<PlannerProfileCubit>().refresh(),
+            onReturnFromEdit: () => ctx.read<PlannerProfileCubit>().refresh(),
             child: const _PlannerProfileView(),
           ),
         ),
@@ -200,7 +237,9 @@ class _ViewProfileScaffold extends StatelessWidget {
                   return IconButton(
                     icon: const Icon(Icons.share_outlined),
                     onPressed: () {
-                      if (creativeUserId != null) _shareProfile(context, creativeUserId);
+                      if (creativeUserId != null) {
+                        _shareProfile(context, creativeUserId);
+                      }
                     },
                   );
                 }
@@ -215,7 +254,8 @@ class _ViewProfileScaffold extends StatelessWidget {
                       stream: sl<SavedCreativesRepository>()
                           .watchSavedCreativeIds(currentUser.id),
                       builder: (context, snapshot) {
-                        final isSaved = snapshot.hasData &&
+                        final isSaved =
+                            snapshot.hasData &&
                             snapshot.data!.contains(creativeUserId);
                         return IconButton(
                           icon: Icon(
@@ -231,7 +271,9 @@ class _ViewProfileScaffold extends StatelessWidget {
                               if (context.mounted) {
                                 showToast(
                                   context,
-                                  isSaved ? 'Removed from saved' : 'Saved creative',
+                                  isSaved
+                                      ? 'Removed from saved'
+                                      : 'Saved creative',
                                 );
                               }
                             } catch (e) {
@@ -267,23 +309,22 @@ class _CreativeProfileView extends StatelessWidget {
       builder: (context, state) {
         if (state.isLoading && state.profile == null) {
           return Center(
-          child: LoadingAnimationWidget.stretchedDots(
-            color: Theme.of(context).colorScheme.primary,
-            size: 48,
-          ),
-        );
+            child: LoadingAnimationWidget.stretchedDots(
+              color: Theme.of(context).colorScheme.primary,
+              size: 48,
+            ),
+          );
         }
         final profile = state.profile;
         if (profile == null) {
           return const Center(child: Text('Profile not found'));
         }
         final authNotifier = sl<AuthRedirectNotifier>();
-        final isViewingOther =
-            authNotifier.user?.id != profile.userId;
+        final isViewingOther = authNotifier.user?.id != profile.userId;
         final photoUrl = isViewingOther
             ? profile.photoUrl
             : (authNotifier.user?.photoUrl ??
-                sl<AuthRepository>().currentUser?.photoUrl);
+                  sl<AuthRepository>().currentUser?.photoUrl);
         final reviewCount = profile.reviewCount > 0
             ? profile.reviewCount
             : state.reviews.length;
@@ -309,16 +350,16 @@ class _CreativeProfileView extends StatelessWidget {
                     photoUrl: isViewingOther
                         ? photoUrl
                         : (authNotifier.user?.photoUrl ??
-                            sl<AuthRepository>().currentUser?.photoUrl),
+                              sl<AuthRepository>().currentUser?.photoUrl),
                     displayName: profile.displayName,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   profile.displayName ?? 'Creative Professional',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 if (titleText != null && titleText.isNotEmpty) ...[
@@ -326,8 +367,8 @@ class _CreativeProfileView extends StatelessWidget {
                   Text(
                     titleText,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -358,8 +399,11 @@ class _CreativeProfileView extends StatelessWidget {
                       Flexible(
                         child: Text(
                           profile.location,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -399,9 +443,7 @@ class _CreativeProfileView extends StatelessWidget {
                 const _SectionSeparator(),
                 SectionHeader(title: 'About'),
                 Text(
-                  profile.bio.isNotEmpty
-                      ? profile.bio
-                      : 'No description yet.',
+                  profile.bio.isNotEmpty ? profile.bio : 'No description yet.',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const _SectionSeparator(),
@@ -422,13 +464,14 @@ class _CreativeProfileView extends StatelessWidget {
                     compact: true,
                   )
                 else
-                  ...state.reviews.take(2).map(
+                  ...state.reviews
+                      .take(2)
+                      .map(
                         (r) => Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: _ProfileReviewCard(
                             review: r,
-                            reviewer:
-                                state.reviewAuthorsById[r.reviewerId],
+                            reviewer: state.reviewAuthorsById[r.reviewerId],
                           ),
                         ),
                       ),
@@ -521,10 +564,7 @@ class _PortfolioSection extends StatelessWidget {
       ...portfolioUrls.map(
         (url) => ClipRRect(
           borderRadius: AppBorders.borderRadius,
-          child: CachedNetworkImage(
-            imageUrl: url,
-            fit: BoxFit.cover,
-          ),
+          child: CachedNetworkImage(imageUrl: url, fit: BoxFit.cover),
         ),
       ),
       ...portfolioVideoUrls.map(
@@ -556,15 +596,12 @@ class _PortfolioSection extends StatelessWidget {
           children: [
             Text(
               'Portfolio',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             if (items.isNotEmpty)
-              TextButton(
-                onPressed: onSeeAll,
-                child: const Text('See All'),
-              ),
+              TextButton(onPressed: onSeeAll, child: const Text('See All')),
           ],
         ),
         const SizedBox(height: 12),
@@ -596,10 +633,7 @@ class _PortfolioSection extends StatelessWidget {
 }
 
 class _ProfileReviewCard extends StatelessWidget {
-  const _ProfileReviewCard({
-    required this.review,
-    this.reviewer,
-  });
+  const _ProfileReviewCard({required this.review, this.reviewer});
 
   final ReviewEntity review;
   final UserEntity? reviewer;
@@ -663,8 +697,8 @@ class _ProfileReviewCard extends StatelessWidget {
                       child: Text(
                         name,
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                          fontWeight: FontWeight.w600,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -674,10 +708,8 @@ class _ProfileReviewCard extends StatelessWidget {
                       Text(
                         _formatReviewDate(review.createdAt!),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ],
@@ -733,8 +765,10 @@ class _CollaborateBar extends StatelessWidget {
 
     try {
       final repo = sl<CollaborationRepository>();
-      final exists =
-          await repo.hasActiveCollaborationBetween(user.id, creativeUserId);
+      final exists = await repo.hasActiveCollaborationBetween(
+        user.id,
+        creativeUserId,
+      );
       if (!context.mounted) return;
       if (exists) {
         showToast(
@@ -782,24 +816,28 @@ class _CollaborateBar extends StatelessWidget {
                     Text(
                       'Starting rate',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
                       children: [
                         Text(
-                          priceRange.isNotEmpty ? _formatPriceWithRwf(priceRange) : '—',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          priceRange.isNotEmpty
+                              ? _formatPriceWithRwf(priceRange)
+                              : '—',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         if (priceRange.isNotEmpty)
                           Text(
                             priceRange.contains('/') ? '' : ' /hr',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                           ),
                       ],
@@ -827,7 +865,9 @@ class _PlannerProfileView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<PlannerProfileCubit, PlannerProfileState>(
       builder: (context, state) {
-        if (state.error != null && state.user == null && state.plannerProfile == null) {
+        if (state.error != null &&
+            state.user == null &&
+            state.plannerProfile == null) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -838,12 +878,13 @@ class _PlannerProfileView extends StatelessWidget {
                     state.error!,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   FilledButton.icon(
-                    onPressed: () => context.read<PlannerProfileCubit>().refresh(),
+                    onPressed: () =>
+                        context.read<PlannerProfileCubit>().refresh(),
                     icon: const Icon(Icons.refresh),
                     label: const Text('Retry'),
                   ),
@@ -852,7 +893,9 @@ class _PlannerProfileView extends StatelessWidget {
             ),
           );
         }
-        if (state.isLoading && state.user == null && state.plannerProfile == null) {
+        if (state.isLoading &&
+            state.user == null &&
+            state.plannerProfile == null) {
           return Center(
             child: LoadingAnimationWidget.stretchedDots(
               color: Theme.of(context).colorScheme.primary,
@@ -863,7 +906,8 @@ class _PlannerProfileView extends StatelessWidget {
         final authNotifier = sl<AuthRedirectNotifier>();
         // When Firestore user doc is missing (e.g. planner never had one created),
         // fall back to auth user for display when viewing own profile.
-        final user = state.user ??
+        final user =
+            state.user ??
             (state.plannerProfile?.userId == authNotifier.user?.id
                 ? authNotifier.user
                 : null);
@@ -894,9 +938,9 @@ class _PlannerProfileView extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   user.displayName ?? 'Event Planner',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 if (user.username != null) ...[
@@ -904,8 +948,8 @@ class _PlannerProfileView extends StatelessWidget {
                   Text(
                     '@${user.username}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -923,8 +967,8 @@ class _PlannerProfileView extends StatelessWidget {
                       Text(
                         location,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
@@ -975,7 +1019,9 @@ class _PlannerProfileView extends StatelessWidget {
                     compact: true,
                   )
                 else
-                  ...state.currentEvents.take(10).map(
+                  ...state.currentEvents
+                      .take(10)
+                      .map(
                         (e) => _EventTile(
                           event: e,
                           viewerUserId: authNotifier.user?.id ?? '',
@@ -1009,10 +1055,9 @@ class _PlannerProfileView extends StatelessWidget {
                           .withValues(alpha: 0.5),
                       borderRadius: AppBorders.borderRadius,
                       border: Border.all(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .outline
-                            .withValues(alpha: 0.2),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withValues(alpha: 0.2),
                         width: 1,
                       ),
                     ),
@@ -1031,14 +1076,12 @@ class _PlannerProfileView extends StatelessWidget {
                                 AppRoutes.creativeProfileView(p.userId),
                               ),
                               customBorder: const CircleBorder(),
-                              splashColor: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: 0.3),
-                              highlightColor: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: 0.15),
+                              splashColor: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.3),
+                              highlightColor: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.15),
                               child: ProfileAvatar(
                                 photoUrl: p.photoUrl,
                                 displayName: name,
@@ -1068,8 +1111,7 @@ class _PlannerViewCTABar extends StatelessWidget {
     final state = context.read<PlannerProfileCubit>().state;
     final plannerUserId = state.user?.id ?? state.plannerProfile?.userId ?? '';
     final currentUser = sl<AuthRedirectNotifier>().user;
-    final isCreative =
-        currentUser?.role == UserRole.creativeProfessional;
+    final isCreative = currentUser?.role == UserRole.creativeProfessional;
     final currentUserId = currentUser?.id;
 
     return Positioned(
@@ -1196,7 +1238,9 @@ class _SectionSeparator extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Divider(
-        color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.6),
+        color: Theme.of(
+          context,
+        ).colorScheme.outlineVariant.withValues(alpha: 0.6),
         height: 1,
         thickness: 1,
       ),
@@ -1234,14 +1278,16 @@ class _PastEventsContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: visible
           .take(10)
-          .map((e) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _EventTile(
-                  event: e,
-                  viewerUserId: viewerUserId,
-                  acceptedEventIdsForViewer: acceptedEventIdsForViewer,
-                ),
-              ))
+          .map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _EventTile(
+                event: e,
+                viewerUserId: viewerUserId,
+                acceptedEventIdsForViewer: acceptedEventIdsForViewer,
+              ),
+            ),
+          )
           .toList(),
     );
   }
@@ -1292,9 +1338,7 @@ class _EventTile extends StatelessWidget {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
         title: Text(event.title),
-        subtitle: Text(
-          '$locationLine · $dateStr',
-        ),
+        subtitle: Text('$locationLine · $dateStr'),
         trailing: Text(
           _statusLabel(event.status),
           style: Theme.of(context).textTheme.bodySmall,
